@@ -13,8 +13,6 @@ const deliveryRoutes = require("./delivery");
 const menuRoutes = require("./menu");
 const notificationsRoutes = require("./notifications");
 const paymentsRoutes = require("./payments");
-const shippingRoutes = require("./shipping");
-const statisticsRoutes = require("./statistics");
 
 // 라우터 연결
 app.use("/admin", adminRoutes);            // 관리자 기능
@@ -24,8 +22,6 @@ app.use("/delivery", deliveryRoutes);      // 배송 일정 관리
 app.use("/menu", menuRoutes);              // 메뉴 관리
 app.use("/notifications", notificationsRoutes); // 알림톡, 문자 발송
 app.use("/payments", paymentsRoutes);      // 결제 기능
-app.use("/shipping", shippingRoutes);      // 배송 지역 설정
-app.use("/statistics", statisticsRoutes);  // 통계/리포트 기능
 
 // 서버 포트 설정
 const PORT = process.env.PORT || 3000;

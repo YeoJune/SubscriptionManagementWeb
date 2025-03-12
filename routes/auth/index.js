@@ -27,4 +27,10 @@ router.get("/profile", authMiddlewarre, (req, res) => {
   res.send("profile");
 });
 
+// PUT /auth/profile
+router.put("/profile", authMiddlewarre, (req, res) => {
+  // TODO: implement profile update
+  res.send("profile update");
+});
+
 module.exports = router;
