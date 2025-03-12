@@ -10,6 +10,7 @@ SubscriptionManagementWeb 프로젝트는 Node/Express 백엔드와 React 프론
 
 ## 프로젝트 구조
 
+```
 /SubscriptionManagementWeb
 ├── /src
 │   ├── index.jsx         # React 애플리케이션의 진입점
@@ -23,6 +24,7 @@ SubscriptionManagementWeb 프로젝트는 Node/Express 백엔드와 React 프론
 ├── server.js             # Express 서버 설정 파일
 ├── webpack.config.js     # Webpack 설정 파일
 └── package.json          # 프로젝트 및 스크립트 설정
+```
 
 ## 설치 및 초기 설정
 
@@ -49,7 +51,9 @@ npm install --save-dev webpack webpack-cli webpack-dev-server babel-loader style
 
 개발 시에는 webpack-dev-server를 사용하여 핫 리로딩 및 빠른 빌드를 이용할 수 있습니다.
 
-1.	webpack.config.js 파일 내 devServer 설정을 확인합니다. 예시:
+1.	webpack.config.js 파일 내 devServer 설정을 확인합니다.
+
+예시:
 
 ```javascript
 // webpack.config.js
@@ -89,16 +93,15 @@ module.exports = {
 };
 ```
 
-
-	2.	개발 서버 실행:
+2. **개발 서버 실행**:
 
 ```bash
 npm run dev
 ```
 
-	•	명령어 실행 후 기본 브라우저가 자동으로 열리며, http://localhost:3000에서 애플리케이션을 확인할 수 있습니다.
+•	명령어 실행 후 기본 브라우저가 자동으로 열리며, http://localhost:3000에서 애플리케이션을 확인할 수 있습니다.
 
-프로덕션 빌드
+3. **프로덕션 빌드**:
 
 프로덕션 번들을 생성하려면 다음 명령어를 실행합니다.
 
@@ -106,10 +109,10 @@ npm run dev
 npm run build
 ```
 
-	•	위 명령어는 React 앱을 번들링하여 /public 폴더 내에 bundle.js 파일 등 빌드 결과물을 생성합니다.
-	•	server.js는 이 결과물을 정적 파일로 서빙하도록 설정되어 있습니다.
+•	위 명령어는 React 앱을 번들링하여 /public 폴더 내에 bundle.js 파일 등 빌드 결과물을 생성합니다.
+•	server.js는 이 결과물을 정적 파일로 서빙하도록 설정되어 있습니다.
 
-Express 서버 실행
+4. **Express 서버 실행**:
 
 프로덕션 모드 또는 Express 서버를 통해 애플리케이션을 실행하려면:
 
@@ -117,5 +120,5 @@ Express 서버 실행
 npm start
 ```
 
-	•	이 명령어는 server.js를 실행하여 http://localhost:3000에서 애플리케이션을 제공합니다.
+•	이 명령어는 server.js를 실행하여 http://localhost:3000에서 애플리케이션을 제공합니다.
 
