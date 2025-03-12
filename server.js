@@ -3,18 +3,20 @@ require("dotenv").config();
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
-
-const exampleRouter = require("./routes/example");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
 
 app.use(cors());
 
-app.use("/example", exampleRouter);
+// React 빌드 파일을 정적 파일로 서빙
+app.use(express.static(path.join(__dirname, "pages")));
 
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/pages/index.html");
+// React Router 사용 등 클라이언트 측 라우팅을 위해
+// 존재하지 않는 모든 요청을 React의 index.html로 보내기
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "pages", "index.html"));
 });
 
 const port = process.env.PORT || 3000;
