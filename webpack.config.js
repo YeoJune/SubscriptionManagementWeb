@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/index.jsx', // React 코드 진입점 (추후 src 폴더 생성)
+  entry: './src/index.tsx', // React 코드 진입점 (추후 src 폴더 생성)
   output: {
     path: path.resolve(__dirname, 'pages'), // 빌드 결과물을 저장할 디렉토리
     filename: 'bundle.js'
@@ -9,7 +9,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.jsx?$/,
+        test: /\.(js|jsx|ts|tsx)$/,
         exclude: /node_modules/,
         use: 'babel-loader'
       },
@@ -20,7 +20,7 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['.js', '.jsx']
+    extensions: ['.js', '.jsx', '.ts', '.tsx']
   },
   mode: 'development', // 혹은 'production'
   devServer: {
