@@ -3,7 +3,7 @@ import Footer from './components/footer';
 import Header from './components/header';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
 
 const root = document.getElementById('root');
 
