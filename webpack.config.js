@@ -3,8 +3,9 @@ const path = require('path');
 module.exports = {
   entry: './src/app.tsx', // React 코드 진입점 (추후 src 폴더 생성)
   output: {
-    path: path.resolve(__dirname, 'pages'), // 빌드 결과물을 저장할 디렉토리
-    filename: 'bundle.js'
+    path: path.resolve(__dirname, 'dist'), // 빌드 결과물을 저장할 디렉토리
+    filename: 'bundle.js',
+    publicPath: '/', // ✅ React Router를 위한 설정
   },
   module: {
     rules: [
@@ -25,11 +26,12 @@ module.exports = {
   mode: 'development', // 혹은 'production'
   devServer: {
     static: {
-      directory: path.join(__dirname, 'pages'),
+      directory: path.join(__dirname, 'dist'),
     },
     compress: true,
     port: 3000,
     hot: true,
-    open: true
+    open: true,
+    historyApiFallback: true,
   }
 };

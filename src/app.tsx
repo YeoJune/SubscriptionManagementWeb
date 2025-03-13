@@ -5,8 +5,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-const container = document.getElementById('root');
-const root = ReactDOM.createRoot(container!);
+const root = document.getElementById('root');
 
 // TODO: implement authentication
 interface AuthContextType {
@@ -20,7 +19,7 @@ const AuthProvider: React.FC<AuthContextType> = ({ children }) => {
 
 const App: React.FC = () => {
   return (
-    <Router>
+    <Router basename='/'>
       <AuthProvider>
         <Header />
         <AppRoutes />
@@ -30,7 +29,12 @@ const App: React.FC = () => {
   );
 };
 
-root.render(
-  <App />
-);
-
+if (root) {
+  ReactDOM.createRoot(root).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+} else {
+  console.error("❌ Root element not found");
+}
