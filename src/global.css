@@ -28,3 +28,19 @@
   padding: 10px;
   text-align: center;
 }
+
+body {
+  margin: 0;
+  font-family: Noto Sans KR, sans-serif;
+  background-color: #f8f9fa;
+}
+
+a {
+  text-decoration: none;
+  background-color: transparent;
+}
+
+a:hover {
+  color: #007bff;
+}
+
