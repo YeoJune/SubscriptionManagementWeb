@@ -1,16 +1,36 @@
+import AppRoutes from './components/appRoutes';
+import Footer from './components/footer';
+import Header from './components/header';
 import React from 'react';
-import { Routes } from 'react-router-dom';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+const container = document.getElementById('root');
+const root = ReactDOM.createRoot(container!);
+
+// TODO: implement authentication
+interface AuthContextType {
+  children: React.ReactNode;
+}
+
+const AuthProvider: React.FC<AuthContextType> = ({ children }) => {
+  // TODO: implement authentication
+  return <>{children}</>;
+}
 
 const App: React.FC = () => {
   return (
-    <div>
-      <main>
-        <h1>My App</h1>
-        <Routes>
-        </Routes>
-      </main>
-    </div>
+    <Router>
+      <AuthProvider>
+        <Header />
+        <AppRoutes />
+        <Footer />
+      </AuthProvider>
+    </Router>
   );
 };
 
-export default App;
+root.render(
+  <App />
+);
+
