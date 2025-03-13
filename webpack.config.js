@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/index.tsx', // React 코드 진입점 (추후 src 폴더 생성)
+  entry: './src/app.tsx', // React 코드 진입점 (추후 src 폴더 생성)
   output: {
     path: path.resolve(__dirname, 'pages'), // 빌드 결과물을 저장할 디렉토리
     filename: 'bundle.js'
