@@ -1,0 +1,69 @@
+/* src/components/board/boardList.css */
+.board-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 공지사항(게시글) 목록을 감싸는 영역 */
+.board-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;              /* 게시글 사이 간격 */
+}
+
+/* 각 공지사항(게시글) 하나를 카드 형태로 디자인 */
+.board-item {
+  background-color: #fff;
+  border: 1px solid #e2e2e2;
+  border-radius: 6px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 제목 */
+.board-item h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 게시글 내용 */
+.board-item p {
+  margin: 0.25rem 0;
+  line-height: 1.4;
+  color: #555;
+}
+
+/* 작성자, 작성일 등 작은 정보 */
+.board-item .meta {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #888;
+}
+
+/* 공개 여부 등 추가 정보 */
+.board-item .status {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #007ACC; /* 필요 시 색상 조정 */
+}
+
+/* 반응형 대응 (예시) */
+@media (max-width: 600px) {
+  .board-container {
+    padding: 1rem;
+  }
+  
+  .board-item {
+    padding: 1rem;
+  }
+  
+  .board-item h3 {
+    font-size: 1.1rem;
+  }
+}

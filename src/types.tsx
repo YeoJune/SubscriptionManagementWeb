@@ -1,18 +1,22 @@
 // src/types.tsx
-export interface User {
+export interface UserProps {
   id: number;
   name: string;
   email: string;
   role: 'admin' | 'customer';
 }
 
-export interface Board {
+export interface BoardProps {
   id: number;
   title: string;
   content: string;
-  author: User;
+  author: UserProps;
   category: 'notice' | 'inquiry' | 'faq' | 'customer-voice';
   isPublic: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface BoardListProps {
+  boards: BoardProps[];
 }
