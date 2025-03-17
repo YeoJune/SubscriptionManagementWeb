@@ -4,4 +4,4 @@ node_modules
 temp**
 public*
 legacy*
-dist*
+bundle.js*
