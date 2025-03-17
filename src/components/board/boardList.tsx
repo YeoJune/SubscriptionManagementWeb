@@ -1,9 +1,16 @@
 // src/components/board/boardList.tsx
 import React from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
-import { BoardListProps } from '../../types';
+import { BoardListProps, BoardProps } from '../../types';
+import { useNavigate } from 'react-router-dom';
 
 const BoardList: React.FC<BoardListProps> = ({ boards }) => {
+  const navigate = useNavigate();
+
+  const handleBoardClick = (board: BoardProps) => {
+    navigate(`/board/${board.id}`);
+  };
+
   return (
     <TableContainer component={Paper} sx={{ maxWidth: 900, margin: '0 auto', marginTop: 4 }}>
       <Table>
@@ -23,7 +30,7 @@ const BoardList: React.FC<BoardListProps> = ({ boards }) => {
         </TableHead>
         <TableBody>
           {boards.map((board) => (
-            <TableRow key={board.id}>
+            <TableRow key={board.id} onClick={() => handleBoardClick(board)} sx={{ cursor: 'pointer' }}>
               <TableCell>{board.title}</TableCell>
               <TableCell>{board.content}</TableCell>
               <TableCell>{board.author.name}</TableCell>
@@ -35,7 +42,6 @@ const BoardList: React.FC<BoardListProps> = ({ boards }) => {
       </Table>
     </TableContainer>
   )
-
 };
 
 export default BoardList;
