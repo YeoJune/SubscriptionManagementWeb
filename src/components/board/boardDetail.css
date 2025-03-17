@@ -1,0 +1,85 @@
+/* src/components/board/boardDetail.css */
+/* button to history back*/
+/* boardDetail.css */
+.board-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Roboto', sans-serif;
+}
+
+.board-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.board-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #333333;
+  margin: 0 0 0.5rem;
+}
+
+.board-meta {
+  font-size: 0.9rem;
+  color: #888888;
+}
+
+.board-content {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #555555;
+  margin-bottom: 2rem;
+}
+
+/* 예쁜 '목록으로 돌아가기' 버튼 */
+.board-back-button {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(45deg, #007acc, #005f99);
+  color: #ffffff;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.3s ease;
+  margin-bottom: 2rem;
+}
+
+.board-back-button:hover {
+  background: linear-gradient(45deg, #005f99, #007acc);
+}
+
+.board-back-button.small {
+  padding: 0.3rem 0.8rem;
+  font-size: 0.9rem;
+  border-radius: 30px;
+}
+
+.board-back-button.small:hover {
+  background: linear-gradient(45deg, #005f99, #007acc);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .board-container {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .board-title {
+    font-size: 1.8rem;
+  }
+
+  .board-content {
+    font-size: 1rem;
+  }
+}
