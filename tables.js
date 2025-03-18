@@ -1,7 +1,7 @@
 /*
 -- 사용자 테이블 (users)
 CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY,
+  id TEXT PRIMARY KEY,
   password_hash TEXT NOT NULL,
   salt TEXT NOT NULL,
   delivery_count INTEGER DEFAULT 0,

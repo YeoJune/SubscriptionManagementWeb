@@ -8,7 +8,7 @@ const checkAdmin = require("../lib/checkAdmin");
 -- 배달 목록 테이블 (delivery_list)
 CREATE TABLE IF NOT EXISTS delivery_list (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
+  user_id TEXT NOT NULL,
   status TEXT CHECK(status IN ('pending', 'complete', 'cancel')) NOT NULL,
   date TEXT NOT NULL,
   product_id INTEGER NOT NULL

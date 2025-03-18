@@ -1,9 +1,21 @@
 // routes/server.js
+const dotenv = require("dotenv");
 const express = require("express");
 const app = express();
+const session = require("express-session");
+
+dotenv.config();
 
 // 공통 미들웨어
 app.use(express.json());
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "default",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: process.env.NODE_ENV === "production" },
+  })
+);
 
 // 기능별 라우터 임포트
 const authRoutes = require("./auth");
