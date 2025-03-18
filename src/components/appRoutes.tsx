@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import Admin from '../pages/admin';
 import Board from '../pages/board';
 import BoardDetail from '../components/board/boardDetail';
 import Home from '../pages/home';
@@ -15,6 +16,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/board/:id" element={<BoardDetail />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/admin" element={<Admin />} />
       <Route path="*" element={<NotFound />} /> {/* 404 Not Found */}
     </Routes>
   );
