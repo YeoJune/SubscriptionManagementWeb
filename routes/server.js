@@ -6,22 +6,20 @@ const app = express();
 app.use(express.json());
 
 // 기능별 라우터 임포트
-const adminRoutes = require("./admin");
 const authRoutes = require("./auth");
-const boardRoutes = require("./board");
 const deliveryRoutes = require("./delivery");
-const menuRoutes = require("./menu");
-const notificationsRoutes = require("./notifications");
+const noticeRoutes = require("./notice");
 const paymentsRoutes = require("./payments");
+const productRoutes = require("./product");
+const userRoutes = require("./user");
 
-// 라우터 연결
-app.use("/admin", adminRoutes);            // 관리자 기능
-app.use("/auth", authRoutes);              // 회원가입/로그인 등 인증
-app.use("/board", boardRoutes);            // 게시판(공지사항, FAQ, 1:1 문의 등)
-app.use("/delivery", deliveryRoutes);      // 배송 일정 관리
-app.use("/menu", menuRoutes);              // 메뉴 관리
-app.use("/notifications", notificationsRoutes); // 알림톡, 문자 발송
-app.use("/payments", paymentsRoutes);      // 결제 기능
+// 라우터 등록
+app.use("/api/auth", authRoutes);
+app.use("/api/delivery", deliveryRoutes);
+app.use("/api/notice", noticeRoutes);
+app.use("/api/payments", paymentsRoutes);
+app.use("/api/product", productRoutes);
+app.use("/api/user", userRoutes);
 
 // 서버 포트 설정
 const PORT = process.env.PORT || 3000;
@@ -30,4 +28,3 @@ app.listen(PORT, () => {
 });
 
 module.exports = app; // 필요 시 다른 곳에서 import할 수 있도록
-
