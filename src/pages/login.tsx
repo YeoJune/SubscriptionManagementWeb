@@ -1,11 +1,20 @@
 // src/pages/login.tsx
-import React from 'react';
+import React, { useState, useContext } from 'react';
 import { Container, Box, Paper, Typography, TextField, Button } from '@mui/material';
+import { AuthContext } from '../components/auth/authProvider';
 
 const Login: React.FC = () => {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const { login } = useContext(AuthContext);
+  const [id, setId] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Add your login logic here, e.g., authentication calls.
+    try {
+      await login(id, password);
+    } catch (error) {
+      console.error("Login Failed", error);
+    }
   };
 
   return (
@@ -22,12 +31,14 @@ const Login: React.FC = () => {
           </Typography>
           <form onSubmit={handleSubmit}>
             <TextField
-              label="Email Address"
+              label="ID"
               variant="outlined"
               margin="normal"
               fullWidth
               required
-              type="email"
+              type="id"
+              value={id}
+              onChange={(e) => setId(e.target.value)}
             />
             <TextField
               label="Password"
@@ -36,6 +47,8 @@ const Login: React.FC = () => {
               fullWidth
               required
               type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             <Button
               type="submit"

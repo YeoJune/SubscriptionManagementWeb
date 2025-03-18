@@ -20,3 +20,10 @@ export interface BoardProps {
 export interface BoardListProps {
   boards: BoardProps[];
 }
+
+export interface AuthContextProps {
+  token: string | null;
+  isAuthenticated: boolean;
+  login: (username: string, password: string) => Promise<void>
+  logout: () => void;
+};
