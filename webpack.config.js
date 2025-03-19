@@ -29,7 +29,10 @@ module.exports = {
       directory: path.join(__dirname, 'dist'),
     },
     compress: true,
-    port: 3000,
+    port: 3001,
+    proxy: {
+      '/api': 'http://localhost:3000', // ✅ 프록시 설정
+    },
     hot: true,
     open: true,
     historyApiFallback: true,
