@@ -22,7 +22,7 @@ export interface BoardListProps {
 }
 
 export interface AuthContextProps {
-  token: string | null;
+  user: UserProps | null;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>
   logout: () => void;

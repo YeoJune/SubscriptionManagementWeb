@@ -3,7 +3,7 @@ import React, { createContext, useState, useEffect } from 'react';
 import { AuthContextProps } from '../../types';
 
 export const AuthContext = createContext<AuthContextProps>({
-  token: null,
+  user: null,
   isAuthenticated: false,
   login: async () => { },
   logout: () => { },
@@ -14,19 +14,24 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState(null);
 
-
-  // Restore JWT token when the app is loaded
   useEffect(() => {
-    const token = localStorage.getItem('jwtToken');
-    if (token) {
-      setToken(token);
-    }
+    const checkSession = async () => {
+      const response = await fetch('/api/auth', {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      }
+    };
+
+    checkSession();
   }, []);
 
   // Login function
-  const login = async (username: string, password: string) => {
+  const login = async (id: string, password: string) => {
     try {
       // Call the login API
       const response = await fetch('/api/auth/login', {
@@ -34,7 +39,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        credentials: 'include',
+        body: JSON.stringify({ id, password }),
       })
 
       if (!response.ok) {
@@ -42,7 +48,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       const data = await response.json();
-      setToken(data.token);
+      setUser(data.user);
       localStorage.setItem('jwtToken', data.token);
     } catch (error) {
       console.error('Login Failed: ', error);
@@ -50,13 +56,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
-    setToken(null);
+    setUser(null);
     localStorage.removeItem('jwtToken');
   };
 
   const contextValue: AuthContextProps = {
-    token,
-    isAuthenticated: !!token,
+    user: null,
+    isAuthenticated: !!user,
     login,
     logout,
   };
