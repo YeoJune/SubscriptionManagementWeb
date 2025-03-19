@@ -11,7 +11,7 @@ const deliveryRoutes = require("./delivery");
 const noticeRoutes = require("./notices");
 const paymentsRoutes = require("./payments");
 const productRoutes = require("./product");
-const userRoutes = require("./user");
+const userRoutes = require("./users");
 
 // 라우터 등록
 router.use("/auth", authRoutes);
