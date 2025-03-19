@@ -24,6 +24,6 @@ export interface BoardListProps {
 export interface AuthContextProps {
   user: UserProps | null;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<void>
+  login: (id: string, password: string) => Promise<{ success: boolean, message: string | null }>;
   logout: () => void;
 };

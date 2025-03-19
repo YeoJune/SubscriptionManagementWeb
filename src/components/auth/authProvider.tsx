@@ -44,20 +44,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       })
 
       if (!response.ok) {
-        throw new Error('Login failed');
+        const errorData = await response.json();
+        return {
+          success: false, message: errorData.message || 'Login Failed',
+        };
       }
 
       const data = await response.json();
       setUser(data.user);
-      localStorage.setItem('jwtToken', data.token);
+      return { success: true };
     } catch (error) {
       console.error('Login Failed: ', error);
+      return {
+        success: false, message: 'An Unexpected Error Occurred',
+      };
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+    });
     setUser(null);
-    localStorage.removeItem('jwtToken');
   };
 
   const contextValue: AuthContextProps = {
