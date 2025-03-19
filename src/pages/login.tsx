@@ -1,19 +1,42 @@
-// src/pages/login.tsx
-import React, { useState, useContext } from 'react';
-import { Container, Box, Paper, Typography, TextField, Button } from '@mui/material';
+// src/pages/login.tsx import React, { useState, useContext } from 'react';
 import { AuthContext } from '../components/auth/authProvider';
+import { Container, Box, Paper, Typography, TextField, Button } from '@mui/material';
+import { Snackbar, Alert } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { useState, useContext } from 'react';
 
 const Login: React.FC = () => {
+  const navigate = useNavigate();
   const { login } = useContext(AuthContext);
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSnackbarClose = () => {
+    setOpenSnackbar(false);
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    try {
-      await login(id, password);
-    } catch (error) {
-      console.error("Login Failed", error);
+    setError(null);
+
+    if (!id || !password) {
+      setError('ID 또는 비밀번호를 입력해주세요.');
+      setOpenSnackbar(true);
+      return;
+    }
+
+    setLoading(true);
+    const result = await login(id, password);
+    setLoading(false);
+
+    if (!result.success) {
+      setError(result.message);
+      setOpenSnackbar(true);
+    } else {
+      navigate('/')
     }
   };
 
@@ -50,6 +73,16 @@ const Login: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            <Snackbar
+              open={openSnackbar}
+              autoHideDuration={3000}
+              onClose={handleSnackbarClose}
+              anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+              <Alert severity="error" sx={{ width: '100%' }}>
+                {error}
+              </Alert>
+            </Snackbar>
             <Button
               type="submit"
               variant="contained"
@@ -61,8 +94,9 @@ const Login: React.FC = () => {
                 backgroundColor: 'grey.700',
                 ':hover': { backgroundColor: 'grey.800' }
               }}
+              disabled={loading}
             >
-              Login
+              {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
         </Paper>
