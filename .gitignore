@@ -5,3 +5,6 @@ temp**
 public*
 legacy*
 bundle.js*
+
+# sqlite
+*.sqlite
