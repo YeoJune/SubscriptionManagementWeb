@@ -3,7 +3,9 @@ export interface UserProps {
   id: number;
   name: string;
   email: string;
+  phone_number: string;
   role: 'admin' | 'customer';
+  delivery_count: number;
 }
 
 export interface BoardProps {
@@ -25,8 +27,7 @@ export interface AuthContextProps {
   user: UserProps | null;
   isAuthenticated: boolean;
   login: (
-    id: string,
-    password: string
+    user: UserProps
   ) => Promise<{ success: boolean; message: string | null }>;
   logout: () => void;
 }

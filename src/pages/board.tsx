@@ -16,6 +16,7 @@ const user: UserProps = {
   name: 'Yeo',
   email: 'Yeo@korea.ac.kr',
   role: 'admin',
+  phone_number: '010-1234-5678',
 };
 
 // TODO: get boards list from DB

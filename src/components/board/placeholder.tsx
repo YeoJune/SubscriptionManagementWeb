@@ -7,6 +7,7 @@ const dummyUser: UserProps = {
   name: '홍길동',
   email: 'hong@example.com',
   role: 'customer',
+  phone_number: '010-1234-5678',
 };
 
 const dummyBoards: BoardListProps = {

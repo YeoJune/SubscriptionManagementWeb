@@ -16,20 +16,22 @@ const Register: React.FC = () => {
   const navigate = useNavigate();
 
   const [name, setName] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
+  const [id, setid] = useState<string | null>(null);
   const [password, setPassword] = useState<string | null>(null);
   const [passwordConfirm, setPasswordConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorSnackbar, setErrorSnackbar] = useState<string | null>(null);
   const [successSnackbar, setSuccessSnackbar] = useState<string | null>(null);
+  const [phone, setPhone] = useState<string | null>(null);
 
   // 실시간 에러 상태
   const [nameError, setNameError] = useState<string | null>(null);
-  const [emailError, setEmailError] = useState<string | null>(null);
+  const [idError, _setIdError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordMatchError, setPasswordMatchError] = useState<string | null>(
     null
   );
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   const handleSnackbarClose = () => {
     setErrorSnackbar(null);
@@ -47,10 +49,9 @@ const Register: React.FC = () => {
     }
   };
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setEmail(value);
-    setEmailError(value.includes('@') ? null : '이메일 형식이 아닙니다');
+    setid(value);
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,24 +76,38 @@ const Register: React.FC = () => {
     );
   };
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // validate phone number
+    const phoneRegex = /^[0-9]{10,11}$/;
+    if (!phoneRegex.test(value)) {
+      setPhoneError('전화번호는 숫자 10~11자리로 입력해주세요');
+      return;
+    }
+    setPhone(value);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!name || !email || !password || !passwordConfirm) {
+    console.log('handleSubmit called');
+    if (!name || !id || !password || !passwordConfirm) {
       setErrorSnackbar('모든 항목을 입력해주세요');
       return;
     }
 
-    if (emailError || passwordError || passwordMatchError) {
+    if (idError || passwordError || passwordMatchError) {
       setErrorSnackbar('입력값을 확인해주세요');
       return;
     }
+
+    console.log('유효성 검사 통과');
 
     setLoading(true);
     try {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ id, password, phone }),
       });
 
       const data = await response.json();
@@ -107,7 +122,11 @@ const Register: React.FC = () => {
       );
       setTimeout(() => navigate('/login'), 1500);
     } catch (error: any) {
-      setErrorSnackbar(error.message);
+      try {
+        setErrorSnackbar(error.message);
+      } catch {
+        setErrorSnackbar('알 수 없는 오류가 발생했습니다');
+      }
     } finally {
       setLoading(false);
     }
@@ -150,19 +169,36 @@ const Register: React.FC = () => {
             )}
 
             <TextField
-              label="이메일 주소"
+              label="아이디"
               variant="outlined"
               margin="normal"
               fullWidth
               required
-              type="email"
-              value={email}
-              onChange={handleEmailChange}
-              error={!!emailError}
+              type="id"
+              value={id}
+              onChange={handleidChange}
+              error={!!idError}
             />
-            {emailError && (
+            {idError && (
               <Typography color="error" variant="body2">
-                {emailError}
+                {idError}
+              </Typography>
+            )}
+
+            <TextField
+              label="전화번호"
+              variant="outlined"
+              margin="normal"
+              fullWidth
+              required
+              type="phone"
+              value={phone}
+              onChange={handlePhoneChange}
+              error={!!phoneError}
+            />
+            {phoneError && (
+              <Typography color="error" variant="body2">
+                {phoneError}
               </Typography>
             )}
 
@@ -204,6 +240,7 @@ const Register: React.FC = () => {
               type="submit"
               variant="contained"
               fullWidth
+              disabled={loading}
               sx={{
                 marginTop: 2,
                 backgroundColor: 'grey.700',

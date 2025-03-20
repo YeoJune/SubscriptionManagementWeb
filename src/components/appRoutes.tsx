@@ -6,6 +6,7 @@ import BoardDetail from '../components/board/boardDetail';
 import Home from '../pages/home';
 import Login from '../pages/login';
 import NotFound from '../pages/notFound';
+import Subscription from '../pages/subscription';
 import Register from '../pages/register';
 
 const AppRoutes: React.FC = () => {
@@ -17,6 +18,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/subscription" element={<Subscription />} />
       <Route path="*" element={<NotFound />} /> {/* 404 Not Found */}
     </Routes>
   );
