@@ -1,11 +1,9 @@
 // src/types.tsx
 export interface UserProps {
-  id: number;
-  name: string;
-  email: string;
-  phone_number: string;
-  role: 'admin' | 'customer';
-  delivery_count: number;
+  id: string;
+  phone_number?: string;
+  role?: 'admin' | 'customer';
+  delivery_count?: number;
 }
 
 export interface BoardProps {
@@ -27,7 +25,8 @@ export interface AuthContextProps {
   user: UserProps | null;
   isAuthenticated: boolean;
   login: (
-    user: UserProps
+    user: UserProps,
+    password: string
   ) => Promise<{ success: boolean; message: string | null }>;
   logout: () => void;
 }

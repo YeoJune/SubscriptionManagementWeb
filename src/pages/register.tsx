@@ -22,7 +22,7 @@ const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errorSnackbar, setErrorSnackbar] = useState<string | null>(null);
   const [successSnackbar, setSuccessSnackbar] = useState<string | null>(null);
-  const [phone, setPhone] = useState<string | null>(null);
+  const [phone_number, setPhone] = useState<string | null>(null);
 
   // 실시간 에러 상태
   const [nameError, setNameError] = useState<string | null>(null);
@@ -79,11 +79,6 @@ const Register: React.FC = () => {
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // validate phone number
-    const phoneRegex = /^[0-9]{10,11}$/;
-    if (!phoneRegex.test(value)) {
-      setPhoneError('전화번호는 숫자 10~11자리로 입력해주세요');
-      return;
-    }
     setPhone(value);
   };
 
@@ -107,7 +102,7 @@ const Register: React.FC = () => {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, password, phone }),
+        body: JSON.stringify({ id, password, phone_number }),
       });
 
       const data = await response.json();
@@ -192,7 +187,7 @@ const Register: React.FC = () => {
               fullWidth
               required
               type="phone"
-              value={phone}
+              value={phone_number}
               onChange={handlePhoneChange}
               error={!!phoneError}
             />

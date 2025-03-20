@@ -5,7 +5,7 @@ import { AuthContextProps, UserProps } from '../../types';
 export const AuthContext = createContext<AuthContextProps>({
   user: null,
   isAuthenticated: false,
-  login: async (_user: UserProps) => {
+  login: async (_user: UserProps, _password: string) => {
     return { success: false, message: 'Not Implemented' };
   },
   logout: () => {},
