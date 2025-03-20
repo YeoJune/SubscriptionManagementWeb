@@ -13,7 +13,15 @@ export default [
   pluginReact.configs.flat.recommended,
   {
     ignores: ['**/node_modules/**', '**/dist/**'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+    settings: {
+      react: {
+        version: 'detect',
+      },
+    },
   },
   eslintConfigPrettier,
 ];
-
