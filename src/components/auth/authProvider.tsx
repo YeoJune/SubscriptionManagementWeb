@@ -1,11 +1,13 @@
 // src/components/authProvider.tsx
 import React, { createContext, useState, useEffect } from 'react';
-import { AuthContextProps } from '../../types';
+import { AuthContextProps, UserProps } from '../../types';
 
 export const AuthContext = createContext<AuthContextProps>({
   user: null,
   isAuthenticated: false,
-  login: async () => {},
+  login: async (_user: UserProps) => {
+    return { success: false, message: 'Not Implemented' };
+  },
   logout: () => {},
 });
 
@@ -31,7 +33,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   // Login function
-  const login = async (id: string, password: string) => {
+  const login = async (user: UserProps, password: string) => {
+    const { id, phone_number } = user;
     try {
       // Call the login API
       const response = await fetch('/api/auth/login', {
@@ -40,7 +43,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ id, password }),
+        body: JSON.stringify({ id, password, phone_number }),
       });
 
       if (!response.ok) {
@@ -53,7 +56,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       const data = await response.json();
       setUser(data.user);
-      return { success: true };
+      return { success: true, message: 'Login Successful' };
     } catch (error) {
       console.error('Login Failed: ', error);
       return {
