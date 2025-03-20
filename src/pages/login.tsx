@@ -37,7 +37,12 @@ const Login: React.FC = () => {
     }
 
     setLoading(true);
-    const result = await login(id, password);
+    const result = await login(
+      {
+        id: id,
+      },
+      password
+    ); // TODO: fix
     setLoading(false);
 
     if (!result.success) {
