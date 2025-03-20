@@ -27,14 +27,17 @@ const RightButtonLogout = (logout: () => void): React.ReactNode => {
         로그아웃
       </Button>
     </>
-  )
+  );
 };
 
 const Header: React.FC = () => {
   const { isAuthenticated, logout } = useContext(AuthContext);
 
   return (
-    <AppBar position="static" sx={{ marginBottom: '1rem', backgroundColor: '#555' }}>
+    <AppBar
+      position="static"
+      sx={{ marginBottom: '1rem', backgroundColor: '#555' }}
+    >
       <Toolbar sx={{ display: 'flex' }}>
         {/* 왼쪽 영역: 로고(또는 앱 타이틀) */}
         <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
@@ -44,7 +47,9 @@ const Header: React.FC = () => {
         </Box>
 
         {/* 중앙 영역: Home, Board 버튼 (정확히 중앙) */}
-        <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', gap: 2 }}>
+        <Box
+          sx={{ flex: 1, display: 'flex', justifyContent: 'center', gap: 2 }}
+        >
           <Button color="inherit" component={Link} to="/">
             Home
           </Button>
@@ -54,7 +59,9 @@ const Header: React.FC = () => {
         </Box>
 
         {/* 오른쪽 영역: Register, Login 버튼 */}
-        <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+        <Box
+          sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end', gap: 2 }}
+        >
           {!isAuthenticated ? RightButtonLogin : RightButtonLogout(logout)}
         </Box>
       </Toolbar>

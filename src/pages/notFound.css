@@ -1,6 +1,7 @@
 /* src/pages/home.css */
 .not-found-hero {
-  background: url('https://via.placeholder.com/1200x600') no-repeat center center/cover;
+  background: url('https://via.placeholder.com/1200x600') no-repeat center
+    center/cover;
   height: 600px;
   display: flex;
   flex-direction: column;
@@ -14,4 +15,3 @@
   color: #000;
   margin-bottom: 10px;
 }
-

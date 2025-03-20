@@ -12,16 +12,16 @@ module.exports = {
       {
         test: /\.(js|jsx|ts|tsx)$/,
         exclude: /node_modules/,
-        use: 'babel-loader'
+        use: 'babel-loader',
       },
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader']
-      }
-    ]
+        use: ['style-loader', 'css-loader'],
+      },
+    ],
   },
   resolve: {
-    extensions: ['.js', '.jsx', '.ts', '.tsx']
+    extensions: ['.js', '.jsx', '.ts', '.tsx'],
   },
   mode: 'development', // 혹은 'production'
   devServer: {
@@ -35,10 +35,10 @@ module.exports = {
         context: ['/api'],
         target: 'http://localhost:3000',
         changeOrigin: true,
-      }
+      },
     ],
     hot: true,
     open: true,
     historyApiFallback: true,
-  }
+  },
 };

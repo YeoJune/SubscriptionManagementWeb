@@ -10,7 +10,7 @@ const root = document.getElementById('root');
 
 const App: React.FC = () => {
   return (
-    <Router basename='/'>
+    <Router basename="/">
       <AuthProvider>
         <Header />
         <AppRoutes />
@@ -27,5 +27,5 @@ if (root) {
     </React.StrictMode>
   );
 } else {
-  console.error("❌ Root element not found");
+  console.error('❌ Root element not found');
 }

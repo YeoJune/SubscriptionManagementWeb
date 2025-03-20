@@ -8,10 +8,13 @@ const Home: React.FC = () => {
       <section className="home-hero">
         <h2> Comming Soon! </h2>
         <p> This is a simple React app with TypeScript and Webpack. </p>
-        <Link to="#" className="btn"> Learn More </Link>
+        <Link to="#" className="btn">
+          {' '}
+          Learn More{' '}
+        </Link>
       </section>
     </div>
   );
-}
+};
 
 export default Home;

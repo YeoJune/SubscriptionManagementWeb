@@ -35,13 +35,13 @@ git clone <repository-url>
 cd SubscriptionManagementWeb
 ```
 
-2.	npm 패키지 설치:
+2. npm 패키지 설치:
 
 ```bash
 npm install
 ```
 
-3.	webpack, Babel, CSS 관련 devDependency 설치 (이미 설치되어 있지 않다면):
+3. webpack, Babel, CSS 관련 devDependency 설치 (이미 설치되어 있지 않다면):
 
 ```bash
 npm install --save-dev webpack webpack-cli webpack-dev-server babel-loader style-loader css-loader @babel/core @babel/preset-env @babel/preset-react
@@ -51,7 +51,7 @@ npm install --save-dev webpack webpack-cli webpack-dev-server babel-loader style
 
 개발 시에는 webpack-dev-server를 사용하여 핫 리로딩 및 빠른 빌드를 이용할 수 있습니다.
 
-1.	webpack.config.js 파일 내 devServer 설정을 확인합니다.
+1. webpack.config.js 파일 내 devServer 설정을 확인합니다.
 
 예시:
 
@@ -99,7 +99,7 @@ module.exports = {
 npm run dev
 ```
 
-•	명령어 실행 후 기본 브라우저가 자동으로 열리며, http://localhost:3000에서 애플리케이션을 확인할 수 있습니다.
+• 명령어 실행 후 기본 브라우저가 자동으로 열리며, http://localhost:3000에서 애플리케이션을 확인할 수 있습니다.
 
 3. **프로덕션 빌드**:
 
@@ -109,8 +109,8 @@ npm run dev
 npm run build
 ```
 
-•	위 명령어는 React 앱을 번들링하여 /public 폴더 내에 bundle.js 파일 등 빌드 결과물을 생성합니다.
-•	server.js는 이 결과물을 정적 파일로 서빙하도록 설정되어 있습니다.
+• 위 명령어는 React 앱을 번들링하여 /public 폴더 내에 bundle.js 파일 등 빌드 결과물을 생성합니다.
+• server.js는 이 결과물을 정적 파일로 서빙하도록 설정되어 있습니다.
 
 4. **Express 서버 실행**:
 
@@ -120,5 +120,4 @@ npm run build
 npm start
 ```
 
-•	이 명령어는 server.js를 실행하여 http://localhost:3000에서 애플리케이션을 제공합니다.
-
+• 이 명령어는 server.js를 실행하여 http://localhost:3000에서 애플리케이션을 제공합니다.

@@ -1,8 +1,8 @@
 /* src/pages/board.css */
 .board-container {
-  max-width: 900px;       /* 전체 게시판 너비 */
-  margin: 0 auto;         /* 가운데 정렬 */
-  padding: 2rem 1rem;     /* 위아래, 좌우 여백 */
+  max-width: 900px; /* 전체 게시판 너비 */
+  margin: 0 auto; /* 가운데 정렬 */
+  padding: 2rem 1rem; /* 위아래, 좌우 여백 */
 }
 
 .board-hero h1 {

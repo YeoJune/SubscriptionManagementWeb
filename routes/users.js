@@ -1,8 +1,8 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const checkAdmin = require("../lib/checkAdmin");
-const db = require("../lib/db");
-const { hashPassword, verifyPassword, generateSalt } = require("../lib/auth");
+const checkAdmin = require('../lib/checkAdmin');
+const db = require('../lib/db');
+const { hashPassword, verifyPassword, generateSalt } = require('../lib/auth');
 
 /*
 -- 사용자 테이블 (users)
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
 */
 
 // GET /api/users (admin) - 사용자 목록 조회
-router.get("/", checkAdmin, (req, res) => {
+router.get('/', checkAdmin, (req, res) => {
   try {
     // 페이지네이션 처리
     const page = parseInt(req.query.page) || 1;
@@ -24,11 +24,11 @@ router.get("/", checkAdmin, (req, res) => {
     const offset = (page - 1) * limit;
 
     // 검색 기능
-    const searchTerm = req.query.search || "";
+    const searchTerm = req.query.search || '';
 
     // 정렬 기능
-    const sortBy = req.query.sortBy || "id";
-    const order = req.query.order === "desc" ? "DESC" : "ASC";
+    const sortBy = req.query.sortBy || 'id';
+    const order = req.query.order === 'desc' ? 'DESC' : 'ASC';
 
     let query = `SELECT id, delivery_count, phone_number FROM users`;
     let countQuery = `SELECT COUNT(*) as total FROM users`;
@@ -70,7 +70,7 @@ router.get("/", checkAdmin, (req, res) => {
 });
 
 // GET /api/users/:id (admin) - 특정 사용자 정보 조회
-router.get("/:id", checkAdmin, (req, res) => {
+router.get('/:id', checkAdmin, (req, res) => {
   try {
     const { id } = req.params;
 
@@ -83,7 +83,7 @@ router.get("/:id", checkAdmin, (req, res) => {
         }
 
         if (!user) {
-          return res.status(404).json({ error: "사용자를 찾을 수 없습니다." });
+          return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
         }
 
         res.json(user);
@@ -95,7 +95,7 @@ router.get("/:id", checkAdmin, (req, res) => {
 });
 
 // PUT /api/users/:id (admin) - 사용자 정보 수정
-router.put("/:id", checkAdmin, (req, res) => {
+router.put('/:id', checkAdmin, (req, res) => {
   try {
     const { id } = req.params;
     const { delivery_count, phone_number, password } = req.body;
@@ -107,7 +107,7 @@ router.put("/:id", checkAdmin, (req, res) => {
       }
 
       if (!user) {
-        return res.status(404).json({ error: "사용자를 찾을 수 없습니다." });
+        return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
       }
 
       // 비밀번호 변경이 있는 경우
@@ -126,11 +126,11 @@ router.put("/:id", checkAdmin, (req, res) => {
             if (this.changes === 0) {
               return res
                 .status(404)
-                .json({ error: "사용자 업데이트에 실패했습니다." });
+                .json({ error: '사용자 업데이트에 실패했습니다.' });
             }
 
             res.json({
-              message: "사용자 정보가 성공적으로 업데이트되었습니다.",
+              message: '사용자 정보가 성공적으로 업데이트되었습니다.',
             });
           }
         );
@@ -147,11 +147,11 @@ router.put("/:id", checkAdmin, (req, res) => {
             if (this.changes === 0) {
               return res
                 .status(404)
-                .json({ error: "사용자 업데이트에 실패했습니다." });
+                .json({ error: '사용자 업데이트에 실패했습니다.' });
             }
 
             res.json({
-              message: "사용자 정보가 성공적으로 업데이트되었습니다.",
+              message: '사용자 정보가 성공적으로 업데이트되었습니다.',
             });
           }
         );
@@ -163,7 +163,7 @@ router.put("/:id", checkAdmin, (req, res) => {
 });
 
 // DELETE /api/users/:id (admin) - 사용자 삭제
-router.delete("/:id", checkAdmin, (req, res) => {
+router.delete('/:id', checkAdmin, (req, res) => {
   try {
     const { id } = req.params;
 
@@ -173,10 +173,10 @@ router.delete("/:id", checkAdmin, (req, res) => {
       }
 
       if (this.changes === 0) {
-        return res.status(404).json({ error: "사용자를 찾을 수 없습니다." });
+        return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
       }
 
-      res.json({ message: "사용자가 성공적으로 삭제되었습니다." });
+      res.json({ message: '사용자가 성공적으로 삭제되었습니다.' });
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -184,14 +184,14 @@ router.delete("/:id", checkAdmin, (req, res) => {
 });
 
 // POST /api/users (admin) - 새 사용자 추가
-router.post("/", checkAdmin, (req, res) => {
+router.post('/', checkAdmin, (req, res) => {
   try {
     const { id, password, phone_number, delivery_count = 0 } = req.body;
 
     if (!id || !password || !phone_number) {
       return res
         .status(400)
-        .json({ error: "아이디, 비밀번호, 전화번호는 필수 입력 사항입니다." });
+        .json({ error: '아이디, 비밀번호, 전화번호는 필수 입력 사항입니다.' });
     }
 
     // ID 중복 확인
@@ -201,7 +201,7 @@ router.post("/", checkAdmin, (req, res) => {
       }
 
       if (existingUser) {
-        return res.status(400).json({ error: "이미 사용 중인 아이디입니다." });
+        return res.status(400).json({ error: '이미 사용 중인 아이디입니다.' });
       }
 
       // 전화번호 중복 확인
@@ -216,7 +216,7 @@ router.post("/", checkAdmin, (req, res) => {
           if (phoneUser) {
             return res
               .status(400)
-              .json({ error: "이미 등록된 전화번호입니다." });
+              .json({ error: '이미 등록된 전화번호입니다.' });
           }
 
           // 새 사용자 생성
@@ -233,7 +233,7 @@ router.post("/", checkAdmin, (req, res) => {
 
               res.status(201).json({
                 id: id,
-                message: "사용자가 성공적으로 생성되었습니다.",
+                message: '사용자가 성공적으로 생성되었습니다.',
               });
             }
           );

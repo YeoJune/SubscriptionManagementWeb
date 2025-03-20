@@ -1,9 +1,9 @@
 // routes/payments.js
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const db = require("../lib/db");
-const { authMiddleware } = require("../lib/auth");
-const deliveryManager = require("../lib/deliveryManager");
+const db = require('../lib/db');
+const { authMiddleware } = require('../lib/auth');
+const deliveryManager = require('../lib/deliveryManager');
 
 /*
 -- 결제 테이블 (payments)
@@ -30,7 +30,7 @@ db.run(`
 `);
 
 // POST /api/payments - 결제 처리 (로그인 필요)
-router.post("/", authMiddleware, (req, res) => {
+router.post('/', authMiddleware, (req, res) => {
   try {
     const { product_id, count } = req.body;
     const user_id = req.session.user.id;
@@ -39,13 +39,13 @@ router.post("/", authMiddleware, (req, res) => {
     if (!product_id || !count) {
       return res
         .status(400)
-        .json({ error: "상품과 배송 횟수는 필수 입력 사항입니다." });
+        .json({ error: '상품과 배송 횟수는 필수 입력 사항입니다.' });
     }
 
     if (isNaN(count) || count <= 0) {
       return res
         .status(400)
-        .json({ error: "배송 횟수는 1 이상의 숫자여야 합니다." });
+        .json({ error: '배송 횟수는 1 이상의 숫자여야 합니다.' });
     }
 
     // 상품 정보 확인
@@ -58,7 +58,7 @@ router.post("/", authMiddleware, (req, res) => {
         }
 
         if (!product) {
-          return res.status(404).json({ error: "상품을 찾을 수 없습니다." });
+          return res.status(404).json({ error: '상품을 찾을 수 없습니다.' });
         }
 
         // 결제 금액 계산
@@ -89,7 +89,7 @@ router.post("/", authMiddleware, (req, res) => {
                   .createDeliverySchedule(user_id, product_id, count)
                   .then((deliveries) => {
                     res.status(201).json({
-                      message: "결제 및 배송 일정 등록이 완료되었습니다.",
+                      message: '결제 및 배송 일정 등록이 완료되었습니다.',
                       payment_id,
                       amount,
                       delivery_count: count,
@@ -111,7 +111,7 @@ router.post("/", authMiddleware, (req, res) => {
 });
 
 // GET /api/payments - 사용자 결제 내역 조회 (로그인 필요)
-router.get("/", authMiddleware, (req, res) => {
+router.get('/', authMiddleware, (req, res) => {
   try {
     const user_id = req.session.user.id;
 

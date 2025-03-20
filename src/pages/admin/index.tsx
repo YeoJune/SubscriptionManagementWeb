@@ -10,6 +10,6 @@ const Admin: React.FC = () => {
       <Route path="*" element={<NotFound />} /> {/* 404 Not Found */}
     </Routes>
   );
-}
+};
 
 export default Admin;
