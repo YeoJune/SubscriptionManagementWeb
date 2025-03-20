@@ -7,8 +7,7 @@ const notFound: React.FC = () => {
     <div className="not-found-hero">
       <h1>404 Not Found</h1>
     </div>
-  )
-}
+  );
+};
 
 export default notFound;
-

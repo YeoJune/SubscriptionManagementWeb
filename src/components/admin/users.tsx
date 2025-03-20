@@ -3,10 +3,7 @@ import React from 'react';
 
 const Users: React.FC = () => {
   // TODO: Implement Users component
-  return (
-    <></>
-  );
+  return <></>;
 };
 
-export default Users; 
-
+export default Users;

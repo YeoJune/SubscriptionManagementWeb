@@ -10,29 +10,28 @@ import React, { useState } from 'react';
 import { BoardListProps, BoardProps, UserProps } from '../types';
 import './board.css';
 
-
 // TODO: get users list from DB
 const user: UserProps = {
   id: 1,
-  name: "Yeo",
-  email: "Yeo@korea.ac.kr",
-  role: 'admin'
-}
+  name: 'Yeo',
+  email: 'Yeo@korea.ac.kr',
+  role: 'admin',
+};
 
 // TODO: get boards list from DB
 const boards: BoardListProps = {
   boards: [
     {
       id: 1,
-      title: "Hello, world!",
-      content: "Hello, world!",
+      title: 'Hello, world!',
+      content: 'Hello, world!',
       author: user,
       category: 'notice',
       isPublic: true,
       createdAt: new Date(),
       updatedAt: new Date(),
-    }
-  ]
+    },
+  ],
 };
 
 // TODO: Add a board component that will display the board list
@@ -41,11 +40,11 @@ const Board: React.FC = () => {
 
   const handleBoardClick = (board: BoardProps) => {
     setSelectedBoard(board);
-  }
+  };
 
   const handleClose = () => {
     setSelectedBoard(null);
-  }
+  };
 
   return (
     <div className="board-container">
@@ -63,9 +62,7 @@ const Board: React.FC = () => {
           <>
             <DialogTitle>{selectedBoard.title}</DialogTitle>
             <DialogContent>
-              <DialogContentText>
-                {selectedBoard.content}
-              </DialogContentText>
+              <DialogContentText>{selectedBoard.content}</DialogContentText>
             </DialogContent>
             <DialogActions>
               <Button onClick={handleClose} color="primary">
@@ -76,8 +73,7 @@ const Board: React.FC = () => {
         )}
       </Dialog>
     </div>
-  )
-}
+  );
+};
 
 export default Board;
-

@@ -1,10 +1,10 @@
 // routes/delivery.js
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const checkAdmin = require("../lib/checkAdmin");
-const { authMiddleware } = require("../lib/auth");
-const db = require("../lib/db");
-const deliveryManager = require("../lib/deliveryManager");
+const checkAdmin = require('../lib/checkAdmin');
+const { authMiddleware } = require('../lib/auth');
+const db = require('../lib/db');
+const deliveryManager = require('../lib/deliveryManager');
 
 /*
 -- 배달 목록 테이블 (delivery_list)
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS delivery_list (
 */
 
 // GET /api/delivery (admin) - 배송 목록 조회 (관리자용)
-router.get("/", checkAdmin, async (req, res) => {
+router.get('/', checkAdmin, async (req, res) => {
   try {
     // 페이지네이션 처리
     const page = parseInt(req.query.page) || 1;
@@ -29,8 +29,8 @@ router.get("/", checkAdmin, async (req, res) => {
     const { search, status, date } = req.query;
 
     // 정렬
-    const sortBy = req.query.sortBy || "date";
-    const order = req.query.order === "desc" ? "DESC" : "ASC";
+    const sortBy = req.query.sortBy || 'date';
+    const order = req.query.order === 'desc' ? 'DESC' : 'ASC';
 
     // 쿼리 구성
     let query = `
@@ -70,7 +70,7 @@ router.get("/", checkAdmin, async (req, res) => {
     }
 
     if (conditions.length > 0) {
-      const whereClause = ` WHERE ${conditions.join(" AND ")}`;
+      const whereClause = ` WHERE ${conditions.join(' AND ')}`;
       query += whereClause;
       countQuery += whereClause;
     }
@@ -107,7 +107,7 @@ router.get("/", checkAdmin, async (req, res) => {
 });
 
 // GET /api/delivery/today (admin) - 당일 배송 목록 조회
-router.get("/today", checkAdmin, async (req, res) => {
+router.get('/today', checkAdmin, async (req, res) => {
   try {
     const deliveries = await deliveryManager.getTodayDeliveries();
     res.json({ deliveries });
@@ -117,35 +117,33 @@ router.get("/today", checkAdmin, async (req, res) => {
 });
 
 // PUT /api/delivery/:id (admin) - 배송 상태 변경
-router.put("/:id", checkAdmin, async (req, res) => {
+router.put('/:id', checkAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
     // 유효성 검사
     if (!status) {
-      return res.status(400).json({ error: "상태는 필수 입력 사항입니다." });
+      return res.status(400).json({ error: '상태는 필수 입력 사항입니다.' });
     }
 
-    if (!["pending", "complete", "cancel"].includes(status)) {
-      return res
-        .status(400)
-        .json({
-          error: "상태는 'pending', 'complete', 'cancel' 중 하나여야 합니다.",
-        });
+    if (!['pending', 'complete', 'cancel'].includes(status)) {
+      return res.status(400).json({
+        error: "상태는 'pending', 'complete', 'cancel' 중 하나여야 합니다.",
+      });
     }
 
     // 배송 상태 업데이트
     const result = await deliveryManager.updateDeliveryStatus(id, status);
 
     // 사용자 배송 잔여 횟수 감소 (배송 취소 시)
-    if (status === "cancel") {
+    if (status === 'cancel') {
       db.get(
         `SELECT user_id FROM delivery_list WHERE id = ?`,
         [id],
         (err, delivery) => {
           if (err || !delivery) {
-            console.error("배송 취소 시 사용자 정보 조회 오류:", err);
+            console.error('배송 취소 시 사용자 정보 조회 오류:', err);
           } else {
             // 사용자의 배송 잔여 횟수 증가 (환불)
             db.run(
@@ -153,7 +151,7 @@ router.put("/:id", checkAdmin, async (req, res) => {
               [delivery.user_id],
               (err) => {
                 if (err) {
-                  console.error("배송 횟수 업데이트 오류:", err);
+                  console.error('배송 횟수 업데이트 오류:', err);
                 }
               }
             );
@@ -172,11 +170,11 @@ router.put("/:id", checkAdmin, async (req, res) => {
 });
 
 // GET /api/delivery/check-counts (admin) - 배송 잔여 횟수 확인 및 알림 발송
-router.get("/check-counts", checkAdmin, async (req, res) => {
+router.get('/check-counts', checkAdmin, async (req, res) => {
   try {
     const users = await deliveryManager.checkDeliveryCount();
     res.json({
-      message: "배송 잔여 횟수 확인 및 알림 발송 완료",
+      message: '배송 잔여 횟수 확인 및 알림 발송 완료',
       users_notified: users.length,
     });
   } catch (error) {
@@ -185,7 +183,7 @@ router.get("/check-counts", checkAdmin, async (req, res) => {
 });
 
 // GET /api/delivery/my (user) - 사용자 자신의 배송 목록 조회
-router.get("/my", authMiddleware, async (req, res) => {
+router.get('/my', authMiddleware, async (req, res) => {
   try {
     const user_id = req.session.user.id;
     const { page, limit, status } = req.query;

@@ -1,6 +1,14 @@
 // src/components/board/boardList.tsx
 import React from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from '@mui/material';
 import { BoardListProps, BoardProps } from '../../types';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,11 +20,18 @@ const BoardList: React.FC<BoardListProps> = ({ boards }) => {
   };
 
   return (
-    <TableContainer component={Paper} sx={{ maxWidth: 900, margin: '0 auto', marginTop: 4 }}>
+    <TableContainer
+      component={Paper}
+      sx={{ maxWidth: 900, margin: '0 auto', marginTop: 4 }}
+    >
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell align="center" colSpan={5} sx={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+            <TableCell
+              align="center"
+              colSpan={5}
+              sx={{ fontSize: '1.5rem', fontWeight: 'bold' }}
+            >
               공지사항
             </TableCell>
           </TableRow>
@@ -30,7 +45,11 @@ const BoardList: React.FC<BoardListProps> = ({ boards }) => {
         </TableHead>
         <TableBody>
           {boards.map((board) => (
-            <TableRow key={board.id} onClick={() => handleBoardClick(board)} sx={{ cursor: 'pointer' }}>
+            <TableRow
+              key={board.id}
+              onClick={() => handleBoardClick(board)}
+              sx={{ cursor: 'pointer' }}
+            >
               <TableCell>{board.title}</TableCell>
               <TableCell>{board.content}</TableCell>
               <TableCell>{board.author.name}</TableCell>
@@ -41,8 +60,7 @@ const BoardList: React.FC<BoardListProps> = ({ boards }) => {
         </TableBody>
       </Table>
     </TableContainer>
-  )
+  );
 };
 
 export default BoardList;
-

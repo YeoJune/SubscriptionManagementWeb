@@ -20,6 +20,6 @@ const AppRoutes: React.FC = () => {
       <Route path="*" element={<NotFound />} /> {/* 404 Not Found */}
     </Routes>
   );
-}
+};
 
 export default AppRoutes;

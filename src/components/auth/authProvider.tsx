@@ -5,8 +5,8 @@ import { AuthContextProps } from '../../types';
 export const AuthContext = createContext<AuthContextProps>({
   user: null,
   isAuthenticated: false,
-  login: async () => { },
-  logout: () => { },
+  login: async () => {},
+  logout: () => {},
 });
 
 interface AuthProviderProps {
@@ -41,12 +41,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         },
         credentials: 'include',
         body: JSON.stringify({ id, password }),
-      })
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
         return {
-          success: false, message: errorData.message || 'Login Failed',
+          success: false,
+          message: errorData.message || 'Login Failed',
         };
       }
 
@@ -56,7 +57,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Login Failed: ', error);
       return {
-        success: false, message: 'An Unexpected Error Occurred',
+        success: false,
+        message: 'An Unexpected Error Occurred',
       };
     }
   };
@@ -77,9 +79,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 };
-

@@ -15,10 +15,18 @@ const Footer: React.FC = () => {
         <div className="footer-section">
           <h4>Quick Links</h4>
           <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/products">Products</a></li>
-            <li><a href="/contact">Contact</a></li>
-            <li><a href="/about">About</a></li>
+            <li>
+              <a href="/">Home</a>
+            </li>
+            <li>
+              <a href="/products">Products</a>
+            </li>
+            <li>
+              <a href="/contact">Contact</a>
+            </li>
+            <li>
+              <a href="/about">About</a>
+            </li>
           </ul>
         </div>
         {/* Contact Information */}
@@ -30,7 +38,10 @@ const Footer: React.FC = () => {
         </div>
       </div>
       <div className="footer-bottom">
-        <p>&copy; 2025~{new Date().getFullYear()} Shopping Mall. All rights reserved.</p>
+        <p>
+          &copy; 2025~{new Date().getFullYear()} Shopping Mall. All rights
+          reserved.
+        </p>
       </div>
     </footer>
   );

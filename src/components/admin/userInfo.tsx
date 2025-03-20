@@ -4,9 +4,7 @@ import React from 'react';
 const UserInfo: React.FC = () => {
   return (
     // TODO: Implement BoardList component
-    <div>
-      BoardList
-    </div>
+    <div>BoardList</div>
   );
 };
 

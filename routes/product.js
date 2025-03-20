@@ -1,7 +1,7 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const checkAdmin = require("../lib/checkAdmin");
-const db = require("../lib/db");
+const checkAdmin = require('../lib/checkAdmin');
+const db = require('../lib/db');
 
 /*
 -- 상품 테이블 (product)
@@ -25,7 +25,7 @@ db.run(`
 `);
 
 // GET /api/products - 상품 목록 조회
-router.get("/", (req, res) => {
+router.get('/', (req, res) => {
   try {
     // 페이지네이션 처리
     const page = parseInt(req.query.page) || 1;
@@ -33,11 +33,11 @@ router.get("/", (req, res) => {
     const offset = (page - 1) * limit;
 
     // 검색 기능
-    const searchTerm = req.query.search || "";
+    const searchTerm = req.query.search || '';
 
     // 정렬 기능
-    const sortBy = req.query.sortBy || "name";
-    const order = req.query.order === "desc" ? "DESC" : "ASC";
+    const sortBy = req.query.sortBy || 'name';
+    const order = req.query.order === 'desc' ? 'DESC' : 'ASC';
 
     let query = `SELECT id, name, description, price FROM product`;
     let countQuery = `SELECT COUNT(*) as total FROM product`;
@@ -79,7 +79,7 @@ router.get("/", (req, res) => {
 });
 
 // GET /api/products/:id - 특정 상품 조회
-router.get("/:id", (req, res) => {
+router.get('/:id', (req, res) => {
   try {
     const { id } = req.params;
 
@@ -92,7 +92,7 @@ router.get("/:id", (req, res) => {
         }
 
         if (!product) {
-          return res.status(404).json({ error: "상품을 찾을 수 없습니다." });
+          return res.status(404).json({ error: '상품을 찾을 수 없습니다.' });
         }
 
         res.json(product);
@@ -104,7 +104,7 @@ router.get("/:id", (req, res) => {
 });
 
 // POST /api/products (admin) - 상품 등록
-router.post("/", checkAdmin, (req, res) => {
+router.post('/', checkAdmin, (req, res) => {
   try {
     const { name, description, price } = req.body;
 
@@ -112,20 +112,20 @@ router.post("/", checkAdmin, (req, res) => {
     if (!name || price === undefined) {
       return res
         .status(400)
-        .json({ error: "상품명과 가격은 필수 입력 사항입니다." });
+        .json({ error: '상품명과 가격은 필수 입력 사항입니다.' });
     }
 
     // 가격 유효성 검사
     if (isNaN(price) || price < 0) {
       return res
         .status(400)
-        .json({ error: "가격은 0 이상의 숫자여야 합니다." });
+        .json({ error: '가격은 0 이상의 숫자여야 합니다.' });
     }
 
     // 데이터베이스에 저장
     db.run(
       `INSERT INTO product (name, description, price) VALUES (?, ?, ?)`,
-      [name, description || "", price],
+      [name, description || '', price],
       function (err) {
         if (err) {
           return res.status(500).json({ error: err.message });
@@ -133,7 +133,7 @@ router.post("/", checkAdmin, (req, res) => {
 
         res.status(201).json({
           id: this.lastID,
-          message: "상품이 성공적으로 등록되었습니다.",
+          message: '상품이 성공적으로 등록되었습니다.',
         });
       }
     );
@@ -143,7 +143,7 @@ router.post("/", checkAdmin, (req, res) => {
 });
 
 // PUT /api/products/:id (admin) - 상품 수정
-router.put("/:id", checkAdmin, (req, res) => {
+router.put('/:id', checkAdmin, (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, price } = req.body;
@@ -152,14 +152,14 @@ router.put("/:id", checkAdmin, (req, res) => {
     if (!name || price === undefined) {
       return res
         .status(400)
-        .json({ error: "상품명과 가격은 필수 입력 사항입니다." });
+        .json({ error: '상품명과 가격은 필수 입력 사항입니다.' });
     }
 
     // 가격 유효성 검사
     if (isNaN(price) || price < 0) {
       return res
         .status(400)
-        .json({ error: "가격은 0 이상의 숫자여야 합니다." });
+        .json({ error: '가격은 0 이상의 숫자여야 합니다.' });
     }
 
     // 해당 상품이 존재하는지 확인
@@ -169,13 +169,13 @@ router.put("/:id", checkAdmin, (req, res) => {
       }
 
       if (!product) {
-        return res.status(404).json({ error: "상품을 찾을 수 없습니다." });
+        return res.status(404).json({ error: '상품을 찾을 수 없습니다.' });
       }
 
       // 데이터베이스 업데이트
       db.run(
         `UPDATE product SET name = ?, description = ?, price = ? WHERE id = ?`,
-        [name, description || "", price, id],
+        [name, description || '', price, id],
         function (err) {
           if (err) {
             return res.status(500).json({ error: err.message });
@@ -184,12 +184,12 @@ router.put("/:id", checkAdmin, (req, res) => {
           if (this.changes === 0) {
             return res
               .status(404)
-              .json({ error: "상품 업데이트에 실패했습니다." });
+              .json({ error: '상품 업데이트에 실패했습니다.' });
           }
 
           res.json({
             id: parseInt(id),
-            message: "상품이 성공적으로 수정되었습니다.",
+            message: '상품이 성공적으로 수정되었습니다.',
           });
         }
       );
@@ -200,7 +200,7 @@ router.put("/:id", checkAdmin, (req, res) => {
 });
 
 // DELETE /api/products/:id (admin) - 상품 삭제
-router.delete("/:id", checkAdmin, (req, res) => {
+router.delete('/:id', checkAdmin, (req, res) => {
   try {
     const { id } = req.params;
 
@@ -211,7 +211,7 @@ router.delete("/:id", checkAdmin, (req, res) => {
       }
 
       if (!product) {
-        return res.status(404).json({ error: "상품을 찾을 수 없습니다." });
+        return res.status(404).json({ error: '상품을 찾을 수 없습니다.' });
       }
 
       // 데이터베이스에서 삭제
@@ -221,11 +221,11 @@ router.delete("/:id", checkAdmin, (req, res) => {
         }
 
         if (this.changes === 0) {
-          return res.status(404).json({ error: "상품 삭제에 실패했습니다." });
+          return res.status(404).json({ error: '상품 삭제에 실패했습니다.' });
         }
 
         res.json({
-          message: "상품이 성공적으로 삭제되었습니다.",
+          message: '상품이 성공적으로 삭제되었습니다.',
         });
       });
     });

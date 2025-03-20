@@ -1,6 +1,14 @@
 // src/pages/login.tsx import React, { useState, useContext } from 'react';
+import React from 'react';
 import { AuthContext } from '../components/auth/authProvider';
-import { Container, Box, Paper, Typography, TextField, Button } from '@mui/material';
+import {
+  Container,
+  Box,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+} from '@mui/material';
 import { Snackbar, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useState, useContext } from 'react';
@@ -36,7 +44,7 @@ const Login: React.FC = () => {
       setError(result.message);
       setOpenSnackbar(true);
     } else {
-      navigate('/')
+      navigate('/');
     }
   };
 
@@ -92,7 +100,7 @@ const Login: React.FC = () => {
               sx={{
                 marginTop: 2,
                 backgroundColor: 'grey.700',
-                ':hover': { backgroundColor: 'grey.800' }
+                ':hover': { backgroundColor: 'grey.800' },
               }}
               disabled={loading}
             >
