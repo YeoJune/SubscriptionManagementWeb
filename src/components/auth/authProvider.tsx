@@ -16,7 +16,7 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<UserProps | null>(null);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -25,7 +25,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       if (response.ok) {
         const data = await response.json();
-        setUser(data.user);
+        const transformedUser = {
+          id: data.user.id,
+          phone_number: data.user.phone_number,
+          role: data.user.isAdmin ? 'admin' : 'customer',
+          delivery_count: data.user.delivery_count,
+        } as UserProps;
+        setUser(transformedUser);
       }
     };
 
