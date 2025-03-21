@@ -82,7 +82,7 @@ const AdminUsers: React.FC = () => {
 
   // 사용자 행 클릭 시 상세 페이지로 이동
   const handleRowClick = (id: number) => {
-    navigate(`/admin/user/${id}`);
+    navigate(`/admin/users/${id}`);
   };
 
   return (
