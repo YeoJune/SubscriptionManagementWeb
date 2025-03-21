@@ -7,9 +7,6 @@ import Login from '../pages/login';
 import NotFound from '../pages/notFound';
 import Subscription from '../pages/subscription';
 import Register from '../pages/register';
-import Users from '../components/admin/users';
-import UserInfo from '../components/admin/userInfo';
-import AdminIndex from '../pages/admin/adminIndex';
 import Delivery from '../pages/admin/delivery';
 import Profile from '../pages/profile';
 
@@ -21,9 +18,6 @@ const AppRoutes: React.FC = () => {
       <Route path="/board/:id" element={<BoardDetail />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/admin" element={<AdminIndex />} />
-      <Route path="/admin/users" element={<Users />} />
-      <Route path="/admin/users/:id" element={<UserInfo />} />
       <Route path="/admin/delivery" element={<Delivery />} />
       <Route path="/subscription" element={<Subscription />} />
       <Route path="/profile" element={<Profile />} />
