@@ -19,6 +19,7 @@ export interface BoardProps {
 
 export interface BoardListProps {
   boards: BoardProps[];
+  onBoardClick: (board: BoardProps) => void;
 }
 
 export interface AuthContextProps {
