@@ -81,7 +81,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const contextValue: AuthContextProps = {
-    user: null,
+    user: user,
     isAuthenticated: !!user,
     login,
     logout,
