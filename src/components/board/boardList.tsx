@@ -38,9 +38,7 @@ const BoardList: React.FC<BoardListProps> = ({ boards }) => {
           <TableRow>
             <TableCell>제목</TableCell>
             <TableCell>내용</TableCell>
-            <TableCell>작성자</TableCell>
             <TableCell>작성일</TableCell>
-            <TableCell>공개 여부</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -52,9 +50,7 @@ const BoardList: React.FC<BoardListProps> = ({ boards }) => {
             >
               <TableCell>{board.title}</TableCell>
               <TableCell>{board.content}</TableCell>
-              <TableCell>{board.author.name}</TableCell>
               <TableCell>{board.createdAt.toLocaleString()}</TableCell>
-              <TableCell>{board.isPublic ? '공개' : '비공개'}</TableCell>
             </TableRow>
           ))}
         </TableBody>
