@@ -1,12 +1,12 @@
+// src/pages/board.tsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import BoardList from '../components/board/boardList';
 import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import { Typography, Box, CircularProgress } from '@mui/material';
 import { BoardProps } from '../types';
 import './board.css';
 
@@ -14,49 +14,61 @@ const PAGE_SIZE = 10; // Number of items per page
 
 const Board: React.FC = () => {
   const [boards, setBoards] = useState<BoardProps[]>([]);
-  const [selectedBoard, setSelectedBoard] = useState<BoardProps | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [activeTab, setActiveTab] = useState<'normal' | 'faq'>('normal');
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchBoards();
-  }, [currentPage]); // Fetch data when `currentPage` changes
+  }, [currentPage, activeTab]); // Fetch data when `currentPage` or `activeTab` changes
 
   const fetchBoards = async () => {
     setLoading(true);
     try {
       const response = await axios.get('/api/notices', {
-        params: { page: currentPage, limit: PAGE_SIZE },
+        params: {
+          page: currentPage,
+          limit: PAGE_SIZE,
+          type: activeTab,
+        },
       });
+
       const notices = response.data.notices.map((notice: any) => ({
         id: notice.id,
         title: notice.title,
-        content: notice.content || notice.answer,
-        category: notice.type,
+        content: notice.content || '',
+        type: notice.type,
+        question: notice.question || '',
+        answer: notice.answer || '',
         createdAt: new Date(notice.created_at),
       }));
+
       setBoards(notices);
-      
-      // ✅ Ensure totalPages is always valid
-      const total = response.data.total ?? 0; // Default to 0 if undefined
-      setTotalPages(total > 0 ? Math.ceil(total / PAGE_SIZE) : 1); 
-      
+
+      // Ensure totalPages is always valid
+      const total = response.data.pagination?.total ?? 0;
+      setTotalPages(total > 0 ? Math.ceil(total / PAGE_SIZE) : 1);
+
       setLoading(false);
     } catch (err) {
-      setError('데이터를 불러오는 중 오류가 발생했습니다.');
+      if (err) setError('데이터를 불러오는 중 오류가 발생했습니다.');
       setLoading(false);
     }
   };
-  
 
   const handleBoardClick = (board: BoardProps) => {
-    setSelectedBoard(board);
+    navigate(`/board/${board.id}`);
   };
 
-  const handleClose = () => {
-    setSelectedBoard(null);
+  const handleTabChange = (
+    _: React.SyntheticEvent,
+    newValue: 'normal' | 'faq'
+  ) => {
+    setActiveTab(newValue);
+    setCurrentPage(1); // Reset to first page when changing tabs
   };
 
   const goToPreviousPage = () => {
@@ -69,8 +81,28 @@ const Board: React.FC = () => {
 
   return (
     <div className="board-container">
-      {loading && <p>📦 데이터를 불러오는 중...</p>}
-      {error && <p style={{ color: 'red' }}>⚠️ {error}</p>}
+      <Typography variant="h4" component="h1" gutterBottom textAlign="center">
+        공지사항
+      </Typography>
+
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={activeTab} onChange={handleTabChange} centered>
+          <Tab label="공지사항" value="normal" />
+          <Tab label="FAQ" value="faq" />
+        </Tabs>
+      </Box>
+
+      {loading && (
+        <Box display="flex" justifyContent="center" my={4}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {error && (
+        <Typography color="error" textAlign="center" my={4}>
+          ⚠️ {error}
+        </Typography>
+      )}
 
       {!loading && !error && (
         <>
@@ -79,44 +111,74 @@ const Board: React.FC = () => {
           {/* Pagination Buttons */}
           <div className="pagination">
             <Button onClick={goToPreviousPage} disabled={currentPage === 1}>
-              -
+              이전
             </Button>
-            {[...Array(totalPages)].map((_, index) => (
-              <Button
-                key={index + 1}
-                onClick={() => setCurrentPage(index + 1)}
-                variant={currentPage === index + 1 ? 'contained' : 'outlined'}
-                style = {{
-                  backgroundColor: currentPage === index + 1 ? '#4caf50' : 'transparent',
-                  color: currentPage === index + 1 ? 'white' : '#9e9e9e',
-                }}
-              >
-                {index + 1}
-              </Button>
-            ))}
-            <Button onClick={goToNextPage} disabled={currentPage === totalPages}>
-              +
+            {totalPages <= 5 ? (
+              // Show all pages if 5 or fewer
+              [...Array(totalPages)].map((_, index) => (
+                <Button
+                  key={index + 1}
+                  onClick={() => setCurrentPage(index + 1)}
+                  variant={currentPage === index + 1 ? 'contained' : 'outlined'}
+                  sx={{
+                    mx: 0.5,
+                    backgroundColor:
+                      currentPage === index + 1 ? '#4caf50' : 'transparent',
+                    color: currentPage === index + 1 ? 'white' : '#9e9e9e',
+                  }}
+                >
+                  {index + 1}
+                </Button>
+              ))
+            ) : (
+              // Show limited page buttons with ellipsis for many pages
+              <>
+                {currentPage > 1 && (
+                  <Button onClick={() => setCurrentPage(1)}>1</Button>
+                )}
+                {currentPage > 3 && <span>...</span>}
+
+                {[...Array(5)].map((_, idx) => {
+                  const pageNum = Math.max(2, currentPage - 2) + idx;
+                  if (pageNum >= 2 && pageNum <= totalPages - 1) {
+                    return (
+                      <Button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        variant={
+                          currentPage === pageNum ? 'contained' : 'outlined'
+                        }
+                        sx={{
+                          mx: 0.5,
+                          backgroundColor:
+                            currentPage === pageNum ? '#4caf50' : 'transparent',
+                          color: currentPage === pageNum ? 'white' : '#9e9e9e',
+                        }}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  }
+                  return null;
+                })}
+
+                {currentPage < totalPages - 2 && <span>...</span>}
+                {currentPage < totalPages && (
+                  <Button onClick={() => setCurrentPage(totalPages)}>
+                    {totalPages}
+                  </Button>
+                )}
+              </>
+            )}
+            <Button
+              onClick={goToNextPage}
+              disabled={currentPage === totalPages}
+            >
+              다음
             </Button>
           </div>
         </>
       )}
-
-      {/* MUI Dialog for selected board content */}
-      <Dialog open={Boolean(selectedBoard)} onClose={handleClose} fullWidth maxWidth="md">
-        {selectedBoard && (
-          <>
-            <DialogTitle>{selectedBoard.title}</DialogTitle>
-            <DialogContent>
-              <DialogContentText>{selectedBoard.content}</DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClose} color="primary">
-                닫기
-              </Button>
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
     </div>
   );
 };

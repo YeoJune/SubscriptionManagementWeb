@@ -1,7 +1,6 @@
 // src/components/shippingInfo.tsx
 import React, { useState, useEffect } from 'react';
 import {
-  Container,
   Typography,
   Paper,
   CircularProgress,
@@ -14,15 +13,10 @@ import {
   TableRow,
   Box,
   Pagination,
+  Chip,
 } from '@mui/material';
-
-interface Delivery {
-  id: number;
-  status: string;
-  date: string;
-  product_id: number;
-  product_name: string;
-}
+import axios from 'axios';
+import { DeliveryProps } from '../types';
 
 interface PaginationData {
   total: number;
@@ -31,105 +25,123 @@ interface PaginationData {
   limit: number;
 }
 
-interface MyDeliveryResponse {
-  deliveries: Delivery[];
-  pagination: PaginationData;
-}
-
 const ShippingInfo: React.FC = () => {
-  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [deliveries, setDeliveries] = useState<DeliveryProps[]>([]);
   const [pagination, setPagination] = useState<PaginationData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
 
   useEffect(() => {
-    const fetchMyDeliveries = async () => {
-      setLoading(true);
-      try {
-        // 개인 배송 목록 조회 API 호출 (기본 페이지: 1, 페이지당 항목 수: 10)
-        const response = await fetch(`/api/delivery/my?page=${page}&limit=10`);
-        if (!response.ok) {
-          throw new Error('배송 내역을 불러오는 데 실패했습니다.');
-        }
-        const data: MyDeliveryResponse = await response.json();
-        setDeliveries(data.deliveries);
-        setPagination(data.pagination);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchMyDeliveries();
   }, [page]);
 
-  const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
-    value: number
-  ) => {
+  const fetchMyDeliveries = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('/api/delivery/my', {
+        params: { page, limit: 10 },
+      });
+
+      setDeliveries(response.data.deliveries);
+      setPagination(response.data.pagination);
+      setLoading(false);
+    } catch (err) {
+      console.error('Failed to fetch deliveries:', err);
+      setError('배송 내역을 불러오는 중 오류가 발생했습니다.');
+      setLoading(false);
+    }
+  };
+
+  const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
+  };
+
+  // 배송 상태별 색상 및 라벨
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return { color: 'warning', label: '배송 대기' };
+      case 'complete':
+        return { color: 'success', label: '배송 완료' };
+      case 'cancel':
+        return { color: 'error', label: '배송 취소' };
+      default:
+        return { color: 'default', label: status };
+    }
   };
 
   if (loading) {
     return (
-      <Container sx={{ textAlign: 'center', marginTop: '2rem' }}>
+      <Box display="flex" justifyContent="center" my={4}>
         <CircularProgress />
-      </Container>
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <Container sx={{ marginTop: '2rem' }}>
-        <Alert severity="error">{error}</Alert>
-      </Container>
+      <Alert severity="error" sx={{ mt: 2 }}>
+        {error}
+      </Alert>
     );
   }
 
   return (
-    <Container maxWidth="md" sx={{ marginTop: '2rem' }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        내 배송 내역
+    <Box width="100%">
+      <Typography variant="h5" component="h2" gutterBottom>
+        배송 내역
       </Typography>
+
       {deliveries.length === 0 ? (
-        <Typography variant="h6">배송 정보를 찾을 수 없습니다. </Typography>
+        <Alert severity="info">배송 내역이 없습니다.</Alert>
       ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>배송 상태</TableCell>
-                <TableCell>배송일</TableCell>
-                <TableCell>제품명</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {deliveries.map((delivery) => (
-                <TableRow key={delivery.id}>
-                  <TableCell>{delivery.id}</TableCell>
-                  <TableCell>{delivery.status}</TableCell>
-                  <TableCell>{delivery.date}</TableCell>
-                  <TableCell>{delivery.product_name}</TableCell>
+        <>
+          <TableContainer component={Paper} elevation={3}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>배송일</TableCell>
+                  <TableCell>상품명</TableCell>
+                  <TableCell align="center">상태</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {deliveries.map((delivery) => {
+                  const statusInfo = getStatusInfo(delivery.status);
+                  return (
+                    <TableRow key={delivery.id}>
+                      <TableCell>
+                        {new Date(delivery.date).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>{delivery.product_name}</TableCell>
+                      <TableCell align="center">
+                        <Chip
+                          label={statusInfo.label}
+                          color={statusInfo.color as any}
+                          size="small"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {pagination && pagination.totalPages > 1 && (
+            <Box display="flex" justifyContent="center" mt={2}>
+              <Pagination
+                count={pagination.totalPages}
+                page={page}
+                onChange={handlePageChange}
+                color="primary"
+              />
+            </Box>
+          )}
+        </>
       )}
-      {deliveries.length != 0 && pagination && (
-        <Box display="flex" justifyContent="center" mt={2}>
-          <Pagination
-            count={pagination.totalPages}
-            page={page}
-            onChange={handlePageChange}
-            color="primary"
-          />
-        </Box>
-      )}
-    </Container>
+    </Box>
   );
 };
 

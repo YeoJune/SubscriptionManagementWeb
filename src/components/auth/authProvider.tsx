@@ -1,14 +1,14 @@
-// src/components/authProvider.tsx
+// src/components/auth/authProvider.tsx
 import React, { createContext, useState, useEffect } from 'react';
 import { AuthContextProps, UserProps } from '../../types';
 
 export const AuthContext = createContext<AuthContextProps>({
   user: null,
   isAuthenticated: false,
-  login: async (_user: UserProps, _password: string) => {
+  login: async (_id: string, _password: string) => {
     return { success: false, message: 'Not Implemented' };
   },
-  logout: () => {},
+  logout: async () => {},
 });
 
 interface AuthProviderProps {
@@ -20,18 +20,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const response = await fetch('/api/auth', {
-        credentials: 'include',
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const transformedUser = {
-          id: data.user.id,
-          phone_number: data.user.phone_number,
-          role: data.user.isAdmin ? 'admin' : 'customer',
-          delivery_count: data.user.delivery_count,
-        } as UserProps;
-        setUser(transformedUser);
+      try {
+        const response = await fetch('/api/auth', {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+        }
+      } catch (error) {
+        console.error('Session check failed:', error);
       }
     };
 
@@ -39,8 +37,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   // Login function
-  const login = async (user: UserProps, password: string) => {
-    const { id, phone_number } = user;
+  const login = async (id: string, password: string) => {
     try {
       // Call the login API
       const response = await fetch('/api/auth/login', {
@@ -49,39 +46,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ id, password, phone_number }),
+        body: JSON.stringify({ id, password }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
         return {
           success: false,
-          message: errorData.message || 'Login Failed',
+          message: errorData.error || '로그인에 실패했습니다.',
         };
       }
 
       const data = await response.json();
       setUser(data.user);
-      return { success: true, message: 'Login Successful' };
+      return {
+        success: true,
+        message: data.message || '로그인에 성공했습니다.',
+      };
     } catch (error) {
       console.error('Login Failed: ', error);
       return {
         success: false,
-        message: 'An Unexpected Error Occurred',
+        message: '예기치 않은 오류가 발생했습니다.',
       };
     }
   };
 
   const logout = async () => {
-    await fetch('/api/auth/logout', {
-      method: 'POST',
-      credentials: 'include',
-    });
-    setUser(null);
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      setUser(null);
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   const contextValue: AuthContextProps = {
-    user: user,
+    user,
     isAuthenticated: !!user,
     login,
     logout,

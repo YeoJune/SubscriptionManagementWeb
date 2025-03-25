@@ -1,6 +1,5 @@
-// src/pages/login.tsx import React, { useState, useContext } from 'react';
-import React from 'react';
-import { AuthContext } from '../components/auth/authProvider';
+// src/pages/login.tsx
+import React, { useState } from 'react';
 import {
   Container,
   Box,
@@ -8,14 +7,16 @@ import {
   Typography,
   TextField,
   Button,
+  Snackbar,
+  Alert,
+  Link as MuiLink,
 } from '@mui/material';
-import { Snackbar, Alert } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { useState, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext);
+  const { login } = useAuth();
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -31,18 +32,13 @@ const Login: React.FC = () => {
     setError(null);
 
     if (!id || !password) {
-      setError('ID 또는 비밀번호를 입력해주세요.');
+      setError('아이디와 비밀번호를 모두 입력해주세요.');
       setOpenSnackbar(true);
       return;
     }
 
     setLoading(true);
-    const result = await login(
-      {
-        id: id,
-      },
-      password
-    ); // TODO: fix
+    const result = await login(id, password);
     setLoading(false);
 
     if (!result.success) {
@@ -59,25 +55,25 @@ const Login: React.FC = () => {
         display="flex"
         justifyContent="center"
         alignItems="center"
-        minHeight="100vh"
+        minHeight="calc(100vh - 100px)" // 헤더 높이 고려
+        py={4}
       >
-        <Paper elevation={3} style={{ padding: '2rem', width: '100%' }}>
+        <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
           <Typography variant="h4" component="h1" align="center" gutterBottom>
             로그인
           </Typography>
           <form onSubmit={handleSubmit}>
             <TextField
-              label="ID"
+              label="아이디"
               variant="outlined"
               margin="normal"
               fullWidth
               required
-              type="id"
               value={id}
               onChange={(e) => setId(e.target.value)}
             />
             <TextField
-              label="Password"
+              label="비밀번호"
               variant="outlined"
               margin="normal"
               fullWidth
@@ -86,34 +82,42 @@ const Login: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <Snackbar
-              open={openSnackbar}
-              autoHideDuration={3000}
-              onClose={handleSnackbarClose}
-              anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-            >
-              <Alert severity="error" sx={{ width: '100%' }}>
-                {error}
-              </Alert>
-            </Snackbar>
             <Button
               type="submit"
               variant="contained"
-              color="primary"
               fullWidth
-              style={{ marginTop: '1rem' }}
+              disabled={loading}
               sx={{
-                marginTop: 2,
+                marginTop: 3,
                 backgroundColor: 'grey.700',
                 ':hover': { backgroundColor: 'grey.800' },
               }}
-              disabled={loading}
             >
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? '로그인 중...' : '로그인'}
             </Button>
+
+            <Box mt={2} textAlign="center">
+              <Typography variant="body2">
+                계정이 없으신가요?{' '}
+                <MuiLink component={Link} to="/register">
+                  회원가입
+                </MuiLink>
+              </Typography>
+            </Box>
           </form>
         </Paper>
       </Box>
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={handleSnackbarClose}>
+          {error}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

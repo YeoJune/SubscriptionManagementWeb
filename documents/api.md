@@ -310,6 +310,7 @@ GET /api/products
       "name": "프리미엄 세트",
       "description": "고급 상품 세트",
       "price": 50000,
+      "delivery_count": 10,
       "created_at": "2023-01-01T00:00:00.000Z"
     },
     ...
@@ -337,6 +338,7 @@ GET /api/products/:id
   "name": "프리미엄 세트",
   "description": "고급 상품 세트",
   "price": 50000,
+  "delivery_count": 10,
   "created_at": "2023-01-01T00:00:00.000Z"
 }
 ```
@@ -353,7 +355,8 @@ POST /api/products
 {
   "name": "스페셜 세트",
   "description": "특별한 상품 세트",
-  "price": 45000
+  "price": 45000,
+  "delivery_count": 8
 }
 ```
 
@@ -378,7 +381,8 @@ PUT /api/products/:id
 {
   "name": "스페셜 세트 V2",
   "description": "업그레이드된 특별 상품 세트",
-  "price": 49000
+  "price": 49000,
+  "delivery_count": 9
 }
 ```
 
@@ -665,14 +669,7 @@ POST /api/payments
 
 ```json
 {
-  "product_id": 1,
-  "count": 10,
-  "delivery_dates": [
-    "2023-01-02",
-    "2023-01-04",
-    "2023-01-06",
-    ...
-  ]
+  "product_id": 1
 }
 ```
 
@@ -682,7 +679,7 @@ POST /api/payments
 {
   "message": "결제 및 배송 일정 등록이 완료되었습니다.",
   "payment_id": 1,
-  "amount": 500000,
+  "amount": 50000,
   "delivery_count": 10,
   "deliveries": [
     {
@@ -716,10 +713,11 @@ GET /api/payments
     {
       "id": 1,
       "product_id": 1,
-      "count": 10,
-      "amount": 500000,
+      "count": 1,
+      "amount": 50000,
       "created_at": "2023-01-01T00:00:00.000Z",
-      "product_name": "프리미엄 세트"
+      "product_name": "프리미엄 세트",
+      "product_delivery_count": 10
     },
     ...
   ],
@@ -950,6 +948,7 @@ CREATE TABLE IF NOT EXISTS product (
   name TEXT NOT NULL,
   description TEXT,
   price REAL NOT NULL,
+  delivery_count INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```

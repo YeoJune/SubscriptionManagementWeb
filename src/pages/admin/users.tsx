@@ -16,6 +16,7 @@ import {
   Box,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth'; // useAuth 훅 추가
 
 interface User {
   id: number;
@@ -44,8 +45,16 @@ const AdminUsers: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth(); // 인증 상태 확인
 
   useEffect(() => {
+    if (isAuthenticated && user?.isAdmin) {
+      // 관리자인 경우에만 데이터 로드
+      fetchUsers();
+    }
+  }, [page, isAuthenticated, user]);
+
+  const fetchUsers = () => {
     setLoading(true);
     fetch(`/api/users?page=${page}`, {
       method: 'GET',
@@ -53,25 +62,21 @@ const AdminUsers: React.FC = () => {
     })
       .then(async (res) => {
         if (!res.ok) {
-          return res.json().then((data) => {
-            setError(data.error || '사용자 정보를 불러오지 못했습니다.');
-            setLoading(false);
-          });
+          const data = await res.json();
+          throw new Error(data.error || '사용자 정보를 불러오지 못했습니다.');
         }
         return res.json();
       })
-      .then((data: ApiResponse | undefined) => {
-        if (data) {
-          setUsers(data.users);
-          setPagination(data.pagination);
-          setLoading(false);
-        }
+      .then((data: ApiResponse) => {
+        setUsers(data.users);
+        setPagination(data.pagination);
+        setLoading(false);
       })
       .catch((err: Error) => {
         setError(err.message);
         setLoading(false);
       });
-  }, [page]);
+  };
 
   const handlePageChange = (
     event: React.ChangeEvent<unknown>,
@@ -84,6 +89,15 @@ const AdminUsers: React.FC = () => {
   const handleRowClick = (id: number) => {
     navigate(`/admin/users/${id}`);
   };
+
+  // 인증 및 권한 검사
+  if (!isAuthenticated || !user?.isAdmin) {
+    return (
+      <Container maxWidth="sm" sx={{ mt: 10 }}>
+        <Alert severity="error">접근 권한이 없습니다.</Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>

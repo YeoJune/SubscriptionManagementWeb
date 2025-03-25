@@ -10,7 +10,9 @@ CREATE TABLE IF NOT EXISTS product (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   description TEXT,
-  price REAL NOT NULL
+  price REAL NOT NULL,
+  delivery_count INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 */
 
@@ -26,7 +28,7 @@ router.get('/', (req, res) => {
     const searchTerm = req.query.search || '';
 
     // 정렬 기능 - 유효한 필드만 허용
-    const allowedSortFields = ['name', 'price', 'created_at'];
+    const allowedSortFields = ['name', 'price', 'delivery_count', 'created_at'];
     let sortBy = req.query.sortBy || 'name';
     if (!allowedSortFields.includes(sortBy)) {
       sortBy = 'name'; // 기본값으로 설정
@@ -38,7 +40,7 @@ router.get('/', (req, res) => {
     const params = [];
     const countParams = [];
 
-    let query = `SELECT id, name, description, price, created_at FROM product`;
+    let query = `SELECT id, name, description, price, delivery_count, created_at FROM product`;
     let countQuery = `SELECT COUNT(*) as total FROM product`;
 
     if (searchTerm) {
@@ -86,7 +88,7 @@ router.get('/:id', (req, res) => {
     const { id } = req.params;
 
     db.get(
-      `SELECT id, name, description, price FROM product WHERE id = ?`,
+      `SELECT id, name, description, price, delivery_count, created_at FROM product WHERE id = ?`,
       [id],
       (err, product) => {
         if (err) {
@@ -108,7 +110,7 @@ router.get('/:id', (req, res) => {
 // POST /api/products (admin) - 상품 등록
 router.post('/', checkAdmin, (req, res) => {
   try {
-    const { name, description, price } = req.body;
+    const { name, description, price, delivery_count } = req.body;
 
     // 유효성 검사
     if (!name || price === undefined) {
@@ -124,10 +126,19 @@ router.post('/', checkAdmin, (req, res) => {
         .json({ error: '가격은 0 이상의 숫자여야 합니다.' });
     }
 
+    // 배송 횟수 유효성 검사
+    const productDeliveryCount =
+      delivery_count !== undefined ? delivery_count : 1;
+    if (isNaN(productDeliveryCount) || productDeliveryCount < 1) {
+      return res
+        .status(400)
+        .json({ error: '배송 횟수는 1 이상의 숫자여야 합니다.' });
+    }
+
     // 데이터베이스에 저장
     db.run(
-      `INSERT INTO product (name, description, price) VALUES (?, ?, ?)`,
-      [name, description || '', price],
+      `INSERT INTO product (name, description, price, delivery_count) VALUES (?, ?, ?, ?)`,
+      [name, description || '', price, productDeliveryCount],
       function (err) {
         if (err) {
           return res.status(500).json({ error: err.message });
@@ -148,7 +159,7 @@ router.post('/', checkAdmin, (req, res) => {
 router.put('/:id', checkAdmin, (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price } = req.body;
+    const { name, description, price, delivery_count } = req.body;
 
     // 유효성 검사
     if (!name || price === undefined) {
@@ -164,6 +175,16 @@ router.put('/:id', checkAdmin, (req, res) => {
         .json({ error: '가격은 0 이상의 숫자여야 합니다.' });
     }
 
+    // 배송 횟수 유효성 검사
+    if (
+      delivery_count !== undefined &&
+      (isNaN(delivery_count) || delivery_count < 1)
+    ) {
+      return res
+        .status(400)
+        .json({ error: '배송 횟수는 1 이상의 숫자여야 합니다.' });
+    }
+
     // 해당 상품이 존재하는지 확인
     db.get(`SELECT * FROM product WHERE id = ?`, [id], (err, product) => {
       if (err) {
@@ -174,10 +195,14 @@ router.put('/:id', checkAdmin, (req, res) => {
         return res.status(404).json({ error: '상품을 찾을 수 없습니다.' });
       }
 
+      // 업데이트할 배송 횟수 설정 (제공되지 않은 경우 기존 값 유지)
+      const updatedDeliveryCount =
+        delivery_count !== undefined ? delivery_count : product.delivery_count;
+
       // 데이터베이스 업데이트
       db.run(
-        `UPDATE product SET name = ?, description = ?, price = ? WHERE id = ?`,
-        [name, description || '', price, id],
+        `UPDATE product SET name = ?, description = ?, price = ?, delivery_count = ? WHERE id = ?`,
+        [name, description || '', price, updatedDeliveryCount, id],
         function (err) {
           if (err) {
             return res.status(500).json({ error: err.message });
