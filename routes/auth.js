@@ -1,3 +1,4 @@
+// routes/auth.js
 const express = require('express');
 const router = express.Router();
 const db = require('../lib/db');
@@ -15,14 +16,19 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   salt TEXT NOT NULL,
   delivery_count INTEGER DEFAULT 0,
-  phone_number TEXT
+  name TEXT,
+  phone_number TEXT,
+  email TEXT,
+  address TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_login TIMESTAMP
 );
 */
 
 // POST /api/auth/signup - 회원가입
 router.post('/signup', (req, res) => {
   try {
-    const { id, password, phone_number } = req.body;
+    const { id, password, name, phone_number, email, address } = req.body;
 
     // 유효성 검사
     if (!id || !password || !phone_number) {
@@ -77,8 +83,8 @@ router.post('/signup', (req, res) => {
 
           // 사용자 생성
           db.run(
-            `INSERT INTO users (id, password_hash, salt, delivery_count, phone_number) VALUES (?, ?, ?, ?, ?)`,
-            [id, password_hash, salt, 0, phone_number],
+            `INSERT INTO users (id, password_hash, salt, delivery_count, name, phone_number, email, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [id, password_hash, salt, 0, name, phone_number, email, address],
             function (err) {
               if (err) {
                 return res.status(500).json({ error: err.message });
@@ -136,10 +142,18 @@ router.post('/login', (req, res) => {
           .json({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' });
       }
 
+      // 마지막 로그인 시간 업데이트
+      db.run(`UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?`, [
+        user.id,
+      ]);
+
       // 세션에 사용자 정보 저장
       req.session.user = {
         id: user.id,
+        name: user.name,
         phone_number: user.phone_number,
+        email: user.email,
+        address: user.address,
         delivery_count: user.delivery_count,
         // 관리자 권한 확인 (예: 특정 아이디를 관리자로 지정)
         isAdmin: user.id === 'admin', // 예시: 'admin'이란 아이디를 가진 사용자가 관리자
@@ -149,9 +163,14 @@ router.post('/login', (req, res) => {
         message: '로그인 성공',
         user: {
           id: user.id,
+          name: user.name,
           phone_number: user.phone_number,
+          email: user.email,
+          address: user.address,
           delivery_count: user.delivery_count,
           isAdmin: req.session.user.isAdmin,
+          created_at: user.created_at,
+          last_login: user.last_login,
         },
       });
     });
@@ -186,7 +205,7 @@ router.get('/', authMiddleware, (req, res) => {
 
     // 최신 사용자 정보 조회
     db.get(
-      `SELECT id, phone_number, delivery_count FROM users WHERE id = ?`,
+      `SELECT id, name, phone_number, email, address, delivery_count, created_at, last_login FROM users WHERE id = ?`,
       [userId],
       (err, user) => {
         if (err) {
@@ -204,9 +223,14 @@ router.get('/', authMiddleware, (req, res) => {
         res.json({
           user: {
             id: user.id,
+            name: user.name,
             phone_number: user.phone_number,
+            email: user.email,
+            address: user.address,
             delivery_count: user.delivery_count,
             isAdmin: req.session.user.isAdmin,
+            created_at: user.created_at,
+            last_login: user.last_login,
           },
         });
       }

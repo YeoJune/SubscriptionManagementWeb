@@ -34,8 +34,8 @@ router.get('/', checkAdmin, async (req, res) => {
 
     // 쿼리 구성
     let query = `
-      SELECT d.id, d.user_id, d.status, d.date, d.product_id, 
-             p.name AS product_name, u.phone_number
+      SELECT d.id, d.user_id, u.name AS user_name, d.status, d.date, d.product_id, 
+             p.name AS product_name, u.phone_number, u.address
       FROM delivery_list d
       JOIN product p ON d.product_id = p.id
       JOIN users u ON d.user_id = u.id
@@ -64,9 +64,9 @@ router.get('/', checkAdmin, async (req, res) => {
 
     if (search) {
       conditions.push(
-        `(u.id LIKE ? OR p.name LIKE ? OR u.phone_number LIKE ?)`
+        `(u.id LIKE ? OR u.name LIKE ? OR p.name LIKE ? OR u.phone_number LIKE ?)`
       );
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
     }
 
     if (conditions.length > 0) {
@@ -195,6 +195,40 @@ router.get('/my', authMiddleware, async (req, res) => {
     });
 
     res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/delivery/available-dates - 배송 가능 날짜 조회
+router.get('/available-dates', authMiddleware, (req, res) => {
+  try {
+    const { month } = req.query; // YYYY-MM 형식
+
+    // month가 없으면 현재 월 사용
+    const targetMonth = month || new Date().toISOString().slice(0, 7);
+
+    // 해당 월의 모든 날짜를 가져온 후 월/수/금만 필터링
+    const availableDates = [];
+    const [year, monthNum] = targetMonth.split('-');
+    const date = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
+
+    // 해당 월의 마지막 날짜 구하기
+    const lastDay = new Date(parseInt(year), parseInt(monthNum), 0).getDate();
+
+    // 월/수/금(1, 3, 5) 날짜만 필터링
+    for (let day = 1; day <= lastDay; day++) {
+      date.setDate(day);
+      const dayOfWeek = date.getDay();
+
+      // 월(1), 수(3), 금(5)에 해당하는지 확인
+      if (dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5) {
+        const formattedDate = date.toISOString().split('T')[0];
+        availableDates.push(formattedDate);
+      }
+    }
+
+    res.json({ available_dates: availableDates });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

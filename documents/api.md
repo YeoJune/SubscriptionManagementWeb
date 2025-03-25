@@ -9,10 +9,11 @@
 3. [사용자 관리 API](#사용자-관리-api)
 4. [상품 API](#상품-api)
 5. [공지사항 API](#공지사항-api)
-6. [결제 API](#결제-api)
-7. [배송 API](#배송-api)
-8. [에러 처리](#에러-처리)
-9. [모델 스키마](#모델-스키마)
+6. [고객의 소리 API](#고객의-소리-api)
+7. [결제 API](#결제-api)
+8. [배송 API](#배송-api)
+9. [에러 처리](#에러-처리)
+10. [모델 스키마](#모델-스키마)
 
 ## 기본 정보
 
@@ -62,7 +63,10 @@ POST /api/auth/signup
 {
   "id": "user123",
   "password": "securepassword",
-  "phone_number": "01012345678"
+  "name": "홍길동",
+  "phone_number": "01012345678",
+  "email": "user123@example.com",
+  "address": "서울시 강남구"
 }
 ```
 
@@ -97,9 +101,14 @@ POST /api/auth/login
   "message": "로그인 성공",
   "user": {
     "id": "user123",
+    "name": "홍길동",
     "phone_number": "01012345678",
+    "email": "user123@example.com",
+    "address": "서울시 강남구",
     "delivery_count": 10,
-    "isAdmin": false
+    "isAdmin": false,
+    "created_at": "2023-01-01T00:00:00.000Z",
+    "last_login": "2023-01-05T00:00:00.000Z"
   }
 }
 ```
@@ -130,9 +139,14 @@ GET /api/auth
 {
   "user": {
     "id": "user123",
+    "name": "홍길동",
     "phone_number": "01012345678",
+    "email": "user123@example.com",
+    "address": "서울시 강남구",
     "delivery_count": 10,
-    "isAdmin": false
+    "isAdmin": false,
+    "created_at": "2023-01-01T00:00:00.000Z",
+    "last_login": "2023-01-05T00:00:00.000Z"
   }
 }
 ```
@@ -160,8 +174,13 @@ GET /api/users
   "users": [
     {
       "id": "user123",
+      "name": "홍길동",
+      "phone_number": "01012345678",
+      "email": "user123@example.com",
+      "address": "서울시 강남구",
       "delivery_count": 10,
-      "phone_number": "01012345678"
+      "created_at": "2023-01-01T00:00:00.000Z",
+      "last_login": "2023-01-05T00:00:00.000Z"
     },
     ...
   ],
@@ -185,8 +204,13 @@ GET /api/users/:id
 ```json
 {
   "id": "user123",
+  "name": "홍길동",
+  "phone_number": "01012345678",
+  "email": "user123@example.com",
+  "address": "서울시 강남구",
   "delivery_count": 10,
-  "phone_number": "01012345678"
+  "created_at": "2023-01-01T00:00:00.000Z",
+  "last_login": "2023-01-05T00:00:00.000Z"
 }
 ```
 
@@ -202,7 +226,10 @@ POST /api/users
 {
   "id": "newuser",
   "password": "securepassword",
+  "name": "김철수",
   "phone_number": "01087654321",
+  "email": "newuser@example.com",
+  "address": "부산시 해운대구",
   "delivery_count": 5
 }
 ```
@@ -226,8 +253,11 @@ PUT /api/users/:id
 
 ```json
 {
+  "name": "김철수",
   "delivery_count": 15,
   "phone_number": "01012345678",
+  "email": "updated@example.com",
+  "address": "인천시 연수구",
   "password": "newpassword" // 선택 사항
 }
 ```
@@ -279,7 +309,8 @@ GET /api/products
       "id": 1,
       "name": "프리미엄 세트",
       "description": "고급 상품 세트",
-      "price": 50000
+      "price": 50000,
+      "created_at": "2023-01-01T00:00:00.000Z"
     },
     ...
   ],
@@ -305,7 +336,8 @@ GET /api/products/:id
   "id": 1,
   "name": "프리미엄 세트",
   "description": "고급 상품 세트",
-  "price": 50000
+  "price": 50000,
+  "created_at": "2023-01-01T00:00:00.000Z"
 }
 ```
 
@@ -511,6 +543,116 @@ DELETE /api/notices/:id
 }
 ```
 
+## 고객의 소리 API
+
+### 고객의 소리 목록 조회
+
+```
+GET /api/inquiries
+```
+
+**쿼리 파라미터:**
+
+- `page`: 페이지 번호 (기본값: 1)
+- `limit`: 페이지당 항목 수 (기본값: 10)
+- `status`: 상태 필터링 (answered/unanswered)
+
+**응답:**
+
+```json
+{
+  "inquiries": [
+    {
+      "id": 1,
+      "user_id": "user123",
+      "user_name": "홍길동",
+      "title": "배송 관련 문의",
+      "content": "배송 일정을 변경할 수 있나요?",
+      "answer": "현재는 배송 일정 변경이 어렵습니다.",
+      "status": "answered",
+      "created_at": "2023-01-01T00:00:00.000Z",
+      "answered_at": "2023-01-02T00:00:00.000Z"
+    },
+    ...
+  ],
+  "pagination": {
+    "total": 25,
+    "currentPage": 1,
+    "totalPages": 3,
+    "limit": 10
+  }
+}
+```
+
+### 특정 고객의 소리 조회
+
+```
+GET /api/inquiries/:id
+```
+
+**응답:**
+
+```json
+{
+  "id": 1,
+  "user_id": "user123",
+  "user_name": "홍길동",
+  "title": "배송 관련 문의",
+  "content": "배송 일정을 변경할 수 있나요?",
+  "answer": "현재는 배송 일정 변경이 어렵습니다.",
+  "status": "answered",
+  "created_at": "2023-01-01T00:00:00.000Z",
+  "answered_at": "2023-01-02T00:00:00.000Z"
+}
+```
+
+### 문의 등록
+
+```
+POST /api/inquiries
+```
+
+**요청 본문:**
+
+```json
+{
+  "title": "상품 관련 문의",
+  "content": "새로운 상품이 출시될 예정인가요?"
+}
+```
+
+**응답:**
+
+```json
+{
+  "id": 2,
+  "message": "문의가 등록되었습니다."
+}
+```
+
+### 문의 답변 등록/수정 (관리자 전용)
+
+```
+PUT /api/inquiries/:id
+```
+
+**요청 본문:**
+
+```json
+{
+  "answer": "다음 달에 새로운 상품이 출시될 예정입니다."
+}
+```
+
+**응답:**
+
+```json
+{
+  "id": 2,
+  "message": "답변이 등록되었습니다."
+}
+```
+
 ## 결제 API
 
 ### 결제 처리
@@ -524,7 +666,13 @@ POST /api/payments
 ```json
 {
   "product_id": 1,
-  "count": 10
+  "count": 10,
+  "delivery_dates": [
+    "2023-01-02",
+    "2023-01-04",
+    "2023-01-06",
+    ...
+  ]
 }
 ```
 
@@ -610,11 +758,13 @@ GET /api/delivery
     {
       "id": 1,
       "user_id": "user123",
+      "user_name": "홍길동",
       "status": "pending",
       "date": "2023-01-02",
       "product_id": 1,
       "product_name": "프리미엄 세트",
-      "phone_number": "01012345678"
+      "phone_number": "01012345678",
+      "address": "서울시 강남구"
     },
     ...
   ],
@@ -641,11 +791,13 @@ GET /api/delivery/today
     {
       "id": 5,
       "user_id": "user123",
+      "user_name": "홍길동",
       "status": "pending",
       "date": "2023-01-05",
       "product_id": 1,
       "product_name": "프리미엄 세트",
-      "phone_number": "01012345678"
+      "phone_number": "01012345678",
+      "address": "서울시 강남구"
     },
     ...
   ]
@@ -728,6 +880,29 @@ GET /api/delivery/my
 }
 ```
 
+### 배송 가능 날짜 조회
+
+```
+GET /api/delivery/available-dates
+```
+
+**쿼리 파라미터:**
+
+- `month`: 월 (YYYY-MM)
+
+**응답:**
+
+```json
+{
+  "available_dates": [
+    "2023-01-02",
+    "2023-01-04",
+    "2023-01-06",
+    ...
+  ]
+}
+```
+
 ## 에러 처리
 
 API는 다음과 같은 HTTP 상태 코드를 사용합니다:
@@ -758,7 +933,12 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   salt TEXT NOT NULL,
   delivery_count INTEGER DEFAULT 0,
-  phone_number TEXT
+  name TEXT,
+  phone_number TEXT,
+  email TEXT,
+  address TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_login TIMESTAMP
 );
 ```
 
@@ -822,5 +1002,20 @@ CREATE TABLE IF NOT EXISTS sms_logs (
   message TEXT NOT NULL,
   type TEXT NOT NULL,
   sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 고객의 소리 (inquiries)
+
+```sql
+CREATE TABLE IF NOT EXISTS inquiries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  answer TEXT,
+  status TEXT CHECK(status IN ('answered', 'unanswered')) NOT NULL DEFAULT 'unanswered',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  answered_at TIMESTAMP
 );
 ```

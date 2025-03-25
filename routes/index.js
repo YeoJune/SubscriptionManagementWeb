@@ -1,4 +1,4 @@
-// routes/server.js
+// routes/index.js
 const dotenv = require('dotenv');
 const express = require('express');
 const router = express.Router();
@@ -10,15 +10,17 @@ const authRoutes = require('./auth');
 const deliveryRoutes = require('./delivery');
 const noticeRoutes = require('./notices');
 const paymentsRoutes = require('./payments');
-const productRoutes = require('./product');
+const productRoutes = require('./products');
 const userRoutes = require('./users');
+const inquiryRoutes = require('./inquiry');
 
 // 라우터 등록
 router.use('/auth', authRoutes);
 router.use('/delivery', deliveryRoutes);
 router.use('/notices', noticeRoutes);
 router.use('/payments', paymentsRoutes);
-router.use('/product', productRoutes);
+router.use('/products', productRoutes);
 router.use('/users', userRoutes);
+router.use('/inquiries', inquiryRoutes);
 
-module.exports = router; // 필요 시 다른 곳에서 import할 수 있도록
+module.exports = router;

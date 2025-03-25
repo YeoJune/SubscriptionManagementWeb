@@ -1,3 +1,4 @@
+// src/component/appRoutes.tsx
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Board from '../pages/board';
@@ -23,7 +24,6 @@ const AppRoutes: React.FC = () => {
       <Route path="/profile" element={<Profile />} />
       <Route path="/register" element={<Register />} />
       <Route path="/subscription" element={<Subscription />} />
-
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminIndex />} />
       <Route path="/admin/delivery" element={<Delivery />} />

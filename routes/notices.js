@@ -15,19 +15,6 @@ CREATE TABLE IF NOT EXISTS notice (
 );
 */
 
-// 테이블 생성 확인
-db.run(`
-  CREATE TABLE IF NOT EXISTS notice (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    type TEXT CHECK(type IN ('normal', 'faq')) NOT NULL,
-    title TEXT NOT NULL,
-    content TEXT,
-    question TEXT,
-    answer TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`);
-
 // POST /api/notices (admin) - 공지사항 등록
 router.post('/', checkAdmin, (req, res) => {
   try {
@@ -226,6 +213,7 @@ router.get('/', (req, res) => {
 
     // 타입에 따른 조건 추가
     let whereClause = '';
+    let params = [];
     let countQuery = `SELECT COUNT(*) as total FROM notice`;
     let query = '';
 
@@ -236,7 +224,8 @@ router.get('/', (req, res) => {
           .json({ error: "타입은 'normal' 또는 'faq'만 가능합니다." });
       }
 
-      whereClause = ` WHERE type = '${type}'`;
+      whereClause = ` WHERE type = ?`;
+      params.push(type);
       countQuery += whereClause;
 
       if (type === 'normal') {
@@ -250,31 +239,36 @@ router.get('/', (req, res) => {
     }
 
     // 정렬 추가 (최신순)
-    query += ` ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+    query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+    params.push(limit, offset);
 
     // 전체 공지사항 수 가져오기
-    db.get(countQuery, [], (err, countResult) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-
-      // 공지사항 목록 가져오기
-      db.all(query, [], (err, notices) => {
+    db.get(
+      countQuery,
+      params.slice(0, params.length - 2),
+      (err, countResult) => {
         if (err) {
           return res.status(500).json({ error: err.message });
         }
 
-        res.json({
-          notices,
-          pagination: {
-            total: countResult.total,
-            currentPage: page,
-            totalPages: Math.ceil(countResult.total / limit),
-            limit,
-          },
+        // 공지사항 목록 가져오기
+        db.all(query, params, (err, notices) => {
+          if (err) {
+            return res.status(500).json({ error: err.message });
+          }
+
+          res.json({
+            notices,
+            pagination: {
+              total: countResult.total,
+              currentPage: page,
+              totalPages: Math.ceil(countResult.total / limit),
+              limit,
+            },
+          });
         });
-      });
-    });
+      }
+    );
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

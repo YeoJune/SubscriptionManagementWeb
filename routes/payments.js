@@ -17,18 +17,6 @@ CREATE TABLE IF NOT EXISTS payments (
 );
 */
 
-// 테이블 생성 확인
-db.run(`
-  CREATE TABLE IF NOT EXISTS payments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id TEXT NOT NULL,
-    product_id INTEGER NOT NULL,
-    count INTEGER NOT NULL,
-    amount REAL NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`);
-
 // POST /api/payments - 결제 처리 (로그인 필요)
 router.post('/', authMiddleware, (req, res) => {
   try {

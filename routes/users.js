@@ -1,8 +1,9 @@
+// routes/users.js
 const express = require('express');
 const router = express.Router();
 const checkAdmin = require('../lib/checkAdmin');
 const db = require('../lib/db');
-const { hashPassword, verifyPassword, generateSalt } = require('../lib/auth');
+const { hashPassword, generateSalt } = require('../lib/auth');
 
 /*
 -- 사용자 테이블 (users)
@@ -11,7 +12,12 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   salt TEXT NOT NULL,
   delivery_count INTEGER DEFAULT 0,
-  phone_number TEXT
+  name TEXT,
+  phone_number TEXT,
+  email TEXT,
+  address TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_login TIMESTAMP
 );
 */
 
@@ -26,29 +32,55 @@ router.get('/', checkAdmin, (req, res) => {
     // 검색 기능
     const searchTerm = req.query.search || '';
 
-    // 정렬 기능
-    const sortBy = req.query.sortBy || 'id';
-    const order = req.query.order === 'desc' ? 'DESC' : 'ASC';
-
-    let query = `SELECT id, delivery_count, phone_number FROM users`;
-    let countQuery = `SELECT COUNT(*) as total FROM users`;
-
-    if (searchTerm) {
-      const searchCondition = ` WHERE phone_number LIKE '%${searchTerm}%' OR id LIKE '%${searchTerm}%'`;
-      query += searchCondition;
-      countQuery += searchCondition;
+    // 정렬 기능 - 유효한 필드만 허용
+    const allowedSortFields = [
+      'id',
+      'name',
+      'phone_number',
+      'email',
+      'delivery_count',
+      'created_at',
+      'last_login',
+    ];
+    let sortBy = req.query.sortBy || 'id';
+    if (!allowedSortFields.includes(sortBy)) {
+      sortBy = 'id'; // 기본값으로 설정
     }
 
-    query += ` ORDER BY ${sortBy} ${order} LIMIT ${limit} OFFSET ${offset}`;
+    const order = req.query.order === 'desc' ? 'DESC' : 'ASC';
+
+    let query = `SELECT id, name, phone_number, email, address, delivery_count, created_at, last_login FROM users`;
+    let countQuery = `SELECT COUNT(*) as total FROM users`;
+
+    const params = [];
+    const countParams = [];
+
+    if (searchTerm) {
+      const searchCondition = ` WHERE phone_number LIKE ? OR id LIKE ? OR name LIKE ? OR email LIKE ?`;
+      query += searchCondition;
+      countQuery += searchCondition;
+
+      const searchPattern = `%${searchTerm}%`;
+      params.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      countParams.push(
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern
+      );
+    }
+
+    query += ` ORDER BY ${sortBy} ${order} LIMIT ? OFFSET ?`;
+    params.push(limit, offset);
 
     // 전체 사용자 수 가져오기
-    db.get(countQuery, [], (err, countResult) => {
+    db.get(countQuery, countParams, (err, countResult) => {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
 
       // 사용자 목록 가져오기
-      db.all(query, [], (err, rows) => {
+      db.all(query, params, (err, rows) => {
         if (err) {
           return res.status(500).json({ error: err.message });
         }
@@ -75,7 +107,7 @@ router.get('/:id', checkAdmin, (req, res) => {
     const { id } = req.params;
 
     db.get(
-      `SELECT id, delivery_count, phone_number FROM users WHERE id = ?`,
+      `SELECT id, name, phone_number, email, address, delivery_count, created_at, last_login FROM users WHERE id = ?`,
       [id],
       (err, user) => {
         if (err) {
@@ -98,7 +130,8 @@ router.get('/:id', checkAdmin, (req, res) => {
 router.put('/:id', checkAdmin, (req, res) => {
   try {
     const { id } = req.params;
-    const { delivery_count, phone_number, password } = req.body;
+    const { delivery_count, name, phone_number, email, address, password } =
+      req.body;
 
     // 사용자 존재 여부 확인
     db.get(`SELECT * FROM users WHERE id = ?`, [id], (err, user) => {
@@ -116,8 +149,17 @@ router.put('/:id', checkAdmin, (req, res) => {
         const password_hash = hashPassword(password, salt);
 
         db.run(
-          `UPDATE users SET password_hash = ?, salt = ?, delivery_count = ?, phone_number = ? WHERE id = ?`,
-          [password_hash, salt, delivery_count, phone_number, id],
+          `UPDATE users SET password_hash = ?, salt = ?, delivery_count = ?, name = ?, phone_number = ?, email = ?, address = ? WHERE id = ?`,
+          [
+            password_hash,
+            salt,
+            delivery_count,
+            name,
+            phone_number,
+            email,
+            address,
+            id,
+          ],
           function (err) {
             if (err) {
               return res.status(500).json({ error: err.message });
@@ -137,8 +179,8 @@ router.put('/:id', checkAdmin, (req, res) => {
       } else {
         // 비밀번호 변경이 없는 경우
         db.run(
-          `UPDATE users SET delivery_count = ?, phone_number = ? WHERE id = ?`,
-          [delivery_count, phone_number, id],
+          `UPDATE users SET delivery_count = ?, name = ?, phone_number = ?, email = ?, address = ? WHERE id = ?`,
+          [delivery_count, name, phone_number, email, address, id],
           function (err) {
             if (err) {
               return res.status(500).json({ error: err.message });
@@ -186,7 +228,15 @@ router.delete('/:id', checkAdmin, (req, res) => {
 // POST /api/users (admin) - 새 사용자 추가
 router.post('/', checkAdmin, (req, res) => {
   try {
-    const { id, password, phone_number, delivery_count = 0 } = req.body;
+    const {
+      id,
+      password,
+      name,
+      phone_number,
+      email,
+      address,
+      delivery_count = 0,
+    } = req.body;
 
     if (!id || !password || !phone_number) {
       return res
@@ -224,8 +274,17 @@ router.post('/', checkAdmin, (req, res) => {
           const password_hash = hashPassword(password, salt);
 
           db.run(
-            `INSERT INTO users (id, password_hash, salt, delivery_count, phone_number) VALUES (?, ?, ?, ?, ?)`,
-            [id, password_hash, salt, delivery_count, phone_number],
+            `INSERT INTO users (id, password_hash, salt, delivery_count, name, phone_number, email, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              id,
+              password_hash,
+              salt,
+              delivery_count,
+              name,
+              phone_number,
+              email,
+              address,
+            ],
             function (err) {
               if (err) {
                 return res.status(500).json({ error: err.message });

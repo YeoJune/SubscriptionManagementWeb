@@ -1,3 +1,4 @@
+// routes/products.js
 const express = require('express');
 const router = express.Router();
 const checkAdmin = require('../lib/checkAdmin');
@@ -13,17 +14,6 @@ CREATE TABLE IF NOT EXISTS product (
 );
 */
 
-// 테이블 생성 확인
-db.run(`
-  CREATE TABLE IF NOT EXISTS product (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    description TEXT,
-    price REAL NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`);
-
 // GET /api/products - 상품 목록 조회
 router.get('/', (req, res) => {
   try {
@@ -35,29 +25,41 @@ router.get('/', (req, res) => {
     // 검색 기능
     const searchTerm = req.query.search || '';
 
-    // 정렬 기능
-    const sortBy = req.query.sortBy || 'name';
+    // 정렬 기능 - 유효한 필드만 허용
+    const allowedSortFields = ['name', 'price', 'created_at'];
+    let sortBy = req.query.sortBy || 'name';
+    if (!allowedSortFields.includes(sortBy)) {
+      sortBy = 'name'; // 기본값으로 설정
+    }
+
     const order = req.query.order === 'desc' ? 'DESC' : 'ASC';
 
-    let query = `SELECT id, name, description, price FROM product`;
+    // 파라미터 배열
+    const params = [];
+    const countParams = [];
+
+    let query = `SELECT id, name, description, price, created_at FROM product`;
     let countQuery = `SELECT COUNT(*) as total FROM product`;
 
     if (searchTerm) {
-      const searchCondition = ` WHERE name LIKE '%${searchTerm}%' OR description LIKE '%${searchTerm}%'`;
+      const searchCondition = ` WHERE name LIKE ? OR description LIKE ?`;
       query += searchCondition;
       countQuery += searchCondition;
+      params.push(`%${searchTerm}%`, `%${searchTerm}%`);
+      countParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
     }
 
-    query += ` ORDER BY ${sortBy} ${order} LIMIT ${limit} OFFSET ${offset}`;
+    query += ` ORDER BY ${sortBy} ${order} LIMIT ? OFFSET ?`;
+    params.push(limit, offset);
 
     // 전체 상품 수 가져오기
-    db.get(countQuery, [], (err, countResult) => {
+    db.get(countQuery, countParams, (err, countResult) => {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
 
       // 상품 목록 가져오기
-      db.all(query, [], (err, products) => {
+      db.all(query, params, (err, products) => {
         if (err) {
           return res.status(500).json({ error: err.message });
         }
