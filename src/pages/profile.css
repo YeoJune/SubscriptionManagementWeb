@@ -1,0 +1,218 @@
+/* src/pages/profile.css */
+
+.profile-container {
+  padding: 2rem 1rem;
+}
+
+/* Page title styling */
+.profile-title {
+  color: #2e6e31; /* accent color */
+  font-weight: 700;
+  margin-bottom: 2rem;
+  position: relative;
+  padding-bottom: 0.75rem;
+}
+
+.profile-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background-color: #a4e22e; /* primary color */
+  border-radius: 2px;
+}
+
+/* Card styling */
+.profile-card {
+  border-radius: 15px !important;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05) !important;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease !important;
+  overflow: hidden !important;
+}
+
+.profile-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+.profile-card-content {
+  padding: 1.5rem !important;
+}
+
+/* User info section */
+.user-info-title {
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 700 !important;
+  margin-bottom: 1.5rem !important;
+  font-size: 1.25rem !important;
+}
+
+.user-info-item {
+  margin-bottom: 0.75rem !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.user-info-label {
+  font-weight: 600 !important;
+  color: #666 !important;
+  min-width: 100px !important;
+}
+
+.user-info-value {
+  color: #333 !important;
+}
+
+/* Delivery count section */
+.delivery-count {
+  margin-top: 2rem !important;
+  padding: 1rem !important;
+  background-color: rgba(164, 226, 46, 0.1) !important;
+  border-radius: 10px !important;
+  border-left: 4px solid #a4e22e !important;
+  color: #2e6e31 !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.delivery-count-number {
+  font-size: 2rem !important;
+  color: #ff7e33 !important; /* secondary color */
+  font-weight: 800 !important;
+}
+
+/* Divider styling */
+.divider {
+  margin: 2.5rem 0 !important;
+  background-color: #e9ecef !important;
+}
+
+/* Delivery history section */
+.delivery-history-title {
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 700 !important;
+  margin-bottom: 1.5rem !important;
+  font-size: 1.5rem !important;
+}
+
+/* Table styling */
+.MuiTableContainer-root {
+  border-radius: 10px !important;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05) !important;
+  overflow: hidden !important;
+}
+
+.MuiTableHead-root {
+  background-color: #f8f9fa !important;
+}
+
+.MuiTableHead-root .MuiTableCell-root {
+  font-weight: 700 !important;
+  color: #2e6e31 !important; /* accent color */
+  border-bottom: 2px solid #a4e22e !important; /* primary color */
+  padding: 1rem !important;
+}
+
+.MuiTableBody-root .MuiTableRow-root {
+  transition: background-color 0.2s ease !important;
+}
+
+.MuiTableBody-root .MuiTableRow-root:hover {
+  background-color: rgba(
+    164,
+    226,
+    46,
+    0.1
+  ) !important; /* primary color with opacity */
+}
+
+.MuiTableBody-root .MuiTableCell-root {
+  padding: 1rem !important;
+  border-bottom: 1px solid #e9ecef !important;
+}
+
+/* Status chip styling */
+.MuiChip-root {
+  font-weight: 600 !important;
+}
+
+.MuiChip-colorSuccess {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+  color: #28a745 !important;
+  border: 1px solid #28a745 !important;
+}
+
+.MuiChip-colorWarning {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+  color: #ffc107 !important;
+  border: 1px solid #ffc107 !important;
+}
+
+.MuiChip-colorError {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  color: #dc3545 !important;
+  border: 1px solid #dc3545 !important;
+}
+
+/* Loading and error states */
+.loading-container {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 3rem !important;
+}
+
+.MuiCircularProgress-root {
+  color: #a4e22e !important; /* primary color */
+  margin-bottom: 1rem !important;
+}
+
+.MuiAlert-standardWarning {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+  color: #ffc107 !important;
+  border: 1px solid #ffc107 !important;
+  border-radius: 10px !important;
+  padding: 1rem !important;
+}
+
+.MuiAlert-standardError {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  color: #dc3545 !important;
+  border: 1px solid #dc3545 !important;
+  border-radius: 10px !important;
+  padding: 1rem !important;
+}
+
+.MuiAlert-standardInfo {
+  background-color: rgba(13, 202, 240, 0.1) !important;
+  color: #0dcaf0 !important;
+  border: 1px solid #0dcaf0 !important;
+  border-radius: 10px !important;
+  padding: 1rem !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 960px) {
+  .user-info-section,
+  .user-card-section {
+    margin-bottom: 2rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-title {
+    font-size: 1.8rem !important;
+  }
+
+  .MuiTableCell-root {
+    padding: 0.75rem !important;
+    font-size: 0.9rem !important;
+  }
+}

@@ -1,56 +1,94 @@
+/* src/components/footer.css */
+
 .footer {
-  background-color: #333;
-  color: #fff;
-  padding: 20px 0;
-  font-family: Arial, sans-serif;
+  background-color: var(--accent-color, #2e6e31);
+  color: white;
+  padding-top: 2rem;
+  margin-top: auto; /* Pushes footer to bottom of page */
 }
 
 .footer-container {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-around;
+  justify-content: space-between;
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 1rem;
 }
 
 .footer-section {
   flex: 1;
-  min-width: 200px;
-  margin: 10px;
+  min-width: 250px;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
 }
 
 .footer-section h4 {
-  margin-bottom: 10px;
-  font-size: 18px;
+  color: #a4e22e; /* Brand primary color */
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  position: relative;
+  padding-bottom: 0.5rem;
 }
 
-.footer-section p,
-.footer-section li {
-  font-size: 14px;
-  line-height: 1.6;
+.footer-section h4::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 40px;
+  height: 3px;
+  background-color: #a4e22e;
+}
+
+.footer-section p {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .footer-section ul {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .footer-section ul li {
-  margin-bottom: 5px;
+  margin-bottom: 0.5rem;
 }
 
 .footer-section ul li a {
-  color: #fff;
+  color: #f8f9fa;
   text-decoration: none;
+  transition: color 0.3s ease;
+  display: inline-block;
+  padding: 0.2rem 0;
 }
 
 .footer-section ul li a:hover {
-  text-decoration: underline;
+  color: #a4e22e;
+  transform: translateX(5px);
 }
 
 .footer-bottom {
+  background-color: rgba(0, 0, 0, 0.2);
   text-align: center;
-  padding-top: 10px;
-  border-top: 1px solid #444;
-  margin-top: 20px;
+  padding: 1.5rem 0;
+  font-size: 0.9rem;
+}
+
+.footer-bottom p {
+  margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .footer-container {
+    flex-direction: column;
+  }
+
+  .footer-section {
+    width: 100%;
+    margin-bottom: 1.5rem;
+  }
 }

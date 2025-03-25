@@ -1,23 +1,188 @@
 /* src/pages/board.css */
+
 .board-container {
-  max-width: 900px; /* 전체 게시판 너비 */
-  margin: 0 auto; /* 가운데 정렬 */
-  padding: 2rem 1rem; /* 위아래, 좌우 여백 */
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
 }
 
-.board-hero h1 {
-  font-size: 2.5rem;
-  color: #000;
-  margin-bottom: 10px;
+/* Page title */
+.MuiTypography-h4 {
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 700 !important;
+  margin-bottom: 2rem !important;
+  position: relative;
+  padding-bottom: 0.75rem;
+  text-align: center !important;
 }
 
+.MuiTypography-h4::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background-color: #a4e22e; /* primary color */
+  border-radius: 2px;
+}
+
+/* Tabs styling */
+.MuiTabs-root {
+  margin-bottom: 2rem !important;
+}
+
+.MuiTabs-indicator {
+  background-color: #a4e22e !important; /* primary color */
+  height: 3px !important;
+}
+
+.MuiTab-root {
+  font-weight: 600 !important;
+  color: #666 !important;
+  text-transform: none !important;
+  font-size: 1rem !important;
+  padding: 1rem 2rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.MuiTab-root.Mui-selected {
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 700 !important;
+}
+
+/* Loading spinner */
+.MuiCircularProgress-root {
+  color: #a4e22e !important; /* primary color */
+}
+
+/* Error message */
+.MuiTypography-root[color='error'] {
+  color: #dc3545 !important;
+  padding: 1rem !important;
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  border-radius: 10px !important;
+  border: 1px solid #dc3545 !important;
+}
+
+/* Pagination section */
 .pagination {
   display: flex;
   justify-content: center;
-  margin-top: 20px;
+  align-items: center;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.pagination button {
-  margin: 0 5px;
+/* Pagination buttons */
+.pagination .MuiButton-root {
+  min-width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  border-radius: 20px !important;
+  font-weight: 600 !important;
+  margin: 0 0.25rem !important;
+  transition: all 0.3s ease !important;
 }
 
+.pagination .MuiButton-contained {
+  background-color: #a4e22e !important; /* primary color */
+  color: #2e6e31 !important; /* accent color */
+  box-shadow: 0 4px 8px rgba(164, 226, 46, 0.3) !important;
+}
+
+.pagination .MuiButton-contained:hover {
+  background-color: #7baa23 !important; /* darker primary */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(164, 226, 46, 0.4) !important;
+}
+
+.pagination .MuiButton-outlined {
+  border-color: #e9ecef !important;
+  color: #666 !important;
+}
+
+.pagination .MuiButton-outlined:hover {
+  border-color: #a4e22e !important; /* primary color */
+  background-color: rgba(164, 226, 46, 0.1) !important;
+  color: #2e6e31 !important; /* accent color */
+}
+
+/* Prev/Next buttons */
+.pagination .MuiButton-root:first-child,
+.pagination .MuiButton-root:last-child {
+  min-width: 80px !important;
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 600 !important;
+  border-color: #e9ecef !important;
+}
+
+.pagination .MuiButton-root:first-child:hover,
+.pagination .MuiButton-root:last-child:hover {
+  background-color: rgba(164, 226, 46, 0.1) !important;
+  border-color: #a4e22e !important; /* primary color */
+}
+
+.pagination .MuiButton-root:disabled {
+  color: #ccc !important;
+  border-color: #f5f5f5 !important;
+  background-color: #f8f9fa !important;
+}
+
+/* Ellipsis */
+.pagination span {
+  margin: 0 0.5rem;
+  color: #666;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .MuiTab-root {
+    padding: 1rem 1rem !important;
+    font-size: 0.9rem !important;
+  }
+
+  .pagination {
+    gap: 0.25rem;
+  }
+
+  .pagination .MuiButton-root {
+    min-width: 36px !important;
+    height: 36px !important;
+    font-size: 0.9rem !important;
+  }
+
+  .pagination .MuiButton-root:first-child,
+  .pagination .MuiButton-root:last-child {
+    min-width: 60px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .MuiTypography-h4 {
+    font-size: 1.8rem !important;
+  }
+
+  .MuiTab-root {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .pagination .MuiButton-root {
+    min-width: 32px !important;
+    height: 32px !important;
+    font-size: 0.8rem !important;
+    margin: 0 0.1rem !important;
+  }
+
+  .pagination .MuiButton-root:first-child,
+  .pagination .MuiButton-root:last-child {
+    min-width: 50px !important;
+  }
+
+  .pagination span {
+    margin: 0 0.2rem;
+  }
+}

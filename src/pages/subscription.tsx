@@ -1,5 +1,6 @@
 // src/pages/subscription.tsx
 import React, { useState, useEffect } from 'react';
+import './subscription.css';
 import axios from 'axios';
 import {
   Container,

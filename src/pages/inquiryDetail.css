@@ -1,0 +1,214 @@
+/* src/pages/inquiryDetail.css */
+
+.inquiry-detail-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Back button styling */
+.back-button {
+  color: #2e6e31 !important; /* accent color */
+  margin-bottom: 1.5rem !important;
+  border-radius: 20px !important;
+  padding: 0.5rem 1rem !important;
+  background-color: rgba(164, 226, 46, 0.1) !important;
+  transition: all 0.3s ease !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+}
+
+.back-button:hover {
+  background-color: rgba(164, 226, 46, 0.2) !important;
+  transform: translateX(-5px);
+}
+
+.back-button .MuiSvgIcon-root {
+  color: #a4e22e !important; /* primary color */
+  transition: transform 0.3s ease;
+}
+
+.back-button:hover .MuiSvgIcon-root {
+  transform: translateX(-3px);
+}
+
+/* Main content paper */
+.content-paper {
+  border-radius: 15px !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05) !important;
+  padding: 2rem !important;
+  overflow: hidden !important;
+}
+
+/* Header section */
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.inquiry-title {
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 700 !important;
+  margin-bottom: 0.5rem !important;
+  font-size: 1.8rem !important;
+}
+
+/* Status chip styling */
+.MuiChip-root {
+  font-weight: 600 !important;
+}
+
+.MuiChip-colorSuccess {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+  color: #28a745 !important;
+  border: 1px solid #28a745 !important;
+}
+
+.MuiChip-colorWarning {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+  color: #ffc107 !important;
+  border: 1px solid #ffc107 !important;
+}
+
+/* Date metadata */
+.date-text {
+  color: #666 !important;
+  font-size: 0.9rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+/* Question card */
+.question-card {
+  border: 1px solid #e9ecef !important;
+  border-radius: 10px !important;
+  margin-bottom: 2rem !important;
+  background-color: white !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03) !important;
+  overflow: hidden !important;
+}
+
+.question-card-content {
+  padding: 1.5rem !important;
+  background-color: #f8f9fa !important;
+}
+
+.question-text {
+  color: #333 !important;
+  line-height: 1.7 !important;
+  white-space: pre-wrap !important;
+}
+
+/* Divider */
+.divider {
+  margin: 2rem 0 !important;
+  background-color: #e9ecef !important;
+}
+
+/* Answer section title */
+.answer-title {
+  color: #a4e22e !important; /* primary color */
+  font-weight: 700 !important;
+  margin-bottom: 1rem !important;
+  font-size: 1.3rem !important;
+}
+
+/* Answer date */
+.answer-date {
+  color: #666 !important;
+  font-size: 0.9rem !important;
+  margin-bottom: 1rem !important;
+}
+
+/* Answer card */
+.answer-card {
+  border: 1px solid #e9ecef !important;
+  border-radius: 10px !important;
+  background-color: white !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03) !important;
+  overflow: hidden !important;
+}
+
+.answer-card-content {
+  padding: 1.5rem !important;
+  background-color: rgba(
+    164,
+    226,
+    46,
+    0.05
+  ) !important; /* Very light primary color */
+  border-left: 4px solid #a4e22e !important; /* primary color */
+}
+
+.answer-text {
+  color: #333 !important;
+  line-height: 1.7 !important;
+  white-space: pre-wrap !important;
+}
+
+/* Loading state */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.loading-spinner {
+  color: #a4e22e !important; /* primary color */
+  margin-bottom: 1rem !important;
+}
+
+/* Alert styling */
+.MuiAlert-standardError {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  color: #dc3545 !important;
+  border: 1px solid #dc3545 !important;
+  border-radius: 10px !important;
+  padding: 1rem !important;
+}
+
+.MuiAlert-standardWarning {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+  color: #ffc107 !important;
+  border: 1px solid #ffc107 !important;
+  border-radius: 10px !important;
+  padding: 1rem !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .content-paper {
+    padding: 1.5rem !important;
+  }
+
+  .inquiry-title {
+    font-size: 1.5rem !important;
+  }
+
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-section .MuiChip-root {
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .content-paper {
+    padding: 1rem !important;
+  }
+
+  .inquiry-title {
+    font-size: 1.3rem !important;
+  }
+
+  .question-card-content,
+  .answer-card-content {
+    padding: 1rem !important;
+  }
+}

@@ -1,5 +1,6 @@
 // src/components/userCard.tsx
 import React from 'react';
+import './userCard.css';
 import {
   Card,
   CardContent,

@@ -1,5 +1,6 @@
 // src/pages/inquiry.tsx
 import React, { useEffect, useState } from 'react';
+import './inquiry.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';

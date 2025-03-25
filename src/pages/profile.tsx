@@ -1,5 +1,6 @@
 // src/pages/profile.tsx
 import React, { useState, useEffect } from 'react';
+import './profile.css';
 import {
   Container,
   Typography,

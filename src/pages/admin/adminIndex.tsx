@@ -1,5 +1,6 @@
 // src/pages/admin/adminIndex.tsx
 import React, { useState, useEffect } from 'react';
+import './adminIndex.css';
 import {
   Container,
   Grid,

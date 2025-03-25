@@ -1,5 +1,6 @@
 // src/pages/admin/products.tsx
 import React, { useState, useEffect } from 'react';
+import './products.css';
 import axios from 'axios';
 import {
   Container,

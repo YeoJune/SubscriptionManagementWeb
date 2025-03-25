@@ -1,0 +1,161 @@
+/* src/pages/login.css */
+
+.login-container {
+  min-height: calc(100vh - 100px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+  background-color: #f8f9fa;
+}
+
+/* Card styling */
+.login-card {
+  width: 100%;
+  max-width: 450px;
+  border-radius: 15px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  padding: 2.5rem;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.login-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+/* Logo section */
+.login-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.login-logo img {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1rem;
+}
+
+/* Title */
+.login-title {
+  font-size: 2rem;
+  color: #2e6e31; /* accent color */
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+/* Form fields */
+.MuiTextField-root {
+  margin-bottom: 1.5rem !important;
+}
+
+.MuiInputLabel-root {
+  color: #2e6e31 !important; /* accent color */
+}
+
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #a4e22e !important; /* primary color */
+}
+
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #a4e22e !important; /* primary color */
+  border-width: 2px;
+}
+
+/* Login button */
+.login-button {
+  background-color: #a4e22e !important; /* primary color */
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  padding: 0.8rem !important;
+  border-radius: 30px !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 1.5rem !important;
+  text-transform: none !important;
+  box-shadow: 0 4px 10px rgba(164, 226, 46, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.login-button:hover {
+  background-color: #7baa23 !important; /* darker primary */
+  box-shadow: 0 6px 15px rgba(164, 226, 46, 0.4) !important;
+  transform: translateY(-2px);
+}
+
+.login-button:disabled {
+  background-color: #cccccc !important;
+  color: #666666 !important;
+}
+
+/* Register link section */
+.register-link-container {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.register-link {
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 600 !important;
+  position: relative;
+  text-decoration: none !important;
+}
+
+.register-link:hover {
+  color: #a4e22e !important; /* primary color */
+}
+
+.register-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background-color: #a4e22e; /* primary color */
+  transition: width 0.3s ease;
+}
+
+.register-link:hover::after {
+  width: 100%;
+}
+
+/* Error message alert */
+.MuiAlert-root.MuiAlert-standardError {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  color: #dc3545 !important;
+  border: 1px solid #dc3545 !important;
+  border-radius: 10px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .login-card {
+    padding: 2rem;
+  }
+
+  .login-title {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 1.5rem;
+  }
+
+  .login-title {
+    font-size: 1.5rem;
+  }
+
+  .login-logo img {
+    width: 60px;
+    height: 60px;
+  }
+}

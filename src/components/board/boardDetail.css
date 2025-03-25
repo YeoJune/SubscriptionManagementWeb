@@ -1,85 +1,171 @@
 /* src/components/board/boardDetail.css */
-/* button to history back*/
-/* boardDetail.css */
+
 .board-container {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  font-family: 'Roboto', sans-serif;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
 }
 
-.board-header {
+/* Back button styling */
+.MuiButton-root.back-button {
+  color: #2e6e31 !important; /* accent color */
+  margin-bottom: 1.5rem !important;
+  border-radius: 20px !important;
+  padding: 0.5rem 1rem !important;
+  background-color: rgba(164, 226, 46, 0.1) !important;
+  transition: all 0.3s ease !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+}
+
+.MuiButton-root.back-button:hover {
+  background-color: rgba(164, 226, 46, 0.2) !important;
+  transform: translateX(-5px);
+}
+
+.MuiButton-root.back-button .MuiSvgIcon-root {
+  color: #a4e22e !important; /* primary color */
+  transition: transform 0.3s ease;
+}
+
+.MuiButton-root.back-button:hover .MuiSvgIcon-root {
+  transform: translateX(-3px);
+}
+
+/* Card styling */
+.MuiCard-root {
+  border-radius: 15px !important;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05) !important;
+  overflow: hidden !important;
+}
+
+.MuiCardContent-root {
+  padding: 2rem !important;
+}
+
+/* Board title */
+.MuiTypography-h5 {
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 700 !important;
+  margin-bottom: 0.5rem !important;
+  font-size: 1.8rem !important;
+}
+
+/* Board meta info */
+.MuiTypography-caption {
+  color: #6c757d !important;
+  font-size: 0.9rem !important;
+  display: block !important;
+  margin-bottom: 1rem !important;
+}
+
+/* Divider */
+.MuiDivider-root {
+  margin: 1.5rem 0 !important;
+  background-color: #e9ecef !important;
+}
+
+/* Normal content */
+.MuiTypography-body1 {
+  color: #333 !important;
+  line-height: 1.8 !important;
+  font-size: 1.05rem !important;
+}
+
+/* FAQ question */
+.MuiTypography-h6 {
+  color: #333 !important;
+  font-weight: 600 !important;
+  margin-bottom: 1rem !important;
+  font-size: 1.2rem !important;
+  line-height: 1.5 !important;
+  background-color: rgba(164, 226, 46, 0.1) !important;
+  padding: 1rem !important;
+  border-radius: 10px !important;
+  border-left: 4px solid #a4e22e !important; /* primary color */
+}
+
+/* FAQ answer */
+.faq-answer {
+  color: #333 !important;
+  line-height: 1.8 !important;
+  font-size: 1.05rem !important;
+  background-color: #f8f9fa !important;
+  padding: 1.5rem !important;
+  border-radius: 10px !important;
+}
+
+/* Loading state */
+.loading-container {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  margin-bottom: 1.5rem;
-}
-
-.board-title {
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: #333333;
-  margin: 0 0 0.5rem;
-}
-
-.board-meta {
-  font-size: 0.9rem;
-  color: #888888;
-}
-
-.board-content {
-  font-size: 1.1rem;
-  line-height: 1.8;
-  color: #555555;
-  margin-bottom: 2rem;
-}
-
-/* 예쁜 '목록으로 돌아가기' 버튼 */
-.board-back-button {
-  display: inline-flex;
   align-items: center;
-  background: linear-gradient(45deg, #007acc, #005f99);
-  color: #ffffff;
-  padding: 0.6rem 1.2rem;
-  border: none;
-  border-radius: 50px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background 0.3s ease;
-  margin-bottom: 2rem;
+  justify-content: center;
+  padding: 3rem;
 }
 
-.board-back-button:hover {
-  background: linear-gradient(45deg, #005f99, #007acc);
+.loading-container .MuiCircularProgress-root {
+  color: #a4e22e !important; /* primary color */
+  margin-bottom: 1rem;
 }
 
-.board-back-button.small {
-  padding: 0.3rem 0.8rem;
-  font-size: 0.9rem;
-  border-radius: 30px;
+.loading-container .MuiTypography-root {
+  color: #6c757d;
 }
 
-.board-back-button.small:hover {
-  background: linear-gradient(45deg, #005f99, #007acc);
+/* Error state */
+.MuiTypography-root[color='error'] {
+  margin: 2rem 0;
+  padding: 1rem;
+  border-radius: 10px;
+  background-color: rgba(220, 53, 69, 0.1);
+  border: 1px solid #dc3545;
 }
 
-/* 반응형 디자인 */
+/* Enhanced content styling for better readability */
+.MuiTypography-body1 a {
+  color: #2e6e31 !important;
+  text-decoration: underline !important;
+  font-weight: 600 !important;
+  transition: color 0.3s ease !important;
+}
+
+.MuiTypography-body1 a:hover {
+  color: #a4e22e !important;
+}
+
+.MuiTypography-body1 strong,
+.MuiTypography-body1 b {
+  color: #2e6e31 !important;
+}
+
+.MuiTypography-body1 em,
+.MuiTypography-body1 i {
+  color: #666 !important;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
-  .board-container {
-    padding: 1.5rem;
-    margin: 1rem;
+  .MuiCardContent-root {
+    padding: 1.5rem !important;
   }
 
-  .board-title {
-    font-size: 1.8rem;
+  .MuiTypography-h5 {
+    font-size: 1.5rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .MuiCardContent-root {
+    padding: 1rem !important;
   }
 
-  .board-content {
-    font-size: 1rem;
+  .MuiTypography-h5 {
+    font-size: 1.3rem !important;
+  }
+
+  .MuiTypography-body1,
+  .faq-answer {
+    font-size: 1rem !important;
   }
 }

@@ -1,5 +1,6 @@
 // pages/admin/users.tsx
 import React, { useEffect, useState } from 'react';
+import './users.css';
 import {
   Container,
   Table,

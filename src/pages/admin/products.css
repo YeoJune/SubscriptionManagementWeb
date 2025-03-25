@@ -1,0 +1,322 @@
+/* src/pages/admin/products.css */
+
+.products-admin-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Header section */
+.header-box {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 2rem !important;
+}
+
+/* Page title */
+.products-admin-title {
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 700 !important;
+  position: relative;
+  padding-bottom: 0.75rem;
+}
+
+.products-admin-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background-color: #a4e22e; /* primary color */
+  border-radius: 2px;
+}
+
+/* Add product button */
+.add-button {
+  background-color: #a4e22e !important; /* primary color */
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 600 !important;
+  border-radius: 30px !important;
+  padding: 0.5rem 1.5rem !important;
+  text-transform: none !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+.add-button:hover {
+  background-color: #7baa23 !important; /* darker primary */
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-2px);
+}
+
+.add-button .MuiSvgIcon-root {
+  font-size: 1.2rem !important;
+}
+
+/* Table styling */
+.MuiTableContainer-root {
+  border-radius: 10px !important;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05) !important;
+  overflow: hidden !important;
+  margin-bottom: 1rem !important;
+}
+
+.MuiTableHead-root {
+  background-color: #f8f9fa !important;
+}
+
+.MuiTableHead-root .MuiTableCell-root {
+  font-weight: 700 !important;
+  color: #2e6e31 !important; /* accent color */
+  border-bottom: 2px solid #a4e22e !important; /* primary color */
+  padding: 1rem !important;
+}
+
+.MuiTableBody-root .MuiTableRow-root {
+  transition: all 0.2s ease !important;
+}
+
+.MuiTableBody-root .MuiTableRow-root:hover {
+  background-color: rgba(
+    164,
+    226,
+    46,
+    0.1
+  ) !important; /* primary color with opacity */
+}
+
+.MuiTableBody-root .MuiTableCell-root {
+  padding: 1rem !important;
+  border-bottom: 1px solid #e9ecef !important;
+}
+
+/* Price cell */
+.price-cell {
+  font-weight: 700 !important;
+  color: #ff7e33 !important; /* secondary color */
+}
+
+/* Delivery count cell */
+.delivery-count-cell {
+  font-weight: 700 !important;
+  color: #2e6e31 !important; /* accent color */
+  background-color: rgba(164, 226, 46, 0.1) !important;
+  border-radius: 20px !important;
+  padding: 0.25rem 0.75rem !important;
+  display: inline-block !important;
+}
+
+/* Action buttons */
+.action-buttons {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+}
+
+.edit-button {
+  color: #0dcaf0 !important;
+  background-color: rgba(13, 202, 240, 0.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+.edit-button:hover {
+  background-color: rgba(13, 202, 240, 0.2) !important;
+  transform: translateY(-2px);
+}
+
+.delete-button {
+  color: #dc3545 !important;
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+.delete-button:hover {
+  background-color: rgba(220, 53, 69, 0.2) !important;
+  transform: translateY(-2px);
+}
+
+/* Pagination styling */
+.MuiTablePagination-root {
+  color: #666 !important;
+}
+
+.MuiTablePagination-selectIcon,
+.MuiTablePagination-actions .MuiIconButton-root {
+  color: #2e6e31 !important; /* accent color */
+}
+
+/* Loading state */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.MuiCircularProgress-root {
+  color: #a4e22e !important; /* primary color */
+}
+
+/* Alert styling */
+.MuiAlert-standardError {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  color: #dc3545 !important;
+  border: 1px solid #dc3545 !important;
+  border-radius: 10px !important;
+  padding: 1rem !important;
+}
+
+.MuiAlert-standardInfo {
+  background-color: rgba(13, 202, 240, 0.1) !important;
+  color: #0dcaf0 !important;
+  border: 1px solid #0dcaf0 !important;
+  border-radius: 10px !important;
+  padding: 1rem !important;
+}
+
+/* Product form dialog */
+.MuiDialog-paper {
+  border-radius: 15px !important;
+  overflow: hidden !important;
+}
+
+.MuiDialogTitle-root {
+  background-color: #f8f9fa !important;
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 700 !important;
+  padding: 1.5rem 2rem !important;
+  border-bottom: 1px solid #e9ecef !important;
+}
+
+.MuiDialogContent-root {
+  padding: 2rem !important;
+}
+
+.form-field {
+  margin-bottom: 1.5rem !important;
+}
+
+.form-field .MuiInputLabel-root {
+  color: #2e6e31 !important; /* accent color */
+}
+
+.form-field .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #a4e22e !important; /* primary color */
+}
+
+.form-field
+  .MuiOutlinedInput-root.Mui-focused
+  .MuiOutlinedInput-notchedOutline {
+  border-color: #a4e22e !important; /* primary color */
+  border-width: 2px;
+}
+
+.price-field .MuiInputAdornment-root {
+  color: #ff7e33 !important; /* secondary color */
+  font-weight: 700 !important;
+}
+
+.delivery-count-field .MuiInputAdornment-root {
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 700 !important;
+}
+
+.helper-text {
+  color: #666 !important;
+  font-size: 0.8rem !important;
+  margin-top: 0.25rem !important;
+}
+
+.MuiDialogActions-root {
+  padding: 1rem 2rem 2rem !important;
+}
+
+.cancel-button {
+  color: #666 !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+}
+
+.save-button {
+  background-color: #a4e22e !important; /* primary color */
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 600 !important;
+  border-radius: 30px !important;
+  padding: 0.5rem 1.5rem !important;
+  text-transform: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.save-button:hover {
+  background-color: #7baa23 !important; /* darker primary */
+  transform: translateY(-2px);
+}
+
+/* Delete confirmation dialog */
+.delete-dialog-title {
+  color: #dc3545 !important;
+}
+
+.delete-warning {
+  color: #dc3545 !important;
+  font-weight: 600 !important;
+  margin-top: 1rem !important;
+}
+
+.delete-confirm-button {
+  color: white !important;
+  background-color: #dc3545 !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  border-radius: 30px !important;
+  padding: 0.5rem 1.5rem !important;
+}
+
+.delete-confirm-button:hover {
+  background-color: #c82333 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 960px) {
+  .MuiTableCell-root {
+    padding: 0.75rem !important;
+    font-size: 0.9rem !important;
+  }
+
+  .MuiTableCell-root:nth-child(3),
+  .MuiTableCell-root:nth-child(6) {
+    display: none !important;
+  }
+
+  .header-box {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+  }
+
+  .add-button {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .products-admin-title {
+    font-size: 1.8rem !important;
+  }
+
+  .MuiTableCell-root {
+    padding: 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .MuiTableCell-root:nth-child(1) {
+    display: none !important;
+  }
+
+  .MuiDialogContent-root {
+    padding: 1.5rem !important;
+  }
+}

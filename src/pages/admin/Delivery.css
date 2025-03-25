@@ -1,52 +1,238 @@
-.delivery-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  font-family: Arial, sans-serif;
+/* src/pages/admin/delivery.css */
+
+/* Main container styling */
+.MuiContainer-root {
+  padding-top: 2rem;
+  padding-bottom: 4rem;
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 20px;
-  color: #333;
+/* Page title styling */
+.MuiContainer-root h1.MuiTypography-root {
+  color: #2e6e31; /* accent color */
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: 0.75rem;
 }
 
-.loading,
-.error {
-  text-align: center;
-  margin: 10px 0;
-  font-size: 1.1rem;
+.MuiContainer-root h1.MuiTypography-root::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background-color: #a4e22e; /* primary color */
+  border-radius: 2px;
 }
 
-.delivery-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
+/* Filter paper styling */
+.MuiPaper-root {
+  border-radius: 10px !important;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05) !important;
+  overflow: hidden;
 }
 
-.delivery-table th,
-.delivery-table td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: center;
+/* Filter section */
+.MuiGrid-container {
+  padding: 0.5rem;
 }
 
-.delivery-table th {
-  background-color: #f4f4f4;
-  color: #555;
+/* Form controls within filter */
+.MuiFormControl-root .MuiInputLabel-root {
+  color: #2e6e31 !important; /* accent color */
 }
 
-.btn-update {
-  background-color: #4caf50;
-  border: none;
-  color: white;
-  padding: 8px 14px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background-color 0.2s ease-in-out;
+.MuiFormControl-root
+  .MuiOutlinedInput-root:hover
+  .MuiOutlinedInput-notchedOutline {
+  border-color: #a4e22e !important; /* primary color */
 }
 
-.btn-update:hover {
-  background-color: #45a049;
+.MuiFormControl-root
+  .MuiOutlinedInput-root.Mui-focused
+  .MuiOutlinedInput-notchedOutline {
+  border-color: #a4e22e !important; /* primary color */
+  border-width: 2px;
+}
+
+/* Search button styling */
+.MuiButton-containedPrimary {
+  background-color: #a4e22e !important; /* primary color */
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 600 !important;
+  border-radius: 30px !important;
+  text-transform: none !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+.MuiButton-containedPrimary:hover {
+  background-color: #7baa23 !important; /* darker primary */
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-2px);
+}
+
+/* Table styling */
+.MuiTableContainer-root {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.MuiTableHead-root {
+  background-color: #f8f9fa;
+}
+
+.MuiTableHead-root .MuiTableCell-root {
+  font-weight: 700;
+  color: #2e6e31; /* accent color */
+  border-bottom: 2px solid #a4e22e; /* primary color */
+  padding: 1rem;
+}
+
+.MuiTableBody-root .MuiTableRow-root {
+  transition: background-color 0.2s ease;
+}
+
+.MuiTableBody-root .MuiTableRow-root:hover {
+  background-color: rgba(164, 226, 46, 0.1); /* primary color with opacity */
+}
+
+.MuiTableBody-root .MuiTableCell-root {
+  padding: 1rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* Status chip styling */
+.MuiChip-root {
+  font-weight: 600 !important;
+}
+
+.MuiChip-colorSuccess {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+  color: #28a745 !important;
+  border: 1px solid #28a745 !important;
+}
+
+.MuiChip-colorWarning {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+  color: #ffc107 !important;
+  border: 1px solid #ffc107 !important;
+}
+
+.MuiChip-colorError {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  color: #dc3545 !important;
+  border: 1px solid #dc3545 !important;
+}
+
+/* Action buttons */
+.MuiButton-outlinedSuccess {
+  color: #28a745 !important;
+  border-color: #28a745 !important;
+  border-radius: 20px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.MuiButton-outlinedSuccess:hover {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+}
+
+.MuiButton-outlinedError {
+  color: #dc3545 !important;
+  border-color: #dc3545 !important;
+  border-radius: 20px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.MuiButton-outlinedError:hover {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+/* Pagination styling */
+.MuiTablePagination-root {
+  color: #666666 !important;
+}
+
+.MuiTablePagination-selectIcon,
+.MuiTablePagination-actions .MuiIconButton-root {
+  color: #2e6e31 !important; /* accent color */
+}
+
+/* Dialog styling */
+.MuiDialog-paper {
+  border-radius: 15px !important;
+  padding: 1rem !important;
+}
+
+.MuiDialogTitle-root {
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 700 !important;
+}
+
+.MuiDialogContent-root {
+  padding: 1.5rem !important;
+}
+
+.MuiDialogActions-root {
+  padding: 1rem 1.5rem 1.5rem !important;
+}
+
+/* Loading and alert styles */
+.MuiCircularProgress-root {
+  color: #a4e22e !important; /* primary color */
+}
+
+.MuiAlert-standardInfo {
+  background-color: rgba(13, 202, 240, 0.1) !important;
+  color: #0dcaf0 !important;
+  border: 1px solid #0dcaf0 !important;
+  border-radius: 10px !important;
+  padding: 1rem !important;
+}
+
+.MuiAlert-standardError {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  color: #dc3545 !important;
+  border: 1px solid #dc3545 !important;
+  border-radius: 10px !important;
+  padding: 1rem !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .MuiTableCell-root {
+    padding: 0.75rem !important;
+    font-size: 0.9rem !important;
+  }
+
+  .MuiTableContainer-root {
+    overflow-x: auto !important;
+  }
+
+  /* Hide less important columns on small screens */
+  .MuiTableCell-root:nth-child(1),
+  .MuiTableCell-root:nth-child(4) {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .MuiContainer-root h1.MuiTypography-root {
+    font-size: 1.8rem !important;
+  }
+
+  .MuiTableCell-root {
+    padding: 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Hide more columns on very small screens */
+  .MuiTableCell-root:nth-child(5) {
+    display: none !important;
+  }
 }

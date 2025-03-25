@@ -1,5 +1,6 @@
 // src/pages/admin/inquiry.tsx
 import React, { useState, useEffect } from 'react';
+import './inquiry.css';
 import axios from 'axios';
 import {
   Container,

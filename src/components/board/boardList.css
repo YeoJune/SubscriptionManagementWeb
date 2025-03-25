@@ -1,69 +1,86 @@
 /* src/components/board/boardList.css */
-.board-header {
-  text-align: center;
-  margin-bottom: 2rem;
-  font-size: 2rem;
-  font-weight: bold;
-  color: #333;
+
+/* Override MUI Table styles to match the Saluv All Day branding */
+.MuiTableContainer-root {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
 }
 
-/* 공지사항(게시글) 목록을 감싸는 영역 */
-.board-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem; /* 게시글 사이 간격 */
+.MuiTableHead-root {
+  background-color: #f8f9fa !important;
 }
 
-/* 각 공지사항(게시글) 하나를 카드 형태로 디자인 */
-.board-item {
-  background-color: #fff;
-  border: 1px solid #e2e2e2;
-  border-radius: 6px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.MuiTableHead-root .MuiTableCell-root {
+  font-weight: 700 !important;
+  color: #2e6e31 !important; /* accent color */
+  border-bottom: 2px solid #a4e22e !important; /* primary color */
+  font-size: 0.95rem !important;
 }
 
-/* 제목 */
-.board-item h3 {
-  margin: 0 0 0.5rem;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #333;
+.MuiTableBody-root .MuiTableRow-root:hover {
+  background-color: rgba(
+    164,
+    226,
+    46,
+    0.1
+  ) !important; /* primary color with opacity */
 }
 
-/* 게시글 내용 */
-.board-item p {
-  margin: 0.25rem 0;
-  line-height: 1.4;
-  color: #555;
+.MuiTableBody-root .MuiTableCell-root {
+  border-bottom: 1px solid #e9ecef !important;
+  padding: 1rem 16px !important;
 }
 
-/* 작성자, 작성일 등 작은 정보 */
-.board-item .meta {
-  margin-top: 1rem;
-  font-size: 0.875rem;
-  color: #888;
+/* Improve the empty state message */
+.MuiTableBody-root .MuiTableCell-root[align='center'] {
+  padding: 2rem !important;
+  color: #666666 !important;
+  font-style: italic;
 }
 
-/* 공개 여부 등 추가 정보 */
-.board-item .status {
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #007acc; /* 필요 시 색상 조정 */
+/* Style the chips/tags to match branding */
+.MuiChip-root.MuiChip-colorPrimary {
+  background-color: #a4e22e !important; /* primary brand color */
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 600 !important;
 }
 
-/* 반응형 대응 (예시) */
+.MuiChip-root.MuiChip-colorSecondary {
+  background-color: #ff7e33 !important; /* secondary brand color */
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+/* Add subtle animations when hovering over rows */
+.MuiTableBody-root .MuiTableRow-root {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease !important;
+}
+
+.MuiTableBody-root .MuiTableRow-root:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05) !important;
+  z-index: 1 !important;
+  position: relative !important;
+}
+
+/* Responsive adjustments */
 @media (max-width: 600px) {
-  .board-container {
-    padding: 1rem;
+  .MuiTableContainer-root {
+    max-width: 100% !important;
+    margin: 0 !important;
   }
 
-  .board-item {
-    padding: 1rem;
+  .MuiTableCell-root {
+    padding: 8px !important;
+    font-size: 0.8rem !important;
   }
 
-  .board-item h3 {
-    font-size: 1.1rem;
+  /* Hide content column on small screens */
+  .MuiTableCell-root:nth-child(3) {
+    display: none !important;
   }
 }

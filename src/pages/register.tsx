@@ -1,5 +1,6 @@
 // src/pages/register.tsx
 import React, { useState } from 'react';
+import './register.css';
 import {
   Alert,
   Container,

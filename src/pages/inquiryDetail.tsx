@@ -1,5 +1,6 @@
 // src/pages/inquiryDetail.tsx
 import React, { useState, useEffect } from 'react';
+import './inquiryDetail.css';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { InquiryProps } from '../types';

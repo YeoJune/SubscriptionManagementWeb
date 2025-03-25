@@ -1,0 +1,162 @@
+/* src/pages/register.css */
+
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+  background-color: #f8f9fa;
+}
+
+/* Card styling */
+.register-card {
+  width: 100%;
+  max-width: 500px;
+  border-radius: 15px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  padding: 2.5rem;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.register-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+/* Title */
+.register-title {
+  font-size: 2rem;
+  color: #2e6e31; /* accent color */
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+  position: relative;
+}
+
+.register-title::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 4px;
+  background-color: #a4e22e; /* primary color */
+  margin: 0.5rem auto 0;
+  border-radius: 2px;
+}
+
+/* Form fields */
+.MuiTextField-root {
+  margin-bottom: 0.5rem !important;
+}
+
+.MuiInputLabel-root {
+  color: #2e6e31 !important; /* accent color */
+}
+
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #a4e22e !important; /* primary color */
+}
+
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #a4e22e !important; /* primary color */
+  border-width: 2px;
+}
+
+/* Error messages under fields */
+.error-text {
+  color: #dc3545 !important;
+  font-size: 0.8rem !important;
+  margin-top: -0.5rem !important;
+  margin-bottom: 0.5rem !important;
+  padding-left: 0.5rem !important;
+}
+
+/* Register button */
+.register-button {
+  background-color: #a4e22e !important; /* primary color */
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  padding: 0.8rem !important;
+  border-radius: 30px !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 1rem !important;
+  text-transform: none !important;
+  box-shadow: 0 4px 10px rgba(164, 226, 46, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.register-button:hover {
+  background-color: #7baa23 !important; /* darker primary */
+  box-shadow: 0 6px 15px rgba(164, 226, 46, 0.4) !important;
+  transform: translateY(-2px);
+}
+
+.register-button:disabled {
+  background-color: #cccccc !important;
+  color: #666666 !important;
+}
+
+/* Alert messages */
+.MuiAlert-root.MuiAlert-standardError {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  color: #dc3545 !important;
+  border: 1px solid #dc3545 !important;
+  border-radius: 10px !important;
+}
+
+.MuiAlert-root.MuiAlert-standardSuccess {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+  color: #28a745 !important;
+  border: 1px solid #28a745 !important;
+  border-radius: 10px !important;
+}
+
+/* Password strength indicator (optional) */
+.password-strength {
+  height: 5px;
+  border-radius: 2px;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+  transition: width 0.3s ease;
+}
+
+.password-strength-weak {
+  background-color: #dc3545;
+  width: 33%;
+}
+
+.password-strength-medium {
+  background-color: #ffc107;
+  width: 66%;
+}
+
+.password-strength-strong {
+  background-color: #28a745;
+  width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .register-card {
+    padding: 2rem;
+    max-width: 450px;
+  }
+
+  .register-title {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .register-card {
+    padding: 1.5rem;
+  }
+
+  .register-title {
+    font-size: 1.5rem;
+  }
+}

@@ -1,24 +1,217 @@
-/* src/components/Header/Header.css */
-.header {
-  background-color: #f1f1f1;
-  padding: 20px;
-  text-align: center;
+/* src/components/header.css */
+
+/* Header container */
+.MuiAppBar-root {
+  background-color: white !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+  margin-bottom: 1rem !important;
 }
 
-.header-container {
-  display: flex;
-  justify-content: space-between;
-  max-width: 1200px;
-  margin: 0 auto;
+.MuiToolbar-root {
+  display: flex !important;
+  padding: 0.5rem 2rem !important;
 }
 
-.header-container ul {
-  list-style: none;
-  display: flex;
-  padding: 0;
-  margin: 0;
+/* Logo/title section */
+.logo-section {
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
-.header-container li {
-  margin: 0 15px;
+.logo-link {
+  display: flex !important;
+  align-items: center !important;
+  text-decoration: none !important;
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 700 !important;
+  font-size: 1.3rem !important;
+  transition: color 0.3s ease !important;
+}
+
+.logo-link:hover {
+  color: #a4e22e !important; /* primary color */
+}
+
+.logo-image {
+  height: 40px !important;
+  margin-right: 10px !important;
+}
+
+/* Navigation section */
+.nav-section {
+  flex: 2 !important;
+  display: flex !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+}
+
+.nav-button {
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 600 !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 25px !important;
+  transition: all 0.3s ease !important;
+  text-transform: none !important;
+}
+
+.nav-button:hover {
+  background-color: rgba(
+    164,
+    226,
+    46,
+    0.1
+  ) !important; /* primary color with opacity */
+  transform: translateY(-2px);
+}
+
+.active-nav-button {
+  background-color: rgba(
+    164,
+    226,
+    46,
+    0.1
+  ) !important; /* primary color with opacity */
+  border-bottom: 2px solid #a4e22e !important; /* primary color */
+}
+
+/* Admin button */
+.admin-button {
+  background-color: #a4e22e !important; /* primary color */
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 700 !important;
+  padding: 0.5rem 1.2rem !important;
+  border-radius: 25px !important;
+  transition: all 0.3s ease !important;
+  text-transform: none !important;
+  box-shadow: 0 4px 8px rgba(164, 226, 46, 0.3) !important;
+}
+
+.admin-button:hover {
+  background-color: #7baa23 !important; /* darker primary */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(164, 226, 46, 0.4) !important;
+}
+
+/* Auth section */
+.auth-section {
+  flex: 1 !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 0.5rem !important;
+  align-items: center !important;
+}
+
+.auth-button {
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 600 !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 25px !important;
+  transition: all 0.3s ease !important;
+  text-transform: none !important;
+}
+
+.auth-button:hover {
+  background-color: rgba(
+    164,
+    226,
+    46,
+    0.1
+  ) !important; /* primary color with opacity */
+  transform: translateY(-2px);
+}
+
+.register-button {
+  border: 1px solid #a4e22e !important; /* primary color */
+}
+
+.login-button {
+  background-color: #a4e22e !important; /* primary color */
+  color: #2e6e31 !important; /* accent color */
+}
+
+.login-button:hover {
+  background-color: #7baa23 !important; /* darker primary */
+}
+
+.logout-button {
+  color: #6c757d !important;
+}
+
+.logout-button:hover {
+  color: #dc3545 !important;
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+/* Delivery count badge */
+.MuiBadge-badge {
+  background-color: #ff7e33 !important; /* secondary color */
+  color: white !important;
+  font-weight: 700 !important;
+}
+
+.badge-label {
+  color: #2e6e31 !important; /* accent color */
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  margin-right: 0.5rem !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 960px) {
+  .MuiToolbar-root {
+    flex-wrap: wrap !important;
+    padding: 0.5rem 1rem !important;
+  }
+
+  .logo-section {
+    flex: 0 0 100% !important;
+    justify-content: center !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .nav-section {
+    flex: 1 1 100% !important;
+    order: 3 !important;
+    margin-top: 0.5rem !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+
+  .auth-section {
+    flex: 1 1 100% !important;
+    order: 2 !important;
+    justify-content: center !important;
+  }
+
+  .nav-button,
+  .auth-button {
+    font-size: 0.9rem !important;
+    padding: 0.4rem 0.8rem !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .MuiToolbar-root {
+    padding: 0.5rem !important;
+  }
+
+  .logo-link {
+    font-size: 1.1rem !important;
+  }
+
+  .logo-image {
+    height: 30px !important;
+  }
+
+  .nav-button,
+  .auth-button {
+    font-size: 0.8rem !important;
+    padding: 0.3rem 0.6rem !important;
+    min-width: auto !important;
+  }
+
+  .badge-label {
+    display: none !important;
+  }
 }
