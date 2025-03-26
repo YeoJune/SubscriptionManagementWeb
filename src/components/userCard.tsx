@@ -1,14 +1,6 @@
 // src/components/userCard.tsx
 import React from 'react';
 import './userCard.css';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  Avatar,
-  Typography,
-  Stack,
-} from '@mui/material';
 import { UserProps } from '../types';
 
 interface UserCardProps {
@@ -16,56 +8,62 @@ interface UserCardProps {
 }
 
 const UserCard: React.FC<UserCardProps> = ({ user }) => {
+  // 첫 글자를 대문자로 변환
+  const getInitial = (name: string) => {
+    return name.charAt(0).toUpperCase();
+  };
+
   return (
-    <Card
-      sx={{
-        width: '100%',
-        maxWidth: 500,
-        p: 4,
-        boxShadow: 4,
-        margin: 'auto',
-        borderRadius: 3,
-      }}
-    >
-      <CardHeader
-        avatar={
-          <Avatar
-            sx={{
-              bgcolor: 'primary.main',
-              width: 90,
-              height: 90,
-              fontSize: 36,
-            }}
-          >
-            {user.id.charAt(0).toUpperCase()}
-          </Avatar>
-        }
-        title={
-          <Typography variant="h5" component="div" sx={{ mt: 1 }}>
-            {user.id}
-          </Typography>
-        }
-        subheader={
-          <Typography variant="subtitle1" color="text.secondary">
-            {user.role ? user.role.toUpperCase() : 'ROLE 미정'}
-          </Typography>
-        }
-      />
-      <CardContent>
-        <Stack spacing={3}>
+    <div className="user-card">
+      <div className="user-card-header">
+        <div className="user-avatar">{getInitial(user.id)}</div>
+        <h3 className="user-name">{user.name || user.id}</h3>
+        {user.isAdmin && <span className="user-role">관리자</span>}
+      </div>
+
+      <div className="user-card-content">
+        <div className="user-info-stack">
           {user.phone_number && (
-            <Typography variant="body1" sx={{ fontSize: 16 }}>
-              전화번호: {user.phone_number}
-            </Typography>
+            <div className="user-info-item">
+              <span className="user-info-label">전화번호:</span>
+              <span className="user-info-value">{user.phone_number}</span>
+            </div>
           )}
+
+          {user.email && (
+            <div className="user-info-item">
+              <span className="user-info-label">이메일:</span>
+              <span className="user-info-value">{user.email}</span>
+            </div>
+          )}
+
+          {user.address && (
+            <div className="user-info-item">
+              <span className="user-info-label">주소:</span>
+              <span className="user-info-value">{user.address}</span>
+            </div>
+          )}
+
           {typeof user.delivery_count !== 'undefined' && (
-            <Typography variant="body1" sx={{ fontSize: 16 }}>
-              배달 횟수: {user.delivery_count}
-            </Typography>
+            <div className="user-info-item">
+              <span className="user-info-label">남은 배송 횟수:</span>
+              <span className="user-info-value delivery-count">
+                {user.delivery_count}
+              </span>
+            </div>
           )}
-        </Stack>
-      </CardContent>
-    </Card>
+
+          {user.created_at && (
+            <div className="user-info-item">
+              <span className="user-info-label">가입일:</span>
+              <span className="user-info-value">
+                {new Date(user.created_at).toLocaleDateString()}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -1,17 +1,6 @@
 // src/pages/login.tsx
 import React, { useState } from 'react';
 import './login.css';
-import {
-  Container,
-  Box,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Snackbar,
-  Alert,
-  Link as MuiLink,
-} from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
@@ -21,12 +10,7 @@ const Login: React.FC = () => {
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [openSnackbar, setOpenSnackbar] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const handleSnackbarClose = () => {
-    setOpenSnackbar(false);
-  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -34,7 +18,6 @@ const Login: React.FC = () => {
 
     if (!id || !password) {
       setError('아이디와 비밀번호를 모두 입력해주세요.');
-      setOpenSnackbar(true);
       return;
     }
 
@@ -44,82 +27,62 @@ const Login: React.FC = () => {
 
     if (!result.success) {
       setError(result.message);
-      setOpenSnackbar(true);
     } else {
       navigate('/');
     }
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="calc(100vh - 100px)" // 헤더 높이 고려
-        py={4}
-      >
-        <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
-          <Typography variant="h4" component="h1" align="center" gutterBottom>
-            로그인
-          </Typography>
-          <form onSubmit={handleSubmit}>
-            <TextField
-              label="아이디"
-              variant="outlined"
-              margin="normal"
-              fullWidth
-              required
+    <div className="login-container">
+      <div className="login-card">
+        <h1 className="login-title">로그인</h1>
+
+        {error && <div className="alert alert-error">{error}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="id" className="form-label">
+              아이디
+            </label>
+            <input
+              id="id"
+              type="text"
+              className="form-control"
               value={id}
               onChange={(e) => setId(e.target.value)}
-            />
-            <TextField
-              label="비밀번호"
-              variant="outlined"
-              margin="normal"
-              fullWidth
               required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">
+              비밀번호
+            </label>
+            <input
+              id="password"
               type="password"
+              className="form-control"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
             />
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              disabled={loading}
-              sx={{
-                marginTop: 3,
-                backgroundColor: 'grey.700',
-                ':hover': { backgroundColor: 'grey.800' },
-              }}
-            >
-              {loading ? '로그인 중...' : '로그인'}
-            </Button>
+          </div>
 
-            <Box mt={2} textAlign="center">
-              <Typography variant="body2">
-                계정이 없으신가요?{' '}
-                <MuiLink component={Link} to="/register">
-                  회원가입
-                </MuiLink>
-              </Typography>
-            </Box>
-          </form>
-        </Paper>
-      </Box>
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? '로그인 중...' : '로그인'}
+          </button>
 
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={3000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert severity="error" onClose={handleSnackbarClose}>
-          {error}
-        </Alert>
-      </Snackbar>
-    </Container>
+          <div className="register-container">
+            <p>
+              계정이 없으신가요?{' '}
+              <Link to="/register" className="register-link">
+                회원가입
+              </Link>
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 };
 

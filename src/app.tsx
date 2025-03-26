@@ -1,4 +1,5 @@
 // src/app.tsx
+import './global.css';
 import AppRoutes from './components/appRoutes';
 import Footer from './components/footer';
 import Header from './components/header';

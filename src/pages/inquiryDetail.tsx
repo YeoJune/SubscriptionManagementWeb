@@ -4,20 +4,6 @@ import './inquiryDetail.css';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { InquiryProps } from '../types';
-import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  Divider,
-  Chip,
-  Button,
-  CircularProgress,
-  Alert,
-  Card,
-  CardContent,
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const InquiryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -63,90 +49,67 @@ const InquiryDetail: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 5, mb: 10 }}>
-      <Button
-        startIcon={<ArrowBackIcon />}
-        onClick={() => navigate('/inquiry')}
-        sx={{ mb: 3 }}
-      >
+    <div className="inquiry-detail-container">
+      <button className="back-button" onClick={() => navigate('/inquiry')}>
+        <span className="back-icon">←</span>
         목록으로 돌아가기
-      </Button>
+      </button>
 
       {loading ? (
-        <Box display="flex" justifyContent="center" my={4}>
-          <CircularProgress />
-        </Box>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+        </div>
       ) : error ? (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {error}
-        </Alert>
+        <div className="alert alert-error">{error}</div>
       ) : inquiry ? (
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={2}
-          >
-            <Typography variant="h5" component="h1">
-              {inquiry.title}
-            </Typography>
-            <Chip
-              label={inquiry.status === 'answered' ? '답변 완료' : '미답변'}
-              color={inquiry.status === 'answered' ? 'success' : 'warning'}
-            />
-          </Box>
+        <div className="content-paper">
+          <div className="header-section">
+            <h1 className="inquiry-title">{inquiry.title}</h1>
+            <span
+              className={`status-chip ${
+                inquiry.status === 'answered'
+                  ? 'status-answered'
+                  : 'status-unanswered'
+              }`}
+            >
+              {inquiry.status === 'answered' ? '답변 완료' : '미답변'}
+            </span>
+          </div>
 
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            display="block"
-            mb={3}
-          >
-            작성일: {formatDate(inquiry.created_at)}
-          </Typography>
+          <p className="date-text">작성일: {formatDate(inquiry.created_at)}</p>
 
-          <Card variant="outlined" sx={{ mb: 4 }}>
-            <CardContent>
-              <Typography variant="body1" component="div">
+          <div className="question-card">
+            <div className="question-content">
+              <div className="question-text">
                 {formatNewlines(inquiry.content)}
-              </Typography>
-            </CardContent>
-          </Card>
+              </div>
+            </div>
+          </div>
 
           {inquiry.answer && (
             <>
-              <Divider sx={{ my: 3 }} />
+              <hr className="divider" />
 
-              <Typography variant="h6" gutterBottom color="primary">
-                답변
-              </Typography>
+              <h2 className="answer-title">답변</h2>
 
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                display="block"
-                mb={2}
-              >
+              <p className="answer-date">
                 답변일: {formatDate(inquiry.answered_at)}
-              </Typography>
+              </p>
 
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="body1" component="div">
+              <div className="answer-card">
+                <div className="answer-content">
+                  <div className="answer-text">
                     {formatNewlines(inquiry.answer)}
-                  </Typography>
-                </CardContent>
-              </Card>
+                  </div>
+                </div>
+              </div>
             </>
           )}
-        </Paper>
+        </div>
       ) : (
-        <Alert severity="warning" sx={{ mt: 2 }}>
-          문의를 찾을 수 없습니다.
-        </Alert>
+        <div className="alert alert-warning">문의를 찾을 수 없습니다.</div>
       )}
-    </Container>
+    </div>
   );
 };
 

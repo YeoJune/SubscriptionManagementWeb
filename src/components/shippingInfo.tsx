@@ -1,21 +1,7 @@
 // src/components/shippingInfo.tsx
 import React, { useState, useEffect } from 'react';
 import './shippingInfo.css';
-import {
-  Typography,
-  Paper,
-  CircularProgress,
-  Alert,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Box,
-  Pagination,
-  Chip,
-} from '@mui/material';
+import './pagination.css';
 import axios from 'axios';
 import { DeliveryProps } from '../types';
 
@@ -54,7 +40,7 @@ const ShippingInfo: React.FC = () => {
     }
   };
 
-  const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
+  const handlePageChange = (value: number) => {
     setPage(value);
   };
 
@@ -62,87 +48,95 @@ const ShippingInfo: React.FC = () => {
   const getStatusInfo = (status: string) => {
     switch (status) {
       case 'pending':
-        return { color: 'warning', label: '배송 대기' };
+        return { class: 'status-warning', label: '배송 대기' };
       case 'complete':
-        return { color: 'success', label: '배송 완료' };
+        return { class: 'status-success', label: '배송 완료' };
       case 'cancel':
-        return { color: 'error', label: '배송 취소' };
+        return { class: 'status-error', label: '배송 취소' };
       default:
-        return { color: 'default', label: status };
+        return { class: '', label: status };
     }
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" my={4}>
-        <CircularProgress />
-      </Box>
+      <div className="loading-container">
+        <div className="progress-indicator">로딩 중...</div>
+      </div>
     );
   }
 
   if (error) {
-    return (
-      <Alert severity="error" sx={{ mt: 2 }}>
-        {error}
-      </Alert>
-    );
+    return <div className="alert alert-error">{error}</div>;
   }
 
   return (
-    <Box width="100%">
-      <Typography variant="h5" component="h2" gutterBottom>
-        배송 내역
-      </Typography>
+    <div className="shipping-container">
+      <h2 className="shipping-title">배송 내역</h2>
 
       {deliveries.length === 0 ? (
-        <Alert severity="info">배송 내역이 없습니다.</Alert>
+        <div className="alert alert-info">배송 내역이 없습니다.</div>
       ) : (
         <>
-          <TableContainer component={Paper} elevation={3}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>배송일</TableCell>
-                  <TableCell>상품명</TableCell>
-                  <TableCell align="center">상태</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
+          <div className="table-container">
+            <table className="table">
+              <thead className="table-head">
+                <tr>
+                  <th className="table-head-cell">배송일</th>
+                  <th className="table-head-cell">상품명</th>
+                  <th
+                    className="table-head-cell"
+                    style={{ textAlign: 'center' }}
+                  >
+                    상태
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
                 {deliveries.map((delivery) => {
                   const statusInfo = getStatusInfo(delivery.status);
                   return (
-                    <TableRow key={delivery.id}>
-                      <TableCell>
+                    <tr key={delivery.id} className="table-row">
+                      <td className="table-cell">
                         {new Date(delivery.date).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>{delivery.product_name}</TableCell>
-                      <TableCell align="center">
-                        <Chip
-                          label={statusInfo.label}
-                          color={statusInfo.color as any}
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                      <td className="table-cell">{delivery.product_name}</td>
+                      <td
+                        className="table-cell"
+                        style={{ textAlign: 'center' }}
+                      >
+                        <span className={`status-chip ${statusInfo.class}`}>
+                          {statusInfo.label}
+                        </span>
+                      </td>
+                    </tr>
                   );
                 })}
-              </TableBody>
-            </Table>
-          </TableContainer>
+              </tbody>
+            </table>
+          </div>
 
           {pagination && pagination.totalPages > 1 && (
-            <Box display="flex" justifyContent="center" mt={2}>
-              <Pagination
-                count={pagination.totalPages}
-                page={page}
-                onChange={handlePageChange}
-                color="primary"
-              />
-            </Box>
+            <div className="pagination-container">
+              <ul className="pagination">
+                {Array.from(
+                  { length: pagination.totalPages },
+                  (_, i) => i + 1
+                ).map((num) => (
+                  <li
+                    key={num}
+                    className={`pagination-item ${page === num ? 'pagination-selected' : ''}`}
+                    onClick={() => handlePageChange(num)}
+                  >
+                    {num}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </>
       )}
-    </Box>
+    </div>
   );
 };
 

@@ -1,23 +1,8 @@
 // pages/admin/users.tsx
 import React, { useEffect, useState } from 'react';
 import './users.css';
-import {
-  Container,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Pagination,
-  CircularProgress,
-  Alert,
-  Typography,
-  Box,
-} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth'; // useAuth 훅 추가
+import { useAuth } from '../../hooks/useAuth';
 
 interface User {
   id: number;
@@ -46,7 +31,7 @@ const AdminUsers: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth(); // 인증 상태 확인
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated && user?.isAdmin) {
@@ -79,11 +64,8 @@ const AdminUsers: React.FC = () => {
       });
   };
 
-  const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
-    value: number
-  ) => {
-    setPage(value);
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
 
   // 사용자 행 클릭 시 상세 페이지로 이동
@@ -91,69 +73,167 @@ const AdminUsers: React.FC = () => {
     navigate(`/admin/users/${id}`);
   };
 
+  // 배송 횟수에 따른 스타일 클래스 결정
+  const getDeliveryCountClass = (count: number) => {
+    if (count > 10) return 'delivery-count-high';
+    if (count > 5) return 'delivery-count-medium';
+    return 'delivery-count-low';
+  };
+
   // 인증 및 권한 검사
   if (!isAuthenticated || !user?.isAdmin) {
     return (
-      <Container maxWidth="sm" sx={{ mt: 10 }}>
-        <Alert severity="error">접근 권한이 없습니다.</Alert>
-      </Container>
+      <div className="admin-users-container">
+        <div className="alert alert-error">접근 권한이 없습니다.</div>
+      </div>
     );
   }
 
+  // 페이지네이션 아이템 생성
+  const renderPaginationItems = () => {
+    const items = [];
+    const { currentPage, totalPages } = pagination;
+
+    // 처음 페이지
+    if (currentPage > 2) {
+      items.push(
+        <li
+          key="first"
+          className="pagination-item"
+          onClick={() => handlePageChange(1)}
+        >
+          1
+        </li>
+      );
+
+      if (currentPage > 3) {
+        items.push(
+          <li key="ellipsis1" className="pagination-item">
+            ...
+          </li>
+        );
+      }
+    }
+
+    // 이전 페이지
+    if (currentPage > 1) {
+      items.push(
+        <li
+          key={currentPage - 1}
+          className="pagination-item"
+          onClick={() => handlePageChange(currentPage - 1)}
+        >
+          {currentPage - 1}
+        </li>
+      );
+    }
+
+    // 현재 페이지
+    items.push(
+      <li key={currentPage} className="pagination-item active">
+        {currentPage}
+      </li>
+    );
+
+    // 다음 페이지
+    if (currentPage < totalPages) {
+      items.push(
+        <li
+          key={currentPage + 1}
+          className="pagination-item"
+          onClick={() => handlePageChange(currentPage + 1)}
+        >
+          {currentPage + 1}
+        </li>
+      );
+    }
+
+    // 마지막 페이지
+    if (currentPage < totalPages - 1) {
+      if (currentPage < totalPages - 2) {
+        items.push(
+          <li key="ellipsis2" className="pagination-item">
+            ...
+          </li>
+        );
+      }
+
+      items.push(
+        <li
+          key={totalPages}
+          className="pagination-item"
+          onClick={() => handlePageChange(totalPages)}
+        >
+          {totalPages}
+        </li>
+      );
+    }
+
+    return items;
+  };
+
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        사용자 관리
-      </Typography>
+    <div className="admin-users-container">
+      <h1 className="admin-users-title">사용자 관리</h1>
 
       {loading && (
-        <Box display="flex" justifyContent="center" my={4}>
-          <CircularProgress />
-        </Box>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <div>데이터를 불러오는 중...</div>
+        </div>
       )}
 
-      {error && <Alert severity="error">{error}</Alert>}
+      {error && <div className="alert alert-error">{error}</div>}
 
       {!loading && !error && (
         <>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>전화번호</TableCell>
-                  <TableCell>구독(배송) 수</TableCell>
-                  <TableCell>관리자 여부</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
+          <div className="users-table-container">
+            <table className="users-table">
+              <thead className="users-table-head">
+                <tr>
+                  <th className="hide-xs">ID</th>
+                  <th>전화번호</th>
+                  <th>구독(배송) 수</th>
+                  <th>관리자 여부</th>
+                </tr>
+              </thead>
+              <tbody>
                 {users.map((user) => (
-                  <TableRow
+                  <tr
                     key={user.id}
-                    hover
-                    sx={{ cursor: 'pointer' }}
+                    className="users-table-row"
                     onClick={() => handleRowClick(user.id)}
                   >
-                    <TableCell>{user.id}</TableCell>
-                    <TableCell>{user.phone_number}</TableCell>
-                    <TableCell>{user.delivery_count}</TableCell>
-                    <TableCell>{user.isAdmin ? 'Yes' : 'No'}</TableCell>
-                  </TableRow>
+                    <td className="users-table-cell hide-xs">{user.id}</td>
+                    <td className="users-table-cell">{user.phone_number}</td>
+                    <td className="users-table-cell">
+                      <span
+                        className={getDeliveryCountClass(user.delivery_count)}
+                      >
+                        {user.delivery_count}
+                      </span>
+                    </td>
+                    <td className="users-table-cell">
+                      {user.isAdmin ? (
+                        <span className="admin-badge">관리자</span>
+                      ) : (
+                        '일반 회원'
+                      )}
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <Box display="flex" justifyContent="center" my={2}>
-            <Pagination
-              count={pagination.totalPages}
-              page={pagination.currentPage}
-              onChange={handlePageChange}
-              color="primary"
-            />
-          </Box>
+              </tbody>
+            </table>
+          </div>
+
+          {pagination.totalPages > 1 && (
+            <div className="pagination-container">
+              <ul className="pagination">{renderPaginationItems()}</ul>
+            </div>
+          )}
         </>
       )}
-    </Container>
+    </div>
   );
 };
 

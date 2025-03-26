@@ -24,6 +24,9 @@ app.use(cors());
 // React 빌드 파일을 정적 파일로 서빙
 app.use(express.static(path.join(__dirname, 'dist')));
 
+// public 폴더를 정적 파일로 서빙
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
 // API 라우트
 app.use('/api', require('./routes'));
 

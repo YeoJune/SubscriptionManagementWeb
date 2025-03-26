@@ -7,10 +7,10 @@
 
 /* Title styling */
 .shipping-title {
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 700 !important;
-  margin-bottom: 1.5rem !important;
-  font-size: 1.5rem !important;
+  color: var(--accent-color);
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
   position: relative;
   padding-bottom: 0.5rem;
 }
@@ -22,85 +22,86 @@
   left: 0;
   width: 50px;
   height: 3px;
-  background-color: #a4e22e; /* primary color */
+  background-color: var(--primary-color);
   border-radius: 2px;
 }
 
 /* Table styling */
-.MuiTableContainer-root {
-  border-radius: 10px !important;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05) !important;
-  overflow: hidden !important;
-  margin-bottom: 1.5rem !important;
+.table-container {
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
 }
 
-.MuiTableHead-root {
-  background-color: #f8f9fa !important;
+.table-head {
+  background-color: var(--background-color);
 }
 
-.MuiTableHead-root .MuiTableCell-root {
-  font-weight: 700 !important;
-  color: #2e6e31 !important; /* accent color */
-  border-bottom: 2px solid #a4e22e !important; /* primary color */
-  padding: 1rem !important;
+.table-head-cell {
+  font-weight: 700;
+  color: var(--accent-color);
+  border-bottom: 2px solid var(--primary-color);
+  padding: 1rem;
 }
 
-.MuiTableBody-root .MuiTableRow-root {
-  transition: all 0.2s ease !important;
+.table-row {
+  transition: all 0.2s ease;
 }
 
-.MuiTableBody-root .MuiTableRow-root:hover {
-  background-color: rgba(
-    164,
-    226,
-    46,
-    0.1
-  ) !important; /* primary color with opacity */
+.table-row:hover {
+  background-color: rgba(164, 226, 46, 0.1);
   transform: translateY(-2px);
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.05);
 }
 
-.MuiTableBody-root .MuiTableCell-root {
-  padding: 1rem !important;
-  border-bottom: 1px solid #e9ecef !important;
+.table-cell {
+  padding: 1rem;
+  border-bottom: 1px solid var(--background-dark);
 }
 
 /* Status chip styling */
-.MuiChip-root {
-  font-weight: 600 !important;
+.status-chip {
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
+  display: inline-block;
+  font-size: 0.75rem;
 }
 
-.MuiChip-colorSuccess {
-  background-color: rgba(40, 167, 69, 0.1) !important;
-  color: #28a745 !important;
-  border: 1px solid #28a745 !important;
+.status-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: var(--success-color);
+  border: 1px solid var(--success-color);
 }
 
-.MuiChip-colorWarning {
-  background-color: rgba(255, 193, 7, 0.1) !important;
-  color: #ffc107 !important;
-  border: 1px solid #ffc107 !important;
+.status-warning {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+  border: 1px solid #ffc107;
 }
 
-.MuiChip-colorError {
-  background-color: rgba(220, 53, 69, 0.1) !important;
-  color: #dc3545 !important;
-  border: 1px solid #dc3545 !important;
+.status-error {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
 }
 
 /* Pagination styling */
-.MuiPagination-root {
-  margin-top: 1.5rem !important;
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
 }
 
-.MuiPaginationItem-root {
-  color: #2e6e31 !important; /* accent color */
+.pagination-item {
+  color: var(--accent-color);
 }
 
-.MuiPaginationItem-root.Mui-selected {
-  background-color: #a4e22e !important; /* primary color */
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 700 !important;
+.pagination-selected {
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+  font-weight: 700;
 }
 
 /* Loading state */
@@ -112,31 +113,34 @@
   padding: 3rem;
 }
 
-.MuiCircularProgress-root {
-  color: #a4e22e !important; /* primary color */
+.progress-indicator {
+  color: var(--primary-color);
 }
 
 /* Alert styling */
-.MuiAlert-standardError {
-  background-color: rgba(220, 53, 69, 0.1) !important;
-  color: #dc3545 !important;
-  border: 1px solid #dc3545 !important;
-  border-radius: 10px !important;
-  padding: 1rem !important;
+.alert {
+  padding: 1rem;
+  border-radius: 10px;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
-.MuiAlert-standardInfo {
-  background-color: rgba(13, 202, 240, 0.1) !important;
-  color: #0dcaf0 !important;
-  border: 1px solid #0dcaf0 !important;
-  border-radius: 10px !important;
-  padding: 1rem !important;
+.alert-error {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
+}
+
+.alert-info {
+  background-color: rgba(13, 202, 240, 0.1);
+  color: #0dcaf0;
+  border: 1px solid #0dcaf0;
 }
 
 /* Responsive adjustments */
 @media (max-width: 600px) {
-  .MuiTableCell-root {
-    padding: 0.75rem !important;
-    font-size: 0.9rem !important;
+  .table-cell {
+    padding: 0.75rem;
+    font-size: 0.9rem;
   }
 }

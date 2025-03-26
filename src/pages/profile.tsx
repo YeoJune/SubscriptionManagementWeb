@@ -1,25 +1,6 @@
 // src/pages/profile.tsx
 import React, { useState, useEffect } from 'react';
 import './profile.css';
-import {
-  Container,
-  Typography,
-  Box,
-  Divider,
-  Card,
-  CardContent,
-  Grid,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
 import { useAuth } from '../hooks/useAuth';
 import UserCard from '../components/userCard';
 import axios from 'axios';
@@ -49,138 +30,125 @@ const Profile: React.FC = () => {
     }
   };
 
-  // 배송 상태별 색상 및 라벨
+  // 배송 상태별 클래스명 및 라벨
   const getStatusInfo = (status: string) => {
     switch (status) {
       case 'pending':
-        return { color: 'warning', label: '배송 대기' };
+        return { className: 'status-pending', label: '배송 대기' };
       case 'complete':
-        return { color: 'success', label: '배송 완료' };
+        return { className: 'status-complete', label: '배송 완료' };
       case 'cancel':
-        return { color: 'error', label: '배송 취소' };
+        return { className: 'status-cancel', label: '배송 취소' };
       default:
-        return { color: 'default', label: status };
+        return { className: '', label: status };
     }
   };
 
   if (!isAuthenticated || !user) {
     return (
-      <Container maxWidth="sm" sx={{ mt: 10 }}>
-        <Alert severity="warning">로그인 후 접근 가능합니다.</Alert>
-      </Container>
+      <div className="profile-container">
+        <div className="alert alert-warning">로그인 후 접근 가능합니다.</div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="md" sx={{ mt: 5, mb: 10 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        내 프로필
-      </Typography>
+    <div className="profile-container">
+      <h1 className="profile-title">내 프로필</h1>
 
-      <Grid container spacing={4}>
-        <Grid item xs={12} md={4}>
+      <div className="profile-grid">
+        <div>
           <UserCard user={user} />
-        </Grid>
+        </div>
 
-        <Grid item xs={12} md={8}>
-          <Card elevation={3}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                사용자 정보
-              </Typography>
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body1">
-                  <strong>아이디:</strong> {user.id}
-                </Typography>
-                {user.name && (
-                  <Typography variant="body1">
-                    <strong>이름:</strong> {user.name}
-                  </Typography>
-                )}
-                {user.phone_number && (
-                  <Typography variant="body1">
-                    <strong>전화번호:</strong> {user.phone_number}
-                  </Typography>
-                )}
-                {user.email && (
-                  <Typography variant="body1">
-                    <strong>이메일:</strong> {user.email}
-                  </Typography>
-                )}
-                {user.address && (
-                  <Typography variant="body1">
-                    <strong>주소:</strong> {user.address}
-                  </Typography>
-                )}
-              </Box>
+        <div className="profile-card">
+          <div className="profile-card-content">
+            <h2 className="user-info-title">사용자 정보</h2>
+            <div className="user-info-item">
+              <span className="user-info-label">아이디:</span>
+              <span className="user-info-value">{user.id}</span>
+            </div>
 
-              <Typography
-                variant="h6"
-                color="primary"
-                gutterBottom
-                sx={{ mt: 3 }}
-              >
-                남은 배송 횟수: {user.delivery_count || 0}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+            {user.name && (
+              <div className="user-info-item">
+                <span className="user-info-label">이름:</span>
+                <span className="user-info-value">{user.name}</span>
+              </div>
+            )}
 
-        <Grid item xs={12}>
-          <Divider sx={{ my: 3 }} />
+            {user.phone_number && (
+              <div className="user-info-item">
+                <span className="user-info-label">전화번호:</span>
+                <span className="user-info-value">{user.phone_number}</span>
+              </div>
+            )}
 
-          <Typography variant="h5" component="h2" gutterBottom>
-            배송 내역
-          </Typography>
+            {user.email && (
+              <div className="user-info-item">
+                <span className="user-info-label">이메일:</span>
+                <span className="user-info-value">{user.email}</span>
+              </div>
+            )}
 
-          {loading ? (
-            <Box display="flex" justifyContent="center" my={4}>
-              <CircularProgress />
-            </Box>
-          ) : error ? (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {error}
-            </Alert>
-          ) : deliveries.length === 0 ? (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              배송 내역이 없습니다.
-            </Alert>
-          ) : (
-            <TableContainer component={Paper} elevation={3}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>배송일</TableCell>
-                    <TableCell>상품</TableCell>
-                    <TableCell align="center">상태</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {deliveries.map((delivery) => {
-                    const statusInfo = getStatusInfo(delivery.status);
-                    return (
-                      <TableRow key={delivery.id}>
-                        <TableCell>
-                          {new Date(delivery.date).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>{delivery.product_name}</TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            label={statusInfo.label}
-                            color={statusInfo.color as any}
-                            size="small"
-                          />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </Grid>
-      </Grid>
-    </Container>
+            {user.address && (
+              <div className="user-info-item">
+                <span className="user-info-label">주소:</span>
+                <span className="user-info-value">{user.address}</span>
+              </div>
+            )}
+
+            <div className="delivery-count">
+              <span>남은 배송 횟수:</span>
+              <span className="delivery-count-number">
+                {user.delivery_count || 0}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr className="divider" />
+
+      <h2 className="delivery-history-title">배송 내역</h2>
+
+      {loading ? (
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+        </div>
+      ) : error ? (
+        <div className="alert alert-error">{error}</div>
+      ) : deliveries.length === 0 ? (
+        <div className="alert alert-info">배송 내역이 없습니다.</div>
+      ) : (
+        <div className="table-container">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>배송일</th>
+                <th>상품</th>
+                <th style={{ textAlign: 'center' }}>상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              {deliveries.map((delivery) => {
+                const statusInfo = getStatusInfo(delivery.status);
+                return (
+                  <tr key={delivery.id}>
+                    <td>{new Date(delivery.date).toLocaleDateString()}</td>
+                    <td>{delivery.product_name}</td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className={`status-chip ${statusInfo.className}`}>
+                        {statusInfo.label}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 };
 

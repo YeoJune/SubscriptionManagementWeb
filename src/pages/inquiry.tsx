@@ -5,29 +5,6 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { InquiryProps } from '../types';
-import {
-  Container,
-  Typography,
-  Button,
-  Box,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  CircularProgress,
-  Chip,
-  Pagination,
-  Alert,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 
 const PAGE_SIZE = 10;
 
@@ -116,147 +93,145 @@ const Inquiry: React.FC = () => {
     }
   };
 
-  const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
-    setCurrentPage(value);
+  const renderPageButtons = () => {
+    const buttons = [];
+
+    for (let i = 1; i <= totalPages; i++) {
+      buttons.push(
+        <button
+          key={i}
+          className={`page-button ${currentPage === i ? 'active' : ''}`}
+          onClick={() => setCurrentPage(i)}
+        >
+          {i}
+        </button>
+      );
+    }
+
+    return buttons;
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 5, mb: 10 }}>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={3}
-      >
-        <Typography variant="h4" component="h1">
-          고객의 소리
-        </Typography>
+    <div className="inquiry-container">
+      <div className="inquiry-header">
+        <h1 className="inquiry-title">고객의 소리</h1>
 
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleOpenDialog}
-        >
+        <button className="add-button" onClick={handleOpenDialog}>
+          <span className="add-icon">+</span>
           문의 등록
-        </Button>
-      </Box>
+        </button>
+      </div>
 
       {loading ? (
-        <Box display="flex" justifyContent="center" my={4}>
-          <CircularProgress />
-        </Box>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+        </div>
       ) : error ? (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {error}
-        </Alert>
+        <div className="alert alert-error">⚠️ {error}</div>
       ) : inquiries.length === 0 ? (
-        <Alert severity="info" sx={{ mt: 2 }}>
-          등록된 문의가 없습니다.
-        </Alert>
+        <div className="alert alert-info">등록된 문의가 없습니다.</div>
       ) : (
-        <TableContainer component={Paper} elevation={3} sx={{ mb: 3 }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>제목</TableCell>
-                <TableCell>작성일</TableCell>
-                <TableCell align="center">상태</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
+        <div className="inquiry-table-container">
+          <table className="inquiry-table">
+            <thead>
+              <tr>
+                <th>제목</th>
+                <th className="date-column">작성일</th>
+                <th style={{ textAlign: 'center' }}>상태</th>
+              </tr>
+            </thead>
+            <tbody>
               {inquiries.map((inquiry) => (
-                <TableRow
+                <tr
                   key={inquiry.id}
                   onClick={() => handleInquiryClick(inquiry)}
-                  sx={{
-                    cursor: 'pointer',
-                    '&:hover': { backgroundColor: '#f5f5f5' },
-                  }}
                 >
-                  <TableCell>{inquiry.title}</TableCell>
-                  <TableCell>
+                  <td>{inquiry.title}</td>
+                  <td className="date-column">
                     {new Date(inquiry.created_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Chip
-                      label={
-                        inquiry.status === 'answered' ? '답변 완료' : '미답변'
-                      }
-                      color={
-                        inquiry.status === 'answered' ? 'success' : 'warning'
-                      }
-                      size="small"
-                    />
-                  </TableCell>
-                </TableRow>
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <span
+                      className={`status-chip ${
+                        inquiry.status === 'answered'
+                          ? 'status-answered'
+                          : 'status-unanswered'
+                      }`}
+                    >
+                      {inquiry.status === 'answered' ? '답변 완료' : '미답변'}
+                    </span>
+                  </td>
+                </tr>
               ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            </tbody>
+          </table>
+        </div>
       )}
 
       {/* Pagination */}
       {!loading && !error && inquiries.length > 0 && (
-        <Box display="flex" justifyContent="center" mt={3}>
-          <Pagination
-            count={totalPages}
-            page={currentPage}
-            onChange={handlePageChange}
-            color="primary"
-          />
-        </Box>
+        <div className="pagination">{renderPageButtons()}</div>
       )}
 
       {/* New Inquiry Dialog */}
-      <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>새 문의 등록</DialogTitle>
-        <DialogContent>
-          {dialogError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {dialogError}
-            </Alert>
-          )}
-          <TextField
-            autoFocus
-            margin="dense"
-            label="제목"
-            fullWidth
-            value={newInquiry.title}
-            onChange={(e) =>
-              setNewInquiry({ ...newInquiry, title: e.target.value })
-            }
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="내용"
-            multiline
-            rows={5}
-            fullWidth
-            value={newInquiry.content}
-            onChange={(e) =>
-              setNewInquiry({ ...newInquiry, content: e.target.value })
-            }
-          />
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={handleCloseDialog} disabled={submitting}>
-            취소
-          </Button>
-          <Button
-            onClick={handleSubmitInquiry}
-            variant="contained"
-            disabled={submitting}
-          >
-            {submitting ? '등록 중...' : '등록'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+      {openDialog && (
+        <div className="dialog-overlay">
+          <div className="dialog">
+            <div className="dialog-title">새 문의 등록</div>
+            <div className="dialog-content">
+              {dialogError && (
+                <div className="alert alert-error">{dialogError}</div>
+              )}
+              <div className="form-group">
+                <label htmlFor="inquiry-title" className="form-label">
+                  제목
+                </label>
+                <input
+                  id="inquiry-title"
+                  type="text"
+                  className="form-control"
+                  value={newInquiry.title}
+                  onChange={(e) =>
+                    setNewInquiry({ ...newInquiry, title: e.target.value })
+                  }
+                  autoFocus
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="inquiry-content" className="form-label">
+                  내용
+                </label>
+                <textarea
+                  id="inquiry-content"
+                  className="form-control"
+                  rows={5}
+                  value={newInquiry.content}
+                  onChange={(e) =>
+                    setNewInquiry({ ...newInquiry, content: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            <div className="dialog-actions">
+              <button
+                className="btn-cancel"
+                onClick={handleCloseDialog}
+                disabled={submitting}
+              >
+                취소
+              </button>
+              <button
+                className="btn-submit"
+                onClick={handleSubmitInquiry}
+                disabled={submitting}
+              >
+                {submitting ? '등록 중...' : '등록'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

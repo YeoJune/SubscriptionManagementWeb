@@ -1,36 +1,6 @@
 // src/pages/admin/delivery.tsx
 import React, { useEffect, useState } from 'react';
-import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Chip,
-  Button,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Grid,
-  CircularProgress,
-  Alert,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  InputAdornment,
-  IconButton,
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import './delivery.css';
 import { useAuth } from '../../hooks/useAuth';
 import { DeliveryProps } from '../../types';
 import axios from 'axios';
@@ -128,12 +98,12 @@ const Delivery: React.FC = () => {
     }
   };
 
-  const handleChangePage = (_: unknown, newPage: number) => {
+  const handleChangePage = (newPage: number) => {
     setPage(newPage);
   };
 
   const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLSelectElement>
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -143,220 +113,222 @@ const Delivery: React.FC = () => {
   const getStatusInfo = (status: string) => {
     switch (status) {
       case 'pending':
-        return { color: 'warning', label: '배송 대기' };
+        return { className: 'status-warning', label: '배송 대기' };
       case 'complete':
-        return { color: 'success', label: '배송 완료' };
+        return { className: 'status-success', label: '배송 완료' };
       case 'cancel':
-        return { color: 'error', label: '배송 취소' };
+        return { className: 'status-error', label: '배송 취소' };
       default:
-        return { color: 'default', label: status };
+        return { className: '', label: status };
     }
   };
 
   if (!isAuthenticated || !user?.isAdmin) {
     return (
-      <Container maxWidth="sm" sx={{ mt: 10 }}>
-        <Alert severity="error">접근 권한이 없습니다.</Alert>
-      </Container>
+      <div className="admin-container">
+        <div className="alert alert-error">접근 권한이 없습니다.</div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 5, mb: 10 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        배송 관리
-      </Typography>
+    <div className="admin-container">
+      <h1 className="admin-title">배송 관리</h1>
 
       {/* 필터 및 검색 */}
-      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={4} md={3}>
-            <FormControl fullWidth>
-              <InputLabel id="status-filter-label">배송 상태</InputLabel>
-              <Select
-                labelId="status-filter-label"
-                value={filterStatus}
-                label="배송 상태"
-                onChange={(e) => {
-                  setFilterStatus(e.target.value);
-                  setPage(0);
-                }}
-              >
-                <MenuItem value="all">전체</MenuItem>
-                <MenuItem value="pending">배송 대기</MenuItem>
-                <MenuItem value="complete">배송 완료</MenuItem>
-                <MenuItem value="cancel">배송 취소</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
+      <div className="filter-paper">
+        <div className="filter-grid">
+          <div className="form-control">
+            <label htmlFor="status-filter">배송 상태</label>
+            <select
+              id="status-filter"
+              value={filterStatus}
+              onChange={(e) => {
+                setFilterStatus(e.target.value);
+                setPage(0);
+              }}
+            >
+              <option value="all">전체</option>
+              <option value="pending">배송 대기</option>
+              <option value="complete">배송 완료</option>
+              <option value="cancel">배송 취소</option>
+            </select>
+          </div>
 
-          <Grid item xs={12} sm={4} md={3}>
-            <TextField
-              fullWidth
-              label="배송일 (YYYY-MM-DD)"
+          <div className="form-control">
+            <label htmlFor="date-filter">배송일 (YYYY-MM-DD)</label>
+            <input
+              id="date-filter"
+              type="date"
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value)}
-              placeholder="YYYY-MM-DD"
-              InputLabelProps={{
-                shrink: true,
-              }}
             />
-          </Grid>
+          </div>
 
-          <Grid item xs={12} sm={4} md={4}>
-            <TextField
-              fullWidth
-              label="검색"
+          <div className="form-control">
+            <label htmlFor="search-term">검색</label>
+            <input
+              id="search-term"
+              type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={handleSearch} edge="end">
-                      <SearchIcon />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
+              placeholder="이름, 주소 또는 연락처 검색"
             />
-          </Grid>
+          </div>
 
-          <Grid item xs={12} md={2}>
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
+          <div className="form-control">
+            <label htmlFor="search-button">&nbsp;</label>
+            <button
+              id="search-button"
+              className="filter-button"
               onClick={handleSearch}
             >
-              적용
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper>
+              검색
+            </button>
+          </div>
+        </div>
+      </div>
 
       {loading ? (
-        <Box display="flex" justifyContent="center" my={4}>
-          <CircularProgress />
-        </Box>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <div>데이터를 불러오는 중...</div>
+        </div>
       ) : error ? (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
+        <div className="alert alert-error">{error}</div>
       ) : deliveries.length === 0 ? (
-        <Alert severity="info">배송 내역이 없습니다.</Alert>
+        <div className="alert alert-info">배송 내역이 없습니다.</div>
       ) : (
         <>
-          <TableContainer component={Paper} elevation={3}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>사용자</TableCell>
-                  <TableCell>배송일</TableCell>
-                  <TableCell>상품</TableCell>
-                  <TableCell>연락처</TableCell>
-                  <TableCell>주소</TableCell>
-                  <TableCell align="center">상태</TableCell>
-                  <TableCell align="center">액션</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
+          <div className="table-container">
+            <table className="admin-table">
+              <thead className="admin-table-head">
+                <tr>
+                  <th>ID</th>
+                  <th>사용자</th>
+                  <th>배송일</th>
+                  <th>상품</th>
+                  <th className="hide-xs">연락처</th>
+                  <th className="hide-sm">주소</th>
+                  <th style={{ textAlign: 'center' }}>상태</th>
+                  <th style={{ textAlign: 'center' }}>액션</th>
+                </tr>
+              </thead>
+              <tbody className="admin-table-body">
                 {deliveries.map((delivery) => {
                   const statusInfo = getStatusInfo(delivery.status);
                   return (
-                    <TableRow key={delivery.id}>
-                      <TableCell>{delivery.id}</TableCell>
-                      <TableCell>
-                        {delivery.user_name || delivery.user_id}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(delivery.date).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>{delivery.product_name}</TableCell>
-                      <TableCell>{delivery.phone_number}</TableCell>
-                      <TableCell>{delivery.address}</TableCell>
-                      <TableCell align="center">
-                        <Chip
-                          label={statusInfo.label}
-                          color={statusInfo.color as any}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell align="center">
+                    <tr key={delivery.id}>
+                      <td>{delivery.id}</td>
+                      <td>{delivery.user_name || delivery.user_id}</td>
+                      <td>{new Date(delivery.date).toLocaleDateString()}</td>
+                      <td>{delivery.product_name}</td>
+                      <td className="hide-xs">{delivery.phone_number}</td>
+                      <td className="hide-sm">{delivery.address}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span className={`status-chip ${statusInfo.className}`}>
+                          {statusInfo.label}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
                         {delivery.status === 'pending' && (
-                          <Box>
-                            <Button
-                              size="small"
-                              color="success"
-                              variant="outlined"
+                          <div>
+                            <button
+                              className="action-button success-button"
                               onClick={() =>
                                 handleOpenStatusDialog(delivery, 'complete')
                               }
-                              sx={{ mr: 1 }}
                             >
                               완료
-                            </Button>
-                            <Button
-                              size="small"
-                              color="error"
-                              variant="outlined"
+                            </button>
+                            <button
+                              className="action-button error-button"
                               onClick={() =>
                                 handleOpenStatusDialog(delivery, 'cancel')
                               }
                             >
                               취소
-                            </Button>
-                          </Box>
+                            </button>
+                          </div>
                         )}
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   );
                 })}
-              </TableBody>
-            </Table>
-          </TableContainer>
+              </tbody>
+            </table>
+          </div>
 
-          <TablePagination
-            component="div"
-            count={total}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[10, 25, 50]}
-            labelRowsPerPage="페이지당 행 수:"
-            labelDisplayedRows={({ from, to, count }) =>
-              `${from}-${to} / 전체 ${count !== -1 ? count : `${to} 이상`}`
-            }
-          />
+          <div className="pagination-container">
+            <div className="rows-per-page">
+              <span>페이지당 행 수:</span>
+              <select value={rowsPerPage} onChange={handleChangeRowsPerPage}>
+                {[10, 25, 50].map((num) => (
+                  <option key={num} value={num}>
+                    {num}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="pagination-info">
+              {page * rowsPerPage + 1}-
+              {Math.min((page + 1) * rowsPerPage, total)} / 전체 {total}
+            </div>
+
+            <div className="pagination-controls">
+              <button
+                className="pagination-button"
+                onClick={() => handleChangePage(page - 1)}
+                disabled={page === 0}
+              >
+                이전
+              </button>
+              <button
+                className="pagination-button"
+                onClick={() => handleChangePage(page + 1)}
+                disabled={(page + 1) * rowsPerPage >= total}
+              >
+                다음
+              </button>
+            </div>
+          </div>
         </>
       )}
 
       {/* 상태 변경 확인 다이얼로그 */}
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>배송 상태 변경 확인</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {`ID: ${selectedDelivery?.id}, 사용자: ${selectedDelivery?.user_name || selectedDelivery?.user_id}의 배송 상태를 `}
-            <strong>{statusToUpdate === 'complete' ? '완료' : '취소'}</strong>로
-            변경하시겠습니까?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} color="inherit">
-            취소
-          </Button>
-          <Button
-            onClick={handleUpdateStatus}
-            color={statusToUpdate === 'complete' ? 'success' : 'error'}
-            autoFocus
-          >
-            변경
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+      {openDialog && selectedDelivery && (
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <h2 className="modal-title">배송 상태 변경 확인</h2>
+            <div className="modal-body">
+              <p>
+                ID: {selectedDelivery.id}, 사용자:{' '}
+                {selectedDelivery.user_name || selectedDelivery.user_id}의 배송
+                상태를
+                <strong>
+                  {' '}
+                  {statusToUpdate === 'complete' ? '완료' : '취소'}
+                </strong>
+                로 변경하시겠습니까?
+              </p>
+            </div>
+            <div className="modal-actions">
+              <button className="cancel-button" onClick={handleCloseDialog}>
+                취소
+              </button>
+              <button
+                className={`confirm-button ${statusToUpdate === 'complete' ? 'confirm-success' : 'confirm-error'}`}
+                onClick={handleUpdateStatus}
+              >
+                변경
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

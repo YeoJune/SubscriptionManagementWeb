@@ -2,36 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import './inquiry.css';
 import axios from 'axios';
-import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Chip,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  CircularProgress,
-  Alert,
-  InputAdornment,
-  IconButton,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import ClearIcon from '@mui/icons-material/Clear';
 import { InquiryProps } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -126,12 +96,12 @@ const AdminInquiry: React.FC = () => {
     }
   };
 
-  const handleChangePage = (_: unknown, newPage: number) => {
+  const handleChangePage = (newPage: number) => {
     setPage(newPage);
   };
 
   const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLSelectElement>
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -151,200 +121,220 @@ const AdminInquiry: React.FC = () => {
 
   if (!isAuthenticated || !user?.isAdmin) {
     return (
-      <Container maxWidth="sm" sx={{ mt: 10 }}>
-        <Alert severity="error">접근 권한이 없습니다.</Alert>
-      </Container>
+      <div className="inquiry-admin-container">
+        <div className="alert alert-error">접근 권한이 없습니다.</div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 5, mb: 10 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        고객의 소리 관리
-      </Typography>
+    <div className="inquiry-admin-container">
+      <h1 className="inquiry-admin-title">고객의 소리 관리</h1>
 
-      <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-        <FormControl sx={{ minWidth: 120 }}>
-          <InputLabel id="status-filter-label">상태</InputLabel>
-          <Select
-            labelId="status-filter-label"
-            value={filterStatus}
-            label="상태"
-            onChange={(e) => {
-              setFilterStatus(e.target.value);
-              setPage(0);
-            }}
-          >
-            <MenuItem value="all">전체</MenuItem>
-            <MenuItem value="unanswered">미답변</MenuItem>
-            <MenuItem value="answered">답변완료</MenuItem>
-          </Select>
-        </FormControl>
-
-        <TextField
-          label="검색"
-          variant="outlined"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                {searchTerm && (
-                  <IconButton onClick={handleClearSearch} edge="end">
-                    <ClearIcon />
-                  </IconButton>
-                )}
-                <IconButton onClick={handleSearch} edge="end">
-                  <SearchIcon />
-                </IconButton>
-              </InputAdornment>
-            ),
+      <div className="filter-box">
+        <select
+          className="filter-select"
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value);
+            setPage(0);
           }}
-        />
-      </Box>
+        >
+          <option value="all">전체</option>
+          <option value="unanswered">미답변</option>
+          <option value="answered">답변완료</option>
+        </select>
+
+        <div className="search-field">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="검색어를 입력하세요"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <div className="search-buttons">
+            {searchTerm && (
+              <button
+                className="clear-button"
+                onClick={handleClearSearch}
+                title="검색어 지우기"
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                  <path
+                    fill="currentColor"
+                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                  />
+                </svg>
+              </button>
+            )}
+            <button
+              className="search-button"
+              onClick={handleSearch}
+              title="검색"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18">
+                <path
+                  fill="currentColor"
+                  d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
 
       {loading ? (
-        <Box display="flex" justifyContent="center" my={4}>
-          <CircularProgress />
-        </Box>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <div>데이터를 불러오는 중...</div>
+        </div>
       ) : error ? (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {error}
-        </Alert>
+        <div className="alert alert-error">{error}</div>
       ) : inquiries.length === 0 ? (
-        <Alert severity="info" sx={{ mt: 2 }}>
-          문의 내역이 없습니다.
-        </Alert>
+        <div className="alert alert-info">문의 내역이 없습니다.</div>
       ) : (
         <>
-          <TableContainer component={Paper} elevation={3}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>제목</TableCell>
-                  <TableCell>사용자</TableCell>
-                  <TableCell>작성일</TableCell>
-                  <TableCell align="center">상태</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
+          <div className="inquiry-table-container">
+            <table className="inquiry-table">
+              <thead className="inquiry-table-head">
+                <tr>
+                  <th>ID</th>
+                  <th>제목</th>
+                  <th>사용자</th>
+                  <th>작성일</th>
+                  <th style={{ textAlign: 'center' }}>상태</th>
+                </tr>
+              </thead>
+              <tbody>
                 {inquiries.map((inquiry) => (
-                  <TableRow
+                  <tr
                     key={inquiry.id}
+                    className="inquiry-table-row"
                     onClick={() => handleRowClick(inquiry)}
-                    sx={{
-                      cursor: 'pointer',
-                      '&:hover': { backgroundColor: '#f5f5f5' },
-                    }}
                   >
-                    <TableCell>{inquiry.id}</TableCell>
-                    <TableCell>{inquiry.title}</TableCell>
-                    <TableCell>
+                    <td className="inquiry-table-cell">{inquiry.id}</td>
+                    <td className="inquiry-table-cell">{inquiry.title}</td>
+                    <td className="inquiry-table-cell">
                       {inquiry.user_name || inquiry.user_id}
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="inquiry-table-cell">
                       {new Date(inquiry.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell align="center">
-                      <Chip
-                        label={
-                          inquiry.status === 'answered' ? '답변완료' : '미답변'
-                        }
-                        color={
-                          inquiry.status === 'answered' ? 'success' : 'warning'
-                        }
-                        size="small"
-                      />
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                    <td
+                      className="inquiry-table-cell"
+                      style={{ textAlign: 'center' }}
+                    >
+                      <span
+                        className={`status-chip ${inquiry.status === 'answered' ? 'status-success' : 'status-warning'}`}
+                      >
+                        {inquiry.status === 'answered' ? '답변완료' : '미답변'}
+                      </span>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+              </tbody>
+            </table>
+          </div>
 
-          <TablePagination
-            component="div"
-            count={total}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[10, 25, 50]}
-            labelRowsPerPage="페이지당 행 수:"
-            labelDisplayedRows={({ from, to, count }) =>
-              `${from}-${to} / 전체 ${count !== -1 ? count : `${to} 이상`}`
-            }
-          />
+          <div className="pagination-container">
+            <span className="pagination-text">페이지당 행 수:</span>
+            <select
+              className="pagination-select"
+              value={rowsPerPage}
+              onChange={handleChangeRowsPerPage}
+            >
+              {[10, 25, 50].map((num) => (
+                <option key={num} value={num}>
+                  {num}
+                </option>
+              ))}
+            </select>
+            <span className="pagination-text">
+              {page * rowsPerPage + 1}-
+              {Math.min((page + 1) * rowsPerPage, total)} / 전체 {total}
+            </span>
+            <div className="pagination-buttons">
+              <button
+                className="pagination-button"
+                onClick={() => handleChangePage(page - 1)}
+                disabled={page === 0}
+              >
+                이전
+              </button>
+              <button
+                className="pagination-button"
+                onClick={() => handleChangePage(page + 1)}
+                disabled={(page + 1) * rowsPerPage >= total}
+              >
+                다음
+              </button>
+            </div>
+          </div>
         </>
       )}
 
       {/* 답변 다이얼로그 */}
-      <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        {selectedInquiry && (
-          <>
-            <DialogTitle>문의 답변 - {selectedInquiry.title}</DialogTitle>
-            <DialogContent>
+      {openDialog && selectedInquiry && (
+        <div className="dialog">
+          <div className="dialog-paper">
+            <div className="dialog-title">
+              문의 답변 - {selectedInquiry.title}
+            </div>
+            <div className="dialog-content">
               {dialogError && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {dialogError}
-                </Alert>
+                <div className="alert alert-error">{dialogError}</div>
               )}
 
-              <Typography variant="subtitle2" gutterBottom sx={{ mt: 1 }}>
-                작성자: {selectedInquiry.user_name || selectedInquiry.user_id}
-              </Typography>
+              <div className="dialog-meta">
+                <strong>작성자:</strong>{' '}
+                {selectedInquiry.user_name || selectedInquiry.user_id}
+              </div>
 
-              <Typography variant="subtitle2" gutterBottom>
-                작성일: {new Date(selectedInquiry.created_at).toLocaleString()}
-              </Typography>
+              <div className="dialog-meta">
+                <strong>작성일:</strong>{' '}
+                {new Date(selectedInquiry.created_at).toLocaleString()}
+              </div>
 
-              <Paper
-                variant="outlined"
-                sx={{ p: 2, mt: 2, mb: 3, backgroundColor: '#f9f9f9' }}
-              >
-                <Typography
-                  variant="body1"
-                  component="div"
-                  sx={{ whiteSpace: 'pre-wrap' }}
-                >
+              <div className="inquiry-content-box">
+                <div className="inquiry-content-text">
                   {selectedInquiry.content}
-                </Typography>
-              </Paper>
+                </div>
+              </div>
 
-              <TextField
-                label="답변"
-                multiline
-                rows={8}
-                fullWidth
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                placeholder="답변을 입력해주세요"
-              />
-            </DialogContent>
-            <DialogActions sx={{ px: 3, pb: 2 }}>
-              <Button onClick={handleCloseDialog} disabled={submitting}>
+              <div className="answer-field">
+                <label htmlFor="answer">답변</label>
+                <textarea
+                  id="answer"
+                  className="answer-textarea"
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  placeholder="답변을 입력해주세요"
+                  rows={8}
+                />
+              </div>
+            </div>
+            <div className="dialog-actions">
+              <button
+                className="cancel-button"
+                onClick={handleCloseDialog}
+                disabled={submitting}
+              >
                 취소
-              </Button>
-              <Button
+              </button>
+              <button
+                className="submit-button"
                 onClick={handleSubmitAnswer}
-                variant="contained"
-                color="primary"
                 disabled={submitting}
               >
                 {submitting ? '저장 중...' : '답변 저장'}
-              </Button>
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
-    </Container>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

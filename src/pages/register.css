@@ -1,12 +1,11 @@
 /* src/pages/register.css */
 
 .register-container {
-  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 2rem 1rem;
-  background-color: #f8f9fa;
+  background-color: var(--background-color);
 }
 
 /* Card styling */
@@ -17,9 +16,7 @@
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
   background-color: white;
   padding: 2.5rem;
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .register-card:hover {
@@ -30,7 +27,7 @@
 /* Title */
 .register-title {
   font-size: 2rem;
-  color: #2e6e31; /* accent color */
+  color: var(--accent-color);
   text-align: center;
   margin-bottom: 1.5rem;
   font-weight: 700;
@@ -42,101 +39,157 @@
   display: block;
   width: 60px;
   height: 4px;
-  background-color: #a4e22e; /* primary color */
+  background-color: var(--primary-color);
   margin: 0.5rem auto 0;
   border-radius: 2px;
 }
 
-/* Form fields */
-.MuiTextField-root {
-  margin-bottom: 0.5rem !important;
+/* Form styling */
+.form-group {
+  margin-bottom: 1.5rem;
 }
 
-.MuiInputLabel-root {
-  color: #2e6e31 !important; /* accent color */
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--accent-color);
 }
 
-.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
-  border-color: #a4e22e !important; /* primary color */
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: border-color 0.3s;
 }
 
-.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-color: #a4e22e !important; /* primary color */
-  border-width: 2px;
+.form-control:hover {
+  border-color: var(--primary-color);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(164, 226, 46, 0.2);
+}
+
+.form-control.error {
+  border-color: var(--error-color);
 }
 
 /* Error messages under fields */
 .error-text {
-  color: #dc3545 !important;
-  font-size: 0.8rem !important;
-  margin-top: -0.5rem !important;
-  margin-bottom: 0.5rem !important;
-  padding-left: 0.5rem !important;
+  color: var(--error-color);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0;
+  padding-left: 0.25rem;
 }
 
 /* Register button */
 .register-button {
-  background-color: #a4e22e !important; /* primary color */
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 600 !important;
-  font-size: 1rem !important;
-  padding: 0.8rem !important;
-  border-radius: 30px !important;
-  margin-top: 1.5rem !important;
-  margin-bottom: 1rem !important;
-  text-transform: none !important;
-  box-shadow: 0 4px 10px rgba(164, 226, 46, 0.3) !important;
-  transition: all 0.3s ease !important;
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.8rem;
+  border-radius: 30px;
+  margin-top: 1.5rem;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(164, 226, 46, 0.3);
+  transition: all 0.3s ease;
 }
 
-.register-button:hover {
-  background-color: #7baa23 !important; /* darker primary */
-  box-shadow: 0 6px 15px rgba(164, 226, 46, 0.4) !important;
+.register-button:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+  box-shadow: 0 6px 15px rgba(164, 226, 46, 0.4);
   transform: translateY(-2px);
 }
 
 .register-button:disabled {
-  background-color: #cccccc !important;
-  color: #666666 !important;
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
 }
 
-/* Alert messages */
-.MuiAlert-root.MuiAlert-standardError {
-  background-color: rgba(220, 53, 69, 0.1) !important;
-  color: #dc3545 !important;
-  border: 1px solid #dc3545 !important;
-  border-radius: 10px !important;
-}
-
-.MuiAlert-root.MuiAlert-standardSuccess {
-  background-color: rgba(40, 167, 69, 0.1) !important;
-  color: #28a745 !important;
-  border: 1px solid #28a745 !important;
-  border-radius: 10px !important;
-}
-
-/* Password strength indicator (optional) */
-.password-strength {
-  height: 5px;
-  border-radius: 2px;
-  margin-top: -0.5rem;
+/* Alert styling */
+.alert {
+  padding: 1rem;
+  border-radius: 10px;
   margin-bottom: 1rem;
-  transition: width 0.3s ease;
+  position: relative;
 }
 
-.password-strength-weak {
-  background-color: #dc3545;
-  width: 33%;
+.alert-error {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
 }
 
-.password-strength-medium {
-  background-color: #ffc107;
-  width: 66%;
+.alert-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: var(--success-color);
+  border: 1px solid var(--success-color);
 }
 
-.password-strength-strong {
-  background-color: #28a745;
-  width: 100%;
+/* Toast notifications */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  max-width: 90%;
+  width: 400px;
+}
+
+.toast {
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: slideDown 0.3s ease-out forwards;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.toast-error {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
+}
+
+.toast-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: var(--success-color);
+  border: 1px solid var(--success-color);
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 0.5rem;
 }
 
 /* Responsive adjustments */

@@ -1,217 +1,324 @@
 /* src/components/header.css */
 
 /* Header container */
-.MuiAppBar-root {
-  background-color: white !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-  margin-bottom: 1rem !important;
+.header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--background-light);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+  transition: all 0.3s ease;
 }
 
-.MuiToolbar-root {
-  display: flex !important;
-  padding: 0.5rem 2rem !important;
+.header-scrolled {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 0.3rem 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 0;
+  flex-wrap: nowrap;
 }
 
 /* Logo/title section */
 .logo-section {
-  flex: 1 !important;
-  display: flex !important;
-  align-items: center !important;
+  display: flex;
+  align-items: center;
 }
 
 .logo-link {
-  display: flex !important;
-  align-items: center !important;
-  text-decoration: none !important;
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 700 !important;
-  font-size: 1.3rem !important;
-  transition: color 0.3s ease !important;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--accent-color);
+  font-weight: 700;
+  font-size: 1.5rem;
+  transition: color 0.3s ease;
 }
 
 .logo-link:hover {
-  color: #a4e22e !important; /* primary color */
+  color: var(--primary-color);
 }
 
 .logo-image {
-  height: 40px !important;
-  margin-right: 10px !important;
+  height: 50px;
+  margin-right: 10px;
+}
+
+.logo-text {
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+/* Mobile menu toggle */
+.mobile-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-left: auto;
+}
+
+.menu-icon {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background-color: var(--accent-color);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.menu-icon::before,
+.menu-icon::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 2px;
+  background-color: var(--accent-color);
+  transition: all 0.3s ease;
+}
+
+.menu-icon::before {
+  top: -8px;
+}
+
+.menu-icon::after {
+  bottom: -8px;
 }
 
 /* Navigation section */
 .nav-section {
-  flex: 2 !important;
-  display: flex !important;
-  justify-content: center !important;
-  gap: 0.5rem !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .nav-button {
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 600 !important;
-  padding: 0.5rem 1rem !important;
-  border-radius: 25px !important;
-  transition: all 0.3s ease !important;
-  text-transform: none !important;
+  color: var(--accent-color);
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  text-align: center;
 }
 
 .nav-button:hover {
-  background-color: rgba(
-    164,
-    226,
-    46,
-    0.1
-  ) !important; /* primary color with opacity */
+  background-color: rgba(164, 226, 46, 0.1);
   transform: translateY(-2px);
+  color: var(--primary-color);
 }
 
 .active-nav-button {
-  background-color: rgba(
-    164,
-    226,
-    46,
-    0.1
-  ) !important; /* primary color with opacity */
-  border-bottom: 2px solid #a4e22e !important; /* primary color */
+  background-color: rgba(164, 226, 46, 0.15);
+  color: var(--primary-dark);
+  position: relative;
+}
+
+.active-nav-button::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background-color: var(--primary-color);
+  border-radius: 3px;
 }
 
 /* Admin button */
 .admin-button {
-  background-color: #a4e22e !important; /* primary color */
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 700 !important;
-  padding: 0.5rem 1.2rem !important;
-  border-radius: 25px !important;
-  transition: all 0.3s ease !important;
-  text-transform: none !important;
-  box-shadow: 0 4px 8px rgba(164, 226, 46, 0.3) !important;
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+  font-weight: 700;
+  padding: 0.5rem 1.2rem;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  box-shadow: 0 4px 8px rgba(164, 226, 46, 0.3);
 }
 
 .admin-button:hover {
-  background-color: #7baa23 !important; /* darker primary */
+  background-color: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(164, 226, 46, 0.4) !important;
+  box-shadow: 0 6px 12px rgba(164, 226, 46, 0.4);
+  color: white;
+}
+
+.active-admin-button {
+  background-color: var(--primary-dark);
+  color: white;
 }
 
 /* Auth section */
 .auth-section {
-  flex: 1 !important;
-  display: flex !important;
-  justify-content: flex-end !important;
-  gap: 0.5rem !important;
-  align-items: center !important;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: nowrap;
 }
 
 .auth-button {
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 600 !important;
-  padding: 0.5rem 1rem !important;
-  border-radius: 25px !important;
-  transition: all 0.3s ease !important;
-  text-transform: none !important;
-}
-
-.auth-button:hover {
-  background-color: rgba(
-    164,
-    226,
-    46,
-    0.1
-  ) !important; /* primary color with opacity */
-  transform: translateY(-2px);
+  width: auto;
+  display: inline-block;
+  font-weight: 600;
+  padding: 0.5rem 1.2rem;
+  border-radius: 30px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  border: none;
+  font-size: 0.95rem;
+  cursor: pointer;
 }
 
 .register-button {
-  border: 1px solid #a4e22e !important; /* primary color */
+  color: var(--accent-color);
+  border: 2px solid var(--primary-color);
+  background-color: white;
+}
+
+.register-button:hover {
+  background-color: var(--primary-light);
+  transform: translateY(-2px);
 }
 
 .login-button {
-  background-color: #a4e22e !important; /* primary color */
-  color: #2e6e31 !important; /* accent color */
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+  border: 2px solid var(--primary-color);
 }
 
 .login-button:hover {
-  background-color: #7baa23 !important; /* darker primary */
+  background-color: var(--primary-dark);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(164, 226, 46, 0.3);
 }
 
 .logout-button {
-  color: #6c757d !important;
+  color: var(--text-light);
+  background-color: transparent;
 }
 
 .logout-button:hover {
-  color: #dc3545 !important;
-  background-color: rgba(220, 53, 69, 0.1) !important;
+  color: var(--error-color);
+  background-color: rgba(220, 53, 69, 0.1);
 }
 
 /* Delivery count badge */
-.MuiBadge-badge {
-  background-color: #ff7e33 !important; /* secondary color */
-  color: white !important;
-  font-weight: 700 !important;
+.delivery-count {
+  display: flex;
+  align-items: center;
+  margin-right: 0.5rem;
+}
+
+.badge {
+  background-color: var(--secondary-color);
+  color: white;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 15px;
+  font-size: 0.85rem;
+  box-shadow: 0 2px 4px rgba(255, 126, 51, 0.3);
 }
 
 .badge-label {
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 600 !important;
-  font-size: 0.9rem !important;
-  margin-right: 0.5rem !important;
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-right: 0.5rem;
 }
 
 /* Responsive adjustments */
-@media (max-width: 960px) {
-  .MuiToolbar-root {
-    flex-wrap: wrap !important;
-    padding: 0.5rem 1rem !important;
+@media (max-width: 992px) {
+  .mobile-menu-toggle {
+    display: block;
+    order: 3;
   }
 
   .logo-section {
-    flex: 0 0 100% !important;
-    justify-content: center !important;
-    margin-bottom: 0.5rem !important;
+    flex: 1;
   }
 
   .nav-section {
-    flex: 1 1 100% !important;
-    order: 3 !important;
-    margin-top: 0.5rem !important;
-    flex-wrap: wrap !important;
-    justify-content: center !important;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: white;
+    flex-direction: column;
+    padding: 1rem;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 99;
+  }
+
+  .nav-section.menu-open {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .nav-button,
+  .admin-button {
+    width: 100%;
+    text-align: center;
+    padding: 0.8rem;
   }
 
   .auth-section {
-    flex: 1 1 100% !important;
-    order: 2 !important;
-    justify-content: center !important;
-  }
-
-  .nav-button,
-  .auth-button {
-    font-size: 0.9rem !important;
-    padding: 0.4rem 0.8rem !important;
+    margin-left: auto;
+    margin-right: 1rem;
   }
 }
 
-@media (max-width: 600px) {
-  .MuiToolbar-root {
-    padding: 0.5rem !important;
-  }
-
-  .logo-link {
-    font-size: 1.1rem !important;
+@media (max-width: 768px) {
+  .logo-text {
+    font-size: 1.2rem;
   }
 
   .logo-image {
-    height: 30px !important;
+    height: 32px;
   }
 
-  .nav-button,
   .auth-button {
-    font-size: 0.8rem !important;
-    padding: 0.3rem 0.6rem !important;
-    min-width: auto !important;
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .auth-section {
+    gap: 0.4rem;
   }
 
   .badge-label {
-    display: none !important;
+    display: none;
+  }
+
+  .logo-text {
+    display: none;
+  }
+
+  .logo-image {
+    height: 36px;
+    margin-right: 0;
+  }
+
+  .auth-button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
   }
 }

@@ -3,10 +3,6 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import BoardList from '../components/board/boardList';
-import Button from '@mui/material/Button';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import { Typography, Box, CircularProgress } from '@mui/material';
 import { BoardProps } from '../types';
 import './board.css';
 
@@ -54,7 +50,7 @@ const Board: React.FC = () => {
 
       setLoading(false);
     } catch (err) {
-      if (err) setError('데이터를 불러오는 중 오류가 발생했습니다.');
+      setError('데이터를 불러오는 중 오류가 발생했습니다.');
       setLoading(false);
     }
   };
@@ -63,10 +59,7 @@ const Board: React.FC = () => {
     navigate(`/board/${board.id}`);
   };
 
-  const handleTabChange = (
-    _: React.SyntheticEvent,
-    newValue: 'normal' | 'faq'
-  ) => {
+  const handleTabChange = (newValue: 'normal' | 'faq') => {
     setActiveTab(newValue);
     setCurrentPage(1); // Reset to first page when changing tabs
   };
@@ -79,30 +72,114 @@ const Board: React.FC = () => {
     if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
   };
 
+  const renderPageButtons = () => {
+    if (totalPages <= 5) {
+      // Show all pages if 5 or fewer
+      return [...Array(totalPages)].map((_, index) => (
+        <button
+          key={index + 1}
+          onClick={() => setCurrentPage(index + 1)}
+          className={`page-button ${currentPage === index + 1 ? 'active' : ''}`}
+        >
+          {index + 1}
+        </button>
+      ));
+    } else {
+      // Show limited page buttons with ellipsis for many pages
+      const buttons = [];
+
+      // First page
+      if (currentPage > 1) {
+        buttons.push(
+          <button
+            key={1}
+            onClick={() => setCurrentPage(1)}
+            className="page-button"
+          >
+            1
+          </button>
+        );
+      }
+
+      // Ellipsis before current pages group
+      if (currentPage > 3) {
+        buttons.push(
+          <span key="ellipsis1" className="ellipsis">
+            ...
+          </span>
+        );
+      }
+
+      // Pages around current page
+      for (let i = 0; i < 5; i++) {
+        const pageNum = Math.max(2, currentPage - 2) + i;
+        if (pageNum >= 2 && pageNum <= totalPages - 1) {
+          buttons.push(
+            <button
+              key={pageNum}
+              onClick={() => setCurrentPage(pageNum)}
+              className={`page-button ${currentPage === pageNum ? 'active' : ''}`}
+            >
+              {pageNum}
+            </button>
+          );
+        }
+      }
+
+      // Ellipsis after current pages group
+      if (currentPage < totalPages - 2) {
+        buttons.push(
+          <span key="ellipsis2" className="ellipsis">
+            ...
+          </span>
+        );
+      }
+
+      // Last page
+      if (currentPage < totalPages) {
+        buttons.push(
+          <button
+            key={totalPages}
+            onClick={() => setCurrentPage(totalPages)}
+            className="page-button"
+          >
+            {totalPages}
+          </button>
+        );
+      }
+
+      return buttons;
+    }
+  };
+
   return (
     <div className="board-container">
-      <Typography variant="h4" component="h1" gutterBottom textAlign="center">
-        공지사항
-      </Typography>
+      <h1 className="page-title">공지사항</h1>
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={activeTab} onChange={handleTabChange} centered>
-          <Tab label="공지사항" value="normal" />
-          <Tab label="FAQ" value="faq" />
-        </Tabs>
-      </Box>
+      <div className="tabs-container">
+        <div className="tabs">
+          <button
+            className={`tab ${activeTab === 'normal' ? 'active' : ''}`}
+            onClick={() => handleTabChange('normal')}
+          >
+            공지사항
+          </button>
+          <button
+            className={`tab ${activeTab === 'faq' ? 'active' : ''}`}
+            onClick={() => handleTabChange('faq')}
+          >
+            FAQ
+          </button>
+        </div>
+      </div>
 
       {loading && (
-        <Box display="flex" justifyContent="center" my={4}>
-          <CircularProgress />
-        </Box>
+        <div className="loading">
+          <div className="loading-spinner"></div>
+        </div>
       )}
 
-      {error && (
-        <Typography color="error" textAlign="center" my={4}>
-          ⚠️ {error}
-        </Typography>
-      )}
+      {error && <div className="error-message">⚠️ {error}</div>}
 
       {!loading && !error && (
         <>
@@ -110,72 +187,23 @@ const Board: React.FC = () => {
 
           {/* Pagination Buttons */}
           <div className="pagination">
-            <Button onClick={goToPreviousPage} disabled={currentPage === 1}>
+            <button
+              onClick={goToPreviousPage}
+              disabled={currentPage === 1}
+              className="nav-button"
+            >
               이전
-            </Button>
-            {totalPages <= 5 ? (
-              // Show all pages if 5 or fewer
-              [...Array(totalPages)].map((_, index) => (
-                <Button
-                  key={index + 1}
-                  onClick={() => setCurrentPage(index + 1)}
-                  variant={currentPage === index + 1 ? 'contained' : 'outlined'}
-                  sx={{
-                    mx: 0.5,
-                    backgroundColor:
-                      currentPage === index + 1 ? '#4caf50' : 'transparent',
-                    color: currentPage === index + 1 ? 'white' : '#9e9e9e',
-                  }}
-                >
-                  {index + 1}
-                </Button>
-              ))
-            ) : (
-              // Show limited page buttons with ellipsis for many pages
-              <>
-                {currentPage > 1 && (
-                  <Button onClick={() => setCurrentPage(1)}>1</Button>
-                )}
-                {currentPage > 3 && <span>...</span>}
+            </button>
 
-                {[...Array(5)].map((_, idx) => {
-                  const pageNum = Math.max(2, currentPage - 2) + idx;
-                  if (pageNum >= 2 && pageNum <= totalPages - 1) {
-                    return (
-                      <Button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        variant={
-                          currentPage === pageNum ? 'contained' : 'outlined'
-                        }
-                        sx={{
-                          mx: 0.5,
-                          backgroundColor:
-                            currentPage === pageNum ? '#4caf50' : 'transparent',
-                          color: currentPage === pageNum ? 'white' : '#9e9e9e',
-                        }}
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  }
-                  return null;
-                })}
+            {renderPageButtons()}
 
-                {currentPage < totalPages - 2 && <span>...</span>}
-                {currentPage < totalPages && (
-                  <Button onClick={() => setCurrentPage(totalPages)}>
-                    {totalPages}
-                  </Button>
-                )}
-              </>
-            )}
-            <Button
+            <button
               onClick={goToNextPage}
               disabled={currentPage === totalPages}
+              className="nav-button"
             >
               다음
-            </Button>
+            </button>
           </div>
         </>
       )}

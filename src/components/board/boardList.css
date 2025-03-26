@@ -1,86 +1,96 @@
 /* src/components/board/boardList.css */
 
-/* Override MUI Table styles to match the Saluv All Day branding */
-.MuiTableContainer-root {
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05) !important;
-  border-radius: 10px !important;
-  overflow: hidden !important;
+.board-table-container {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  max-width: 900px;
+  margin: 2rem auto 0;
+  background-color: white;
 }
 
-.MuiTableHead-root {
-  background-color: #f8f9fa !important;
+.board-table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.MuiTableHead-root .MuiTableCell-root {
-  font-weight: 700 !important;
-  color: #2e6e31 !important; /* accent color */
-  border-bottom: 2px solid #a4e22e !important; /* primary color */
-  font-size: 0.95rem !important;
+.board-table-head {
+  background-color: var(--background-color);
 }
 
-.MuiTableBody-root .MuiTableRow-root:hover {
-  background-color: rgba(
-    164,
-    226,
-    46,
-    0.1
-  ) !important; /* primary color with opacity */
+.board-table-head th {
+  font-weight: 700;
+  color: var(--accent-color);
+  border-bottom: 2px solid var(--primary-color);
+  font-size: 0.95rem;
+  text-align: left;
+  padding: 1rem;
 }
 
-.MuiTableBody-root .MuiTableCell-root {
-  border-bottom: 1px solid #e9ecef !important;
-  padding: 1rem 16px !important;
-}
-
-/* Improve the empty state message */
-.MuiTableBody-root .MuiTableCell-root[align='center'] {
-  padding: 2rem !important;
-  color: #666666 !important;
-  font-style: italic;
-}
-
-/* Style the chips/tags to match branding */
-.MuiChip-root.MuiChip-colorPrimary {
-  background-color: #a4e22e !important; /* primary brand color */
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 600 !important;
-}
-
-.MuiChip-root.MuiChip-colorSecondary {
-  background-color: #ff7e33 !important; /* secondary brand color */
-  color: white !important;
-  font-weight: 600 !important;
-}
-
-/* Add subtle animations when hovering over rows */
-.MuiTableBody-root .MuiTableRow-root {
+.board-table-body tr {
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
-    background-color 0.2s ease !important;
+    background-color 0.2s ease;
+  cursor: pointer;
 }
 
-.MuiTableBody-root .MuiTableRow-root:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05) !important;
-  z-index: 1 !important;
-  position: relative !important;
+.board-table-body tr:hover {
+  background-color: rgba(164, 226, 46, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 1;
+}
+
+.board-table-body td {
+  border-bottom: 1px solid var(--background-dark);
+  padding: 1rem;
+}
+
+/* Empty state message */
+.board-empty-message {
+  padding: 2rem;
+  color: var(--text-light);
+  font-style: italic;
+  text-align: center;
+}
+
+/* Board type chips/tags */
+.board-chip {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.board-chip-primary {
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+}
+
+.board-chip-secondary {
+  background-color: var(--secondary-color);
+  color: white;
 }
 
 /* Responsive adjustments */
 @media (max-width: 600px) {
-  .MuiTableContainer-root {
-    max-width: 100% !important;
-    margin: 0 !important;
+  .board-table-container {
+    max-width: 100%;
+    margin: 1rem 0;
   }
 
-  .MuiTableCell-root {
-    padding: 8px !important;
-    font-size: 0.8rem !important;
+  .board-table-head th,
+  .board-table-body td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
   }
 
   /* Hide content column on small screens */
-  .MuiTableCell-root:nth-child(3) {
-    display: none !important;
+  .board-content-column {
+    display: none;
   }
 }

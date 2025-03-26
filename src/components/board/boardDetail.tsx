@@ -1,19 +1,9 @@
 // src/components/board/boardDetail.tsx
-import '../../global.css';
 import './boardDetail.css';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import {
-  Card,
-  CardContent,
-  Typography,
-  Divider,
-  Button,
-  CircularProgress,
-} from '@mui/material';
 
 interface BoardDetailProps {
   id: number;
@@ -78,58 +68,57 @@ const BoardDetail: React.FC = () => {
 
   return (
     <div className="board-container">
-      <Button
-        startIcon={<ArrowBackIcon />}
-        onClick={() => navigate('/board')}
-        sx={{ marginBottom: 2 }}
-      >
+      <button className="back-button" onClick={() => navigate('/board')}>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M19 12H5M5 12L12 19M5 12L12 5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
         목록으로 돌아가기
-      </Button>
+      </button>
 
       {loading && (
         <div className="loading-container">
-          <CircularProgress />
-          <Typography>데이터를 불러오는 중...</Typography>
+          <div className="loading-spinner"></div>
+          <div className="loading-text">데이터를 불러오는 중...</div>
         </div>
       )}
 
-      {error && (
-        <Typography color="error" variant="h6" align="center">
-          {error}
-        </Typography>
-      )}
+      {error && <div className="error-message">{error}</div>}
 
       {board && !loading && (
-        <Card elevation={3}>
-          <CardContent>
-            <Typography variant="h5" component="h1" gutterBottom>
-              {board.title}
-            </Typography>
+        <div className="board-card">
+          <h1 className="board-title">{board.title}</h1>
 
-            <Typography variant="caption" color="text.secondary">
-              {board.type === 'normal' ? '공지사항' : 'FAQ'} | 작성일:{' '}
-              {board.createdAt.toLocaleDateString()}
-            </Typography>
+          <div className="board-meta">
+            {board.type === 'normal' ? '공지사항' : 'FAQ'} | 작성일:{' '}
+            {board.createdAt.toLocaleDateString()}
+          </div>
 
-            <Divider sx={{ my: 2 }} />
+          <hr className="board-divider" />
 
-            {board.type === 'normal' ? (
-              <Typography variant="body1" component="div">
-                {formatNewlines(board.content)}
-              </Typography>
-            ) : (
-              <>
-                <Typography variant="h6" gutterBottom>
-                  Q. {board.question}
-                </Typography>
-                <Divider sx={{ my: 2 }} />
-                <Typography variant="body1" component="div">
-                  A. {formatNewlines(board.answer)}
-                </Typography>
-              </>
-            )}
-          </CardContent>
-        </Card>
+          {board.type === 'normal' ? (
+            <div className="board-content">{formatNewlines(board.content)}</div>
+          ) : (
+            <>
+              <div className="faq-question">Q. {board.question}</div>
+              <hr className="board-divider" />
+              <div className="faq-answer">
+                A. {formatNewlines(board.answer)}
+              </div>
+            </>
+          )}
+        </div>
       )}
     </div>
   );

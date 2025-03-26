@@ -1,24 +1,8 @@
 // src/pages/admin/adminIndex.tsx
 import React, { useState, useEffect } from 'react';
 import './adminIndex.css';
-import {
-  Container,
-  Grid,
-  Paper,
-  Typography,
-  Box,
-  Card,
-  CardContent,
-  CardActionArea,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import PeopleIcon from '@mui/icons-material/People';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
-import InventoryIcon from '@mui/icons-material/Inventory';
-import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
 import axios from 'axios';
 
 interface DashboardData {
@@ -83,244 +67,177 @@ const AdminIndex: React.FC = () => {
 
   if (!isAuthenticated || !user?.isAdmin) {
     return (
-      <Container maxWidth="sm" sx={{ mt: 10 }}>
-        <Alert severity="error">접근 권한이 없습니다.</Alert>
-      </Container>
+      <div className="admin-dashboard-container">
+        <div className="alert alert-error">접근 권한이 없습니다.</div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 5, mb: 10 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        관리자 대시보드
-      </Typography>
+    <div className="admin-dashboard-container">
+      <h1 className="admin-title">관리자 대시보드</h1>
 
       {loading ? (
-        <Box display="flex" justifyContent="center" my={4}>
-          <CircularProgress />
-        </Box>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <div className="loading-text">데이터를 불러오는 중...</div>
+        </div>
       ) : error ? (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
+        <div className="alert alert-error">{error}</div>
       ) : (
         <>
           {/* 요약 데이터 카드 */}
-          <Grid container spacing={3} sx={{ mb: 5 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Paper
-                elevation={3}
-                sx={{
-                  p: 2,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: 140,
-                }}
-              >
-                <Typography variant="h6" color="text.secondary" gutterBottom>
-                  전체 사용자
-                </Typography>
-                <Typography
-                  component="div"
-                  variant="h3"
-                  sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}
+          <div
+            className="summary-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+              gap: '1rem',
+              marginBottom: '3rem',
+            }}
+          >
+            <div className="summary-card users-card">
+              <div className="summary-title">전체 사용자</div>
+              <div className="summary-value users-value">
+                {dashboardData.totalUsers}
+                <svg
+                  className="users-icon"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
                 >
-                  {dashboardData.totalUsers}
-                  <PeopleIcon
-                    sx={{ fontSize: 40, ml: 2, color: 'primary.main' }}
-                  />
-                </Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Paper
-                elevation={3}
-                sx={{
-                  p: 2,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: 140,
-                }}
-              >
-                <Typography variant="h6" color="text.secondary" gutterBottom>
-                  당일 배송
-                </Typography>
-                <Typography
-                  component="div"
-                  variant="h3"
-                  sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="summary-card delivery-card">
+              <div className="summary-title">당일 배송</div>
+              <div className="summary-value delivery-value">
+                {dashboardData.todayDeliveries}
+                <svg
+                  className="delivery-icon"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
                 >
-                  {dashboardData.todayDeliveries}
-                  <LocalShippingIcon
-                    sx={{ fontSize: 40, ml: 2, color: 'success.main' }}
-                  />
-                </Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Paper
-                elevation={3}
-                sx={{
-                  p: 2,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: 140,
-                }}
-              >
-                <Typography variant="h6" color="text.secondary" gutterBottom>
-                  미해결 문의
-                </Typography>
-                <Typography
-                  component="div"
-                  variant="h3"
-                  sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}
+                  <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="summary-card inquiry-card">
+              <div className="summary-title">미해결 문의</div>
+              <div className="summary-value inquiry-value">
+                {dashboardData.pendingInquiries}
+                <svg
+                  className="inquiry-icon"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
                 >
-                  {dashboardData.pendingInquiries}
-                  <QuestionAnswerIcon
-                    sx={{ fontSize: 40, ml: 2, color: 'warning.main' }}
-                  />
-                </Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Paper
-                elevation={3}
-                sx={{
-                  p: 2,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: 140,
-                }}
-              >
-                <Typography variant="h6" color="text.secondary" gutterBottom>
-                  전체 상품
-                </Typography>
-                <Typography
-                  component="div"
-                  variant="h3"
-                  sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}
+                  <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="summary-card products-card">
+              <div className="summary-title">전체 상품</div>
+              <div className="summary-value products-value">
+                {dashboardData.totalProducts}
+                <svg
+                  className="products-icon"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
                 >
-                  {dashboardData.totalProducts}
-                  <InventoryIcon
-                    sx={{ fontSize: 40, ml: 2, color: 'info.main' }}
-                  />
-                </Typography>
-              </Paper>
-            </Grid>
-          </Grid>
+                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 5h-3v5.5c0 1.38-1.12 2.5-2.5 2.5S9 14.88 9 13.5 10.12 11 11.5 11c.57 0 1.08.19 1.5.51V6h4v2z" />
+                </svg>
+              </div>
+            </div>
+          </div>
 
           {/* 기능 카드 */}
-          <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-            관리 기능
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card elevation={3}>
-                <CardActionArea
-                  onClick={() => handleCardClick('/admin/delivery')}
-                  sx={{ p: 2, height: 180 }}
-                >
-                  <CardContent>
-                    <Box
-                      display="flex"
-                      flexDirection="column"
-                      alignItems="center"
-                      justifyContent="center"
-                      height="100%"
-                    >
-                      <LocalShippingIcon
-                        sx={{ fontSize: 60, color: 'success.main', mb: 2 }}
-                      />
-                      <Typography variant="h6" align="center">
-                        배송 관리
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid>
+          <h2 className="section-title">관리 기능</h2>
+          <div
+            className="feature-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+              gap: '1rem',
+            }}
+          >
+            <div className="feature-card delivery-feature">
+              <div
+                className="feature-card-action"
+                onClick={() => handleCardClick('/admin/delivery')}
+              >
+                <div className="feature-content">
+                  <svg
+                    className="feature-icon"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+                  </svg>
+                  <div className="feature-title">배송 관리</div>
+                </div>
+              </div>
+            </div>
 
-            <Grid item xs={12} sm={6} md={3}>
-              <Card elevation={3}>
-                <CardActionArea
-                  onClick={() => handleCardClick('/admin/users')}
-                  sx={{ p: 2, height: 180 }}
-                >
-                  <CardContent>
-                    <Box
-                      display="flex"
-                      flexDirection="column"
-                      alignItems="center"
-                      justifyContent="center"
-                      height="100%"
-                    >
-                      <PeopleIcon
-                        sx={{ fontSize: 60, color: 'primary.main', mb: 2 }}
-                      />
-                      <Typography variant="h6" align="center">
-                        사용자 관리
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid>
+            <div className="feature-card users-feature">
+              <div
+                className="feature-card-action"
+                onClick={() => handleCardClick('/admin/users')}
+              >
+                <div className="feature-content">
+                  <svg
+                    className="feature-icon"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                  </svg>
+                  <div className="feature-title">사용자 관리</div>
+                </div>
+              </div>
+            </div>
 
-            <Grid item xs={12} sm={6} md={3}>
-              <Card elevation={3}>
-                <CardActionArea
-                  onClick={() => handleCardClick('/admin/products')}
-                  sx={{ p: 2, height: 180 }}
-                >
-                  <CardContent>
-                    <Box
-                      display="flex"
-                      flexDirection="column"
-                      alignItems="center"
-                      justifyContent="center"
-                      height="100%"
-                    >
-                      <InventoryIcon
-                        sx={{ fontSize: 60, color: 'info.main', mb: 2 }}
-                      />
-                      <Typography variant="h6" align="center">
-                        상품 관리
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid>
+            <div className="feature-card products-feature">
+              <div
+                className="feature-card-action"
+                onClick={() => handleCardClick('/admin/products')}
+              >
+                <div className="feature-content">
+                  <svg
+                    className="feature-icon"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 5h-3v5.5c0 1.38-1.12 2.5-2.5 2.5S9 14.88 9 13.5 10.12 11 11.5 11c.57 0 1.08.19 1.5.51V6h4v2z" />
+                  </svg>
+                  <div className="feature-title">상품 관리</div>
+                </div>
+              </div>
+            </div>
 
-            <Grid item xs={12} sm={6} md={3}>
-              <Card elevation={3}>
-                <CardActionArea
-                  onClick={() => handleCardClick('/admin/inquiry')}
-                  sx={{ p: 2, height: 180 }}
-                >
-                  <CardContent>
-                    <Box
-                      display="flex"
-                      flexDirection="column"
-                      alignItems="center"
-                      justifyContent="center"
-                      height="100%"
-                    >
-                      <QuestionAnswerIcon
-                        sx={{ fontSize: 60, color: 'warning.main', mb: 2 }}
-                      />
-                      <Typography variant="h6" align="center">
-                        고객의 소리
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid>
-          </Grid>
+            <div className="feature-card inquiry-feature">
+              <div
+                className="feature-card-action"
+                onClick={() => handleCardClick('/admin/inquiry')}
+              >
+                <div className="feature-content">
+                  <svg
+                    className="feature-icon"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z" />
+                  </svg>
+                  <div className="feature-title">고객의 소리</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </>
       )}
-    </Container>
+    </div>
   );
 };
 

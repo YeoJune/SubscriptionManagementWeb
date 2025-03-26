@@ -8,7 +8,9 @@
 
 /* Hero section */
 .home-hero {
-  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4));
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
+  background-size: cover;
+  background-position: center;
   border-radius: 15px;
   padding: 4rem 2rem;
   text-align: center;
@@ -28,24 +30,30 @@
   height: 100%;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%23ffffff' fill-opacity='0.1' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'%3E%3C/path%3E%3C/svg%3E");
   opacity: 0.3;
+  pointer-events: none; /* 클릭 이벤트가 통과하도록 함 */
+  z-index: 1;
 }
 
 .home-hero h1 {
-  font-size: 3rem;
+  font-size: 3.5rem;
   color: white;
   margin-bottom: 1rem;
   font-weight: 800;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  position: relative;
+  z-index: 2;
 }
 
 .home-hero p {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   color: white;
   margin-bottom: 2rem;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+  position: relative;
+  z-index: 2;
 }
 
 /* Call to action buttons */
@@ -54,6 +62,8 @@
   justify-content: center;
   gap: 1rem;
   margin-top: 2rem;
+  position: relative;
+  z-index: 10; /* 높은 z-index 설정 */
 }
 
 .cta-buttons .btn {
@@ -62,6 +72,16 @@
   padding: 0.75rem 2rem;
   border-radius: 30px;
   letter-spacing: 0.5px;
+  cursor: pointer; /* 명시적 커서 설정 */
+  position: relative; /* 위치 컨텍스트 생성 */
+  z-index: 10; /* 높은 z-index 값 */
+}
+
+/* 오버레이 문제 해결을 위한 링크 스타일 강화 */
+.cta-buttons a.btn {
+  display: inline-block;
+  text-decoration: none;
+  pointer-events: auto !important; /* 명시적으로 포인터 이벤트 허용 */
 }
 
 /* User summary when logged in */
@@ -72,6 +92,8 @@
   max-width: 500px;
   margin: 0 auto;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 5;
 }
 
 .user-summary h2 {
@@ -90,6 +112,15 @@
 .user-summary strong {
   color: var(--secondary-color);
   font-weight: 700;
+}
+
+.user-summary .cta-buttons {
+  margin-top: 1.5rem;
+}
+
+.user-summary .btn {
+  font-size: 1rem;
+  padding: 0.6rem 1.5rem;
 }
 
 /* Featured services section */
@@ -152,25 +183,26 @@
 
 .card-link {
   display: inline-block;
-  color: var(--accent-color);
-  font-weight: 600;
-  position: relative;
-  padding-bottom: 5px;
-}
-
-.card-link::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 0;
-  height: 2px;
+  color: white;
   background-color: var(--primary-color);
-  transition: width 0.3s ease;
+  font-weight: 600;
+  padding: 0.5rem 1.2rem;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(164, 226, 46, 0.3);
 }
 
-.card-link:hover::after {
-  width: 100%;
+.card-link:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(164, 226, 46, 0.4);
+}
+
+.card-link:active {
+  transform: translateY(-1px);
 }
 
 /* Responsive styles */

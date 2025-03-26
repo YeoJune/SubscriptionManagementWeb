@@ -1,16 +1,16 @@
 /* pages/subscription.css */
 
 .subscription-container {
-  max-width: 1000px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 2rem 1rem;
 }
 
 /* Page title */
 .subscription-title {
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 700 !important;
-  margin-bottom: 2rem !important;
+  color: var(--accent-color);
+  font-weight: 700;
+  margin-bottom: 2rem;
   position: relative;
   padding-bottom: 0.75rem;
 }
@@ -22,238 +22,337 @@
   left: 0;
   width: 60px;
   height: 4px;
-  background-color: #a4e22e; /* primary color */
+  background-color: var(--primary-color);
   border-radius: 2px;
 }
 
 /* Stepper styling */
-.MuiStepper-root {
-  background-color: #f8f9fa !important;
-  padding: 1.5rem !important;
-  border-radius: 10px !important;
-  margin-bottom: 2rem !important;
+.stepper {
+  background-color: var(--background-color);
+  padding: 1.5rem;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
 }
 
-.MuiStepLabel-label {
-  font-weight: 600 !important;
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
 }
 
-.MuiStepLabel-label.Mui-active {
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 700 !important;
+.step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  right: -50%;
+  width: 100%;
+  height: 2px;
+  background-color: #ddd;
+  z-index: 1;
 }
 
-.MuiStepLabel-label.Mui-completed {
-  color: #2e6e31 !important; /* accent color */
+.step.active:not(:last-child)::after,
+.step.completed:not(:last-child)::after {
+  background-color: var(--primary-color);
 }
 
-.MuiStepIcon-root.Mui-active {
-  color: #a4e22e !important; /* primary color */
+.step-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 2;
 }
 
-.MuiStepIcon-root.Mui-completed {
-  color: #7baa23 !important; /* darker primary */
+.step.active .step-icon {
+  background-color: var(--primary-color);
+}
+
+.step.completed .step-icon {
+  background-color: var(--primary-dark);
+}
+
+.step-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.step.active .step-label {
+  color: var(--accent-color);
+  font-weight: 700;
+}
+
+.step.completed .step-label {
+  color: var(--accent-color);
 }
 
 /* Content paper */
-.MuiPaper-root {
-  border-radius: 15px !important;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05) !important;
-  overflow: hidden !important;
+.content-paper {
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  background-color: white;
+  padding: 2rem;
+  margin-bottom: 2rem;
 }
 
 /* Step content title */
 .step-title {
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 700 !important;
-  margin-bottom: 1.5rem !important;
-  font-size: 1.3rem !important;
+  color: var(--accent-color);
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  font-size: 1.3rem;
 }
 
 /* Product cards */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
 .product-card {
-  border-radius: 12px !important;
-  transition: all 0.3s ease !important;
-  height: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
 }
 
 .product-card:hover {
-  transform: translateY(-8px) !important;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+  transform: translateY(-8px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
 }
 
-.product-card-selected {
-  border: 2px solid #a4e22e !important; /* primary color */
-  box-shadow: 0 8px 25px rgba(164, 226, 46, 0.2) !important;
+.product-card.selected {
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 8px 25px rgba(164, 226, 46, 0.2);
 }
 
-.product-card-content {
-  flex-grow: 1 !important;
-  padding: 1.5rem !important;
+.product-content {
+  flex-grow: 1;
+  padding: 1.5rem;
 }
 
 .product-name {
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 700 !important;
-  font-size: 1.5rem !important;
-  margin-bottom: 0.5rem !important;
+  color: var(--accent-color);
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .product-description {
-  color: #666 !important;
-  margin-bottom: 1.5rem !important;
-  flex-grow: 1 !important;
+  color: var(--text-light);
+  margin-bottom: 1.5rem;
+  flex-grow: 1;
 }
 
 .product-price {
-  color: #ff7e33 !important; /* secondary color */
-  font-weight: 700 !important;
-  font-size: 1.5rem !important;
-  margin-top: auto !important;
+  color: var(--secondary-color);
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-top: auto;
 }
 
 .product-delivery-count {
-  color: #666 !important;
-  background-color: rgba(164, 226, 46, 0.1) !important;
-  padding: 0.5rem !important;
-  border-radius: 5px !important;
-  margin-top: 0.5rem !important;
-  display: inline-block !important;
+  color: var(--text-light);
+  background-color: rgba(164, 226, 46, 0.1);
+  padding: 0.5rem;
+  border-radius: 5px;
+  margin-top: 0.5rem;
+  display: inline-block;
 }
 
-.product-card-actions {
-  padding: 1rem 1.5rem !important;
-  display: flex !important;
-  justify-content: flex-end !important;
+.product-actions {
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--background-dark);
 }
 
 .select-button {
-  border-radius: 30px !important;
-  padding: 0.5rem 1.5rem !important;
-  font-weight: 600 !important;
-  text-transform: none !important;
+  border-radius: 30px;
+  padding: 0.5rem 1.5rem;
+  font-weight: 600;
+  background: none;
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
-.select-button-selected {
-  background-color: #a4e22e !important; /* primary color */
-  color: #2e6e31 !important; /* accent color */
+.select-button:hover {
+  background-color: rgba(164, 226, 46, 0.1);
+}
+
+.select-button.selected {
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+  border-color: var(--primary-color);
 }
 
 /* Payment form */
 .payment-form {
-  padding: 2rem !important;
-  margin-bottom: 2rem !important;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
-.MuiTextField-root {
-  margin-bottom: 1rem !important;
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
 }
 
-.MuiInputLabel-root {
-  color: #2e6e31 !important; /* accent color */
+.form-group {
+  margin-bottom: 1.5rem;
 }
 
-.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
-  border-color: #a4e22e !important; /* primary color */
+.form-group.full-width {
+  grid-column: span 2;
 }
 
-.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-color: #a4e22e !important; /* primary color */
-  border-width: 2px;
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.form-control:hover {
+  border-color: var(--primary-color);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(164, 226, 46, 0.2);
 }
 
 /* Order summary */
 .order-summary {
-  margin-top: 2rem !important;
+  margin-top: 2rem;
 }
 
 .summary-title {
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 700 !important;
-  margin-bottom: 1rem !important;
+  color: var(--accent-color);
+  font-weight: 700;
+  margin-bottom: 1rem;
 }
 
 .summary-content {
-  padding: 1.5rem !important;
-  background-color: #f8f9fa !important;
-  border-radius: 10px !important;
+  padding: 1.5rem;
+  background-color: var(--background-color);
+  border-radius: 10px;
 }
 
 .summary-item {
-  margin-bottom: 0.5rem !important;
+  margin-bottom: 0.5rem;
 }
 
 .summary-item strong {
-  color: #2e6e31 !important; /* accent color */
-  margin-right: 0.5rem !important;
+  color: var(--accent-color);
+  margin-right: 0.5rem;
 }
 
 .divider {
-  margin: 1rem 0 !important;
-  background-color: #e9ecef !important;
+  margin: 1rem 0;
+  height: 1px;
+  background-color: var(--background-dark);
+  border: none;
 }
 
 .total-amount {
-  font-size: 1.3rem !important;
-  color: #ff7e33 !important; /* secondary color */
-  font-weight: 700 !important;
-  margin-top: 0.5rem !important;
+  font-size: 1.3rem;
+  color: var(--secondary-color);
+  font-weight: 700;
+  margin-top: 0.5rem;
 }
 
 /* Confirmation page */
 .confirmation-section {
-  padding: 2rem !important;
-  margin-bottom: 2rem !important;
+  padding: 2rem;
+  margin-bottom: 2rem;
 }
 
 .section-title {
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 700 !important;
-  margin-bottom: 1rem !important;
+  color: var(--accent-color);
+  font-weight: 700;
+  margin-bottom: 1rem;
 }
 
 .payment-button {
-  background-color: #a4e22e !important; /* primary color */
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 600 !important;
-  border-radius: 30px !important;
-  padding: 0.75rem 2rem !important;
-  text-transform: none !important;
-  box-shadow: 0 5px 15px rgba(164, 226, 46, 0.3) !important;
-  transition: all 0.3s ease !important;
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+  font-weight: 600;
+  border-radius: 30px;
+  padding: 0.75rem 2rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(164, 226, 46, 0.3);
+  transition: all 0.3s ease;
 }
 
-.payment-button:hover {
-  background-color: #7baa23 !important; /* darker primary */
-  box-shadow: 0 8px 20px rgba(164, 226, 46, 0.4) !important;
+.payment-button:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+  box-shadow: 0 8px 20px rgba(164, 226, 46, 0.4);
   transform: translateY(-3px);
 }
 
+.payment-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 /* Alert styling */
-.MuiAlert-standardSuccess {
-  background-color: rgba(40, 167, 69, 0.1) !important;
-  color: #28a745 !important;
-  border: 1px solid #28a745 !important;
-  border-radius: 10px !important;
-  padding: 1rem !important;
+.alert {
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
 }
 
-.MuiAlert-standardWarning {
-  background-color: rgba(255, 193, 7, 0.1) !important;
-  color: #ffc107 !important;
-  border: 1px solid #ffc107 !important;
-  border-radius: 10px !important;
-  padding: 1rem !important;
+.alert-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: var(--success-color);
+  border: 1px solid var(--success-color);
 }
 
-.MuiAlert-standardError {
-  background-color: rgba(220, 53, 69, 0.1) !important;
-  color: #dc3545 !important;
-  border: 1px solid #dc3545 !important;
-  border-radius: 10px !important;
-  padding: 1rem !important;
+.alert-warning {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+  border: 1px solid #ffc107;
+}
+
+.alert-error {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
 }
 
 /* Navigation buttons */
@@ -264,61 +363,118 @@
 }
 
 .back-button {
-  color: #666 !important;
-  text-transform: none !important;
-  font-weight: 600 !important;
+  background: none;
+  border: none;
+  color: var(--text-light);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s;
+}
+
+.back-button:hover:not(:disabled) {
+  color: var(--accent-color);
+}
+
+.back-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .next-button {
-  background-color: #a4e22e !important; /* primary color */
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 600 !important;
-  border-radius: 30px !important;
-  padding: 0.5rem 1.5rem !important;
-  text-transform: none !important;
-  transition: all 0.3s ease !important;
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+  font-weight: 600;
+  border-radius: 30px;
+  padding: 0.5rem 1.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.next-button:hover {
-  background-color: #7baa23 !important; /* darker primary */
+.next-button:hover:not(:disabled) {
+  background-color: var(--primary-dark);
   transform: translateY(-2px);
 }
 
+.next-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 /* Loading indicator */
-.MuiCircularProgress-root {
-  color: #a4e22e !important; /* primary color */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: var(--primary-color);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Center container */
+.center-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Responsive adjustments */
 @media (max-width: 900px) {
-  .MuiStepper-root {
-    padding: 1rem !important;
+  .stepper {
+    padding: 1rem;
   }
 
-  .MuiStepLabel-label {
-    font-size: 0.9rem !important;
+  .step-label {
+    font-size: 0.8rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-group.full-width {
+    grid-column: span 1;
   }
 }
 
 @media (max-width: 600px) {
   .subscription-title {
-    font-size: 1.8rem !important;
+    font-size: 1.8rem;
   }
 
-  .MuiStepper-root {
-    padding: 0.75rem !important;
+  .stepper {
+    padding: 0.75rem;
   }
 
-  .MuiStepLabel-label {
-    font-size: 0.8rem !important;
+  .step-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
+  }
+
+  .step-label {
+    font-size: 0.7rem;
   }
 
   .product-name {
-    font-size: 1.3rem !important;
+    font-size: 1.3rem;
   }
 
   .product-price {
-    font-size: 1.3rem !important;
+    font-size: 1.3rem;
   }
 
   .navigation-buttons {

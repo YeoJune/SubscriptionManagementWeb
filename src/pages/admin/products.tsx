@@ -2,33 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import './products.css';
 import axios from 'axios';
-import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  CircularProgress,
-  Alert,
-  IconButton,
-  Tooltip,
-  InputAdornment,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { ProductProps } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -198,12 +171,12 @@ const AdminProducts: React.FC = () => {
     }
   };
 
-  const handleChangePage = (_: unknown, newPage: number) => {
+  const handleChangePage = (newPage: number) => {
     setPage(newPage);
   };
 
   const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLSelectElement>
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -211,221 +184,296 @@ const AdminProducts: React.FC = () => {
 
   if (!isAuthenticated || !user?.isAdmin) {
     return (
-      <Container maxWidth="sm" sx={{ mt: 10 }}>
-        <Alert severity="error">접근 권한이 없습니다.</Alert>
-      </Container>
+      <div className="products-admin-container">
+        <div className="alert alert-error">접근 권한이 없습니다.</div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 5, mb: 10 }}>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={3}
-      >
-        <Typography variant="h4" component="h1">
-          상품 관리
-        </Typography>
+    <div className="products-admin-container">
+      <div className="header-box">
+        <h1 className="products-admin-title">상품 관리</h1>
 
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleOpenAddDialog}
-        >
+        <button className="add-button" onClick={handleOpenAddDialog}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M12 5v14M5 12h14"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
           상품 추가
-        </Button>
-      </Box>
+        </button>
+      </div>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
+      {error && <div className="alert alert-error">{error}</div>}
 
       {loading ? (
-        <Box display="flex" justifyContent="center" my={4}>
-          <CircularProgress />
-        </Box>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <div>데이터를 불러오는 중...</div>
+        </div>
       ) : products.length === 0 ? (
-        <Alert severity="info">등록된 상품이 없습니다.</Alert>
+        <div className="alert alert-info">등록된 상품이 없습니다.</div>
       ) : (
         <>
-          <TableContainer component={Paper} elevation={3}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>상품명</TableCell>
-                  <TableCell>설명</TableCell>
-                  <TableCell align="right">가격</TableCell>
-                  <TableCell align="center">배송 횟수</TableCell>
-                  <TableCell align="center">등록일</TableCell>
-                  <TableCell align="center">관리</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
+          <div className="products-table-container">
+            <table className="products-table">
+              <thead className="products-table-head">
+                <tr>
+                  <th>ID</th>
+                  <th>상품명</th>
+                  <th>설명</th>
+                  <th>가격</th>
+                  <th>배송 횟수</th>
+                  <th>등록일</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody>
                 {products.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell>{product.id}</TableCell>
-                    <TableCell>{product.name}</TableCell>
-                    <TableCell>{product.description}</TableCell>
-                    <TableCell align="right">
+                  <tr key={product.id} className="products-table-row">
+                    <td className="products-table-cell">{product.id}</td>
+                    <td className="products-table-cell">{product.name}</td>
+                    <td className="products-table-cell">
+                      {product.description}
+                    </td>
+                    <td className="products-table-cell price-cell">
                       {product.price.toLocaleString()}원
-                    </TableCell>
-                    <TableCell align="center">
-                      {product.delivery_count || 1}회
-                    </TableCell>
-                    <TableCell align="center">
+                    </td>
+                    <td
+                      className="products-table-cell"
+                      style={{ textAlign: 'center' }}
+                    >
+                      <span className="delivery-count-cell">
+                        {product.delivery_count || 1}회
+                      </span>
+                    </td>
+                    <td
+                      className="products-table-cell"
+                      style={{ textAlign: 'center' }}
+                    >
                       {new Date(product.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell align="center">
-                      <Tooltip title="수정">
-                        <IconButton
-                          color="primary"
+                    </td>
+                    <td className="products-table-cell">
+                      <div className="action-buttons">
+                        <button
+                          className="action-button edit-button"
                           onClick={() => handleOpenEditDialog(product)}
-                          size="small"
+                          title="수정"
                         >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="삭제">
-                        <IconButton
-                          color="error"
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                          >
+                            <path
+                              d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          className="action-button delete-button"
                           onClick={(e) => handleOpenDeleteConfirm(e, product)}
-                          size="small"
+                          title="삭제"
                         >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                          >
+                            <path
+                              d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+              </tbody>
+            </table>
+          </div>
 
-          <TablePagination
-            component="div"
-            count={total}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[10, 25, 50]}
-            labelRowsPerPage="페이지당 행 수:"
-            labelDisplayedRows={({ from, to, count }) =>
-              `${from}-${to} / 전체 ${count !== -1 ? count : `${to} 이상`}`
-            }
-          />
+          <div className="pagination-container">
+            <span className="pagination-text">페이지당 행 수:</span>
+            <select
+              className="pagination-select"
+              value={rowsPerPage}
+              onChange={handleChangeRowsPerPage}
+            >
+              {[10, 25, 50].map((num) => (
+                <option key={num} value={num}>
+                  {num}
+                </option>
+              ))}
+            </select>
+            <span className="pagination-text">
+              {page * rowsPerPage + 1}-
+              {Math.min((page + 1) * rowsPerPage, total)} / 전체 {total}
+            </span>
+            <div className="pagination-buttons">
+              <button
+                className="pagination-button"
+                onClick={() => handleChangePage(page - 1)}
+                disabled={page === 0}
+              >
+                이전
+              </button>
+              <button
+                className="pagination-button"
+                onClick={() => handleChangePage(page + 1)}
+                disabled={(page + 1) * rowsPerPage >= total}
+              >
+                다음
+              </button>
+            </div>
+          </div>
         </>
       )}
 
       {/* 상품 추가/수정 다이얼로그 */}
-      <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          {dialogMode === 'add' ? '상품 추가' : '상품 수정'}
-        </DialogTitle>
-        <DialogContent>
-          {dialogError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {dialogError}
-            </Alert>
-          )}
+      {openDialog && (
+        <div className="dialog">
+          <div className="dialog-paper">
+            <div className="dialog-title">
+              {dialogMode === 'add' ? '상품 추가' : '상품 수정'}
+            </div>
+            <div className="dialog-content">
+              {dialogError && (
+                <div className="alert alert-error">{dialogError}</div>
+              )}
 
-          <TextField
-            label="상품명"
-            fullWidth
-            margin="normal"
-            value={productForm.name}
-            onChange={(e) =>
-              setProductForm({ ...productForm, name: e.target.value })
-            }
-          />
+              <div className="form-field">
+                <label htmlFor="product-name">상품명</label>
+                <input
+                  id="product-name"
+                  type="text"
+                  className="form-input"
+                  value={productForm.name}
+                  onChange={(e) =>
+                    setProductForm({ ...productForm, name: e.target.value })
+                  }
+                />
+              </div>
 
-          <TextField
-            label="상품 설명"
-            fullWidth
-            margin="normal"
-            multiline
-            rows={3}
-            value={productForm.description}
-            onChange={(e) =>
-              setProductForm({ ...productForm, description: e.target.value })
-            }
-          />
+              <div className="form-field">
+                <label htmlFor="product-description">상품 설명</label>
+                <textarea
+                  id="product-description"
+                  className="form-textarea"
+                  rows={3}
+                  value={productForm.description}
+                  onChange={(e) =>
+                    setProductForm({
+                      ...productForm,
+                      description: e.target.value,
+                    })
+                  }
+                />
+              </div>
 
-          <TextField
-            label="가격"
-            fullWidth
-            margin="normal"
-            type="number"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">₩</InputAdornment>
-              ),
-            }}
-            value={productForm.price}
-            onChange={(e) =>
-              setProductForm({ ...productForm, price: e.target.value })
-            }
-          />
+              <div className="form-field price-field">
+                <label htmlFor="product-price">가격</label>
+                <input
+                  id="product-price"
+                  type="number"
+                  className="form-input"
+                  value={productForm.price}
+                  onChange={(e) =>
+                    setProductForm({ ...productForm, price: e.target.value })
+                  }
+                />
+              </div>
 
-          <TextField
-            label="배송 횟수"
-            fullWidth
-            margin="normal"
-            type="number"
-            InputProps={{
-              endAdornment: <InputAdornment position="end">회</InputAdornment>,
-            }}
-            value={productForm.delivery_count}
-            onChange={(e) =>
-              setProductForm({ ...productForm, delivery_count: e.target.value })
-            }
-            helperText="상품 구매 시 제공되는 배송 횟수"
-          />
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={handleCloseDialog} disabled={submitting}>
-            취소
-          </Button>
-          <Button
-            onClick={handleSubmitProduct}
-            variant="contained"
-            color="primary"
-            disabled={submitting}
-          >
-            {submitting ? '저장 중...' : '저장'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+              <div className="form-field delivery-count-field">
+                <label htmlFor="product-delivery-count">배송 횟수</label>
+                <input
+                  id="product-delivery-count"
+                  type="number"
+                  className="form-input"
+                  value={productForm.delivery_count}
+                  onChange={(e) =>
+                    setProductForm({
+                      ...productForm,
+                      delivery_count: e.target.value,
+                    })
+                  }
+                />
+                <div className="helper-text">
+                  상품 구매 시 제공되는 배송 횟수
+                </div>
+              </div>
+            </div>
+            <div className="dialog-actions">
+              <button
+                className="cancel-button"
+                onClick={handleCloseDialog}
+                disabled={submitting}
+              >
+                취소
+              </button>
+              <button
+                className="save-button"
+                onClick={handleSubmitProduct}
+                disabled={submitting}
+              >
+                {submitting ? '저장 중...' : '저장'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 삭제 확인 다이얼로그 */}
-      <Dialog open={deleteConfirmOpen} onClose={handleCloseDeleteConfirm}>
-        <DialogTitle>상품 삭제 확인</DialogTitle>
-        <DialogContent>
-          <Typography>
-            {productToDelete?.name} 상품을 삭제하시겠습니까?
-          </Typography>
-          <Typography variant="body2" color="error" sx={{ mt: 2 }}>
-            이 작업은 되돌릴 수 없습니다.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteConfirm}>취소</Button>
-          <Button onClick={handleDeleteProduct} color="error">
-            삭제
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+      {deleteConfirmOpen && productToDelete && (
+        <div className="dialog">
+          <div className="dialog-paper" style={{ maxWidth: '400px' }}>
+            <div className="dialog-title delete-dialog-title">
+              상품 삭제 확인
+            </div>
+            <div className="dialog-content">
+              <p>{productToDelete.name} 상품을 삭제하시겠습니까?</p>
+              <p className="delete-warning">이 작업은 되돌릴 수 없습니다.</p>
+            </div>
+            <div className="dialog-actions">
+              <button
+                className="cancel-button"
+                onClick={handleCloseDeleteConfirm}
+              >
+                취소
+              </button>
+              <button
+                className="delete-confirm-button"
+                onClick={handleDeleteProduct}
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

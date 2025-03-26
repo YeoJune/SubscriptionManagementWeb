@@ -1,43 +1,47 @@
 // src/pages/register.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './register.css';
-import {
-  Alert,
-  Container,
-  Box,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Snackbar,
-} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
 
-  const [name, setName] = useState<string | null>(null);
-  const [id, setid] = useState<string | null>(null);
-  const [password, setPassword] = useState<string | null>(null);
-  const [passwordConfirm, setPasswordConfirm] = useState<string | null>(null);
+  const [name, setName] = useState<string>('');
+  const [id, setId] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [passwordConfirm, setPasswordConfirm] = useState<string>('');
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [errorSnackbar, setErrorSnackbar] = useState<string | null>(null);
-  const [successSnackbar, setSuccessSnackbar] = useState<string | null>(null);
-  const [phone_number, setPhone] = useState<string | null>(null);
 
-  // 실시간 에러 상태
+  // 에러 상태
   const [nameError, setNameError] = useState<string | null>(null);
-  const [idError, _setIdError] = useState<string | null>(null);
+  const [idError, setIdError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordMatchError, setPasswordMatchError] = useState<string | null>(
     null
   );
   const [phoneError, setPhoneError] = useState<string | null>(null);
 
-  const handleSnackbarClose = () => {
-    setErrorSnackbar(null);
-    setSuccessSnackbar(null);
-  };
+  // 토스트 메시지 상태
+  const [toast, setToast] = useState<{
+    type: 'error' | 'success';
+    message: string;
+  } | null>(null);
+
+  // 토스트 메시지 타이머
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+        // 성공 메시지 후 로그인 페이지로 리디렉션
+        if (toast.type === 'success') {
+          navigate('/login');
+        }
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [toast, navigate]);
 
   // 실시간 입력 검증
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,9 +54,14 @@ const Register: React.FC = () => {
     }
   };
 
-  const handleidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setid(value);
+    setId(value);
+    if (value.length === 0) {
+      setIdError('아이디를 입력해주세요');
+    } else {
+      setIdError(null);
+    }
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,10 +70,13 @@ const Register: React.FC = () => {
     setPasswordError(
       value.length >= 8 ? null : '비밀번호는 8자 이상이어야 합니다'
     );
+
     // 입력 중에도 비밀번호 일치 여부 갱신
-    setPasswordMatchError(
-      passwordConfirm === value ? null : '비밀번호가 일치하지 않습니다'
-    );
+    if (passwordConfirm) {
+      setPasswordMatchError(
+        passwordConfirm === value ? null : '비밀번호가 일치하지 않습니다'
+      );
+    }
   };
 
   const handlePasswordConfirmChange = (
@@ -79,201 +91,180 @@ const Register: React.FC = () => {
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // validate phone number
-    setPhone(value);
+    setPhoneNumber(value);
+
+    // 간단한 전화번호 유효성 검사 (선택 사항)
+    const phoneRegex = /^[0-9]{10,11}$/;
+    if (!phoneRegex.test(value) && value.length > 0) {
+      setPhoneError('유효한 전화번호를 입력해주세요');
+    } else {
+      setPhoneError(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('handleSubmit called');
+
+    // 모든 필드 입력 확인
     if (!name || !id || !password || !passwordConfirm) {
-      setErrorSnackbar('모든 항목을 입력해주세요');
+      setToast({ type: 'error', message: '모든 항목을 입력해주세요' });
       return;
     }
 
-    if (idError || passwordError || passwordMatchError) {
-      setErrorSnackbar('입력값을 확인해주세요');
+    // 유효성 검사 오류 확인
+    if (
+      nameError ||
+      idError ||
+      passwordError ||
+      passwordMatchError ||
+      phoneError
+    ) {
+      setToast({ type: 'error', message: '입력값을 확인해주세요' });
       return;
     }
-
-    console.log('유효성 검사 통과');
 
     setLoading(true);
     try {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, password, phone_number }),
+        body: JSON.stringify({
+          id,
+          password,
+          name,
+          phone_number: phoneNumber,
+        }),
       });
 
       const data = await response.json();
       if (!response.ok) {
-        setErrorSnackbar(data.message);
+        setToast({
+          type: 'error',
+          message: data.message || '회원가입에 실패했습니다',
+        });
         setLoading(false);
         return;
       }
 
-      setSuccessSnackbar(
-        '회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.'
-      );
-      setTimeout(() => navigate('/login'), 1500);
+      setToast({
+        type: 'success',
+        message: '회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.',
+      });
     } catch (error: any) {
-      try {
-        setErrorSnackbar(error.message);
-      } catch {
-        setErrorSnackbar('알 수 없는 오류가 발생했습니다');
-      }
+      setToast({
+        type: 'error',
+        message: error.message || '알 수 없는 오류가 발생했습니다',
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  const handleCloseToast = () => {
+    setToast(null);
+  };
+
   return (
-    <Container maxWidth="sm">
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-        sx={{ backgroundColor: '#f5f5f5' }} // 전체 배경은 연한 회색
-      >
-        <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
-          <Typography
-            variant="h4"
-            component="h1"
-            align="center"
-            gutterBottom
-            sx={{ color: 'grey.800' }} // 타이틀 회색 계열
-          >
-            회원가입
-          </Typography>
-          <form onSubmit={handleSubmit}>
-            <TextField
-              label="이름"
-              variant="outlined"
-              margin="normal"
-              fullWidth
-              required
+    <div className="register-container">
+      {/* 토스트 메시지 */}
+      {toast && (
+        <div className="toast-container">
+          <div className={`toast toast-${toast.type}`}>
+            <span>{toast.message}</span>
+            <button className="toast-close" onClick={handleCloseToast}>
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="register-card">
+        <h1 className="register-title">회원가입</h1>
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="name" className="form-label">
+              이름
+            </label>
+            <input
+              id="name"
+              type="text"
+              className={`form-control ${nameError ? 'error' : ''}`}
               value={name}
               onChange={handleNameChange}
-              error={!!nameError}
-            />
-            {nameError && (
-              <Typography color="error" variant="body2">
-                {nameError}
-              </Typography>
-            )}
-
-            <TextField
-              label="아이디"
-              variant="outlined"
-              margin="normal"
-              fullWidth
               required
-              type="id"
+            />
+            {nameError && <p className="error-text">{nameError}</p>}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="id" className="form-label">
+              아이디
+            </label>
+            <input
+              id="id"
+              type="text"
+              className={`form-control ${idError ? 'error' : ''}`}
               value={id}
-              onChange={handleidChange}
-              error={!!idError}
-            />
-            {idError && (
-              <Typography color="error" variant="body2">
-                {idError}
-              </Typography>
-            )}
-
-            <TextField
-              label="전화번호"
-              variant="outlined"
-              margin="normal"
-              fullWidth
+              onChange={handleIdChange}
               required
-              type="phone"
-              value={phone_number}
+            />
+            {idError && <p className="error-text">{idError}</p>}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="phone" className="form-label">
+              전화번호
+            </label>
+            <input
+              id="phone"
+              type="tel"
+              className={`form-control ${phoneError ? 'error' : ''}`}
+              value={phoneNumber}
               onChange={handlePhoneChange}
-              error={!!phoneError}
+              placeholder="01012345678"
             />
-            {phoneError && (
-              <Typography color="error" variant="body2">
-                {phoneError}
-              </Typography>
-            )}
+            {phoneError && <p className="error-text">{phoneError}</p>}
+          </div>
 
-            <TextField
-              label="비밀번호"
-              variant="outlined"
-              margin="normal"
-              fullWidth
-              required
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">
+              비밀번호
+            </label>
+            <input
+              id="password"
               type="password"
+              className={`form-control ${passwordError ? 'error' : ''}`}
               value={password}
               onChange={handlePasswordChange}
-              error={!!passwordError}
-            />
-            {passwordError && (
-              <Typography color="error" variant="body2">
-                {passwordError}
-              </Typography>
-            )}
-
-            <TextField
-              label="비밀번호 확인"
-              variant="outlined"
-              margin="normal"
-              fullWidth
               required
+            />
+            {passwordError && <p className="error-text">{passwordError}</p>}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password-confirm" className="form-label">
+              비밀번호 확인
+            </label>
+            <input
+              id="password-confirm"
               type="password"
+              className={`form-control ${passwordMatchError ? 'error' : ''}`}
               value={passwordConfirm}
               onChange={handlePasswordConfirmChange}
-              error={!!passwordMatchError}
+              required
             />
             {passwordMatchError && (
-              <Typography color="error" variant="body2">
-                {passwordMatchError}
-              </Typography>
+              <p className="error-text">{passwordMatchError}</p>
             )}
+          </div>
 
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              disabled={loading}
-              sx={{
-                marginTop: 2,
-                backgroundColor: 'grey.700',
-                ':hover': { backgroundColor: 'grey.800' },
-              }}
-            >
-              {loading ? '회원가입 중...' : '회원가입'}
-            </Button>
-          </form>
-        </Paper>
-      </Box>
-
-      <Snackbar
-        open={!!errorSnackbar || !!successSnackbar}
-        autoHideDuration={3000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        {errorSnackbar ? (
-          <Alert
-            severity="error"
-            onClose={handleSnackbarClose}
-            sx={{ width: '100%' }}
-          >
-            {errorSnackbar}
-          </Alert>
-        ) : successSnackbar ? (
-          <Alert
-            severity="success"
-            onClose={handleSnackbarClose}
-            sx={{ width: '100%' }}
-          >
-            {successSnackbar}
-          </Alert>
-        ) : undefined}
-      </Snackbar>
-    </Container>
+          <button type="submit" className="register-button" disabled={loading}>
+            {loading ? '회원가입 중...' : '회원가입'}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 };
 

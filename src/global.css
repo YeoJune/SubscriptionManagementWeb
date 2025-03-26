@@ -25,7 +25,6 @@
 }
 
 body {
-  margin: 0;
   font-family: 'Noto Sans KR', 'Arial', sans-serif;
   background-color: var(--background-color);
   color: var(--text-color);
@@ -59,15 +58,12 @@ h6 {
 h1 {
   font-size: 2.5rem;
 }
-
 h2 {
   font-size: 2rem;
 }
-
 h3 {
   font-size: 1.5rem;
 }
-
 p {
   margin-bottom: 1rem;
 }
@@ -241,28 +237,23 @@ label {
 .d-flex {
   display: flex;
 }
-
 .flex-column {
   flex-direction: column;
 }
-
 .justify-content-center {
   justify-content: center;
 }
-
 .justify-content-between {
   justify-content: space-between;
 }
-
 .align-items-center {
   align-items: center;
 }
-
 .flex-wrap {
   flex-wrap: wrap;
 }
 
-/* Board-specific styling retained from original */
+/* Board-specific styling */
 .board-container {
   max-width: 900px;
   margin: 0 auto;

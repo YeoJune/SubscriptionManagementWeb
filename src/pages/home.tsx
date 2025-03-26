@@ -1,8 +1,8 @@
 // src/pages/home.tsx
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 import './home.css';
 
 interface DeliveryInfo {
@@ -56,8 +56,8 @@ const Home: React.FC = () => {
   return (
     <div className="home-container">
       <section className="home-hero">
-        <h1>배송 관리 시스템</h1>
-        <p>효율적인 배송 관리를 위한 올인원 솔루션</p>
+        <h1>Saluv All Day</h1>
+        <p>기분이 좋아지는 음식, 샐럽올데이</p>
 
         {!isAuthenticated ? (
           <div className="cta-buttons">
@@ -87,6 +87,11 @@ const Home: React.FC = () => {
                     </strong>
                   </p>
                 )}
+                <div className="cta-buttons">
+                  <Link to="/profile" className="btn btn-primary">
+                    배송 내역 보기
+                  </Link>
+                </div>
               </>
             )}
           </div>
@@ -94,11 +99,11 @@ const Home: React.FC = () => {
       </section>
 
       <section className="featured-services">
-        <h2>주요 서비스</h2>
+        <h2>샐럽올데이 서비스</h2>
         <div className="service-cards">
           <div className="service-card">
             <h3>공지사항</h3>
-            <p>최신 업데이트 및 중요 안내사항</p>
+            <p>최신 메뉴 업데이트 및 중요 안내사항</p>
             <Link to="/board" className="card-link">
               바로가기
             </Link>
@@ -113,8 +118,8 @@ const Home: React.FC = () => {
           </div>
 
           <div className="service-card">
-            <h3>상품 결제</h3>
-            <p>새로운 배송 일정 예약하기</p>
+            <h3>구독 신청</h3>
+            <p>건강한 식단 구독 신청하기</p>
             <Link to="/subscription" className="card-link">
               바로가기
             </Link>

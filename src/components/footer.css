@@ -1,10 +1,10 @@
 /* src/components/footer.css */
 
 .footer {
-  background-color: var(--accent-color, #2e6e31);
-  color: white;
+  background-color: var(--accent-color);
+  color: #f8f9fa;
   padding-top: 2rem;
-  margin-top: auto; /* Pushes footer to bottom of page */
+  margin-top: 3rem;
 }
 
 .footer-container {
@@ -18,14 +18,14 @@
 
 .footer-section {
   flex: 1;
-  min-width: 250px;
+  min-width: 200px;
   margin-bottom: 2rem;
   padding: 0 1rem;
 }
 
 .footer-section h4 {
-  color: #a4e22e; /* Brand primary color */
-  font-size: 1.25rem;
+  color: var(--primary-color);
+  font-size: 1.2rem;
   margin-bottom: 1rem;
   position: relative;
   padding-bottom: 0.5rem;
@@ -36,15 +36,16 @@
   position: absolute;
   left: 0;
   bottom: 0;
-  width: 40px;
+  width: 30px;
   height: 3px;
-  background-color: #a4e22e;
+  background-color: var(--primary-color);
 }
 
 .footer-section p {
   margin-bottom: 0.5rem;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   line-height: 1.5;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .footer-section ul {
@@ -58,37 +59,55 @@
 }
 
 .footer-section ul li a {
-  color: #f8f9fa;
+  color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
   display: inline-block;
-  padding: 0.2rem 0;
+  font-size: 0.9rem;
 }
 
 .footer-section ul li a:hover {
-  color: #a4e22e;
-  transform: translateX(5px);
+  color: var(--primary-color);
+  transform: translateX(3px);
 }
 
 .footer-bottom {
   background-color: rgba(0, 0, 0, 0.2);
   text-align: center;
-  padding: 1.5rem 0;
-  font-size: 0.9rem;
+  padding: 1rem 0;
+  font-size: 0.85rem;
 }
 
 .footer-bottom p {
   margin: 0;
+  opacity: 0.9;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .footer-container {
     flex-direction: column;
+    padding: 0 2rem;
   }
 
   .footer-section {
     width: 100%;
     margin-bottom: 1.5rem;
+    padding: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-container {
+    padding: 0 1rem;
+  }
+
+  .footer-section h4 {
+    font-size: 1.1rem;
+  }
+
+  .footer-section p,
+  .footer-section ul li a {
+    font-size: 0.85rem;
   }
 }

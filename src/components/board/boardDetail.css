@@ -7,92 +7,97 @@
 }
 
 /* Back button styling */
-.MuiButton-root.back-button {
-  color: #2e6e31 !important; /* accent color */
-  margin-bottom: 1.5rem !important;
-  border-radius: 20px !important;
-  padding: 0.5rem 1rem !important;
-  background-color: rgba(164, 226, 46, 0.1) !important;
-  transition: all 0.3s ease !important;
-  font-weight: 600 !important;
-  text-transform: none !important;
+.back-button {
+  color: var(--accent-color);
+  margin-bottom: 1.5rem;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  background-color: rgba(164, 226, 46, 0.1);
+  transition: all 0.3s ease;
+  font-weight: 600;
+  text-transform: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.MuiButton-root.back-button:hover {
-  background-color: rgba(164, 226, 46, 0.2) !important;
+.back-button:hover {
+  background-color: rgba(164, 226, 46, 0.2);
   transform: translateX(-5px);
 }
 
-.MuiButton-root.back-button .MuiSvgIcon-root {
-  color: #a4e22e !important; /* primary color */
+.back-button svg {
+  color: var(--primary-color);
   transition: transform 0.3s ease;
 }
 
-.MuiButton-root.back-button:hover .MuiSvgIcon-root {
+.back-button:hover svg {
   transform: translateX(-3px);
 }
 
 /* Card styling */
-.MuiCard-root {
-  border-radius: 15px !important;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05) !important;
-  overflow: hidden !important;
-}
-
-.MuiCardContent-root {
-  padding: 2rem !important;
+.board-card {
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  background-color: white;
+  padding: 2rem;
 }
 
 /* Board title */
-.MuiTypography-h5 {
-  color: #2e6e31 !important; /* accent color */
-  font-weight: 700 !important;
-  margin-bottom: 0.5rem !important;
-  font-size: 1.8rem !important;
+.board-title {
+  color: var(--accent-color);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  font-size: 1.8rem;
 }
 
 /* Board meta info */
-.MuiTypography-caption {
-  color: #6c757d !important;
-  font-size: 0.9rem !important;
-  display: block !important;
-  margin-bottom: 1rem !important;
+.board-meta {
+  color: #6c757d;
+  font-size: 0.9rem;
+  display: block;
+  margin-bottom: 1rem;
 }
 
 /* Divider */
-.MuiDivider-root {
-  margin: 1.5rem 0 !important;
-  background-color: #e9ecef !important;
+.board-divider {
+  margin: 1.5rem 0;
+  height: 1px;
+  background-color: var(--background-dark);
+  border: none;
 }
 
 /* Normal content */
-.MuiTypography-body1 {
-  color: #333 !important;
-  line-height: 1.8 !important;
-  font-size: 1.05rem !important;
+.board-content {
+  color: var(--text-color);
+  line-height: 1.8;
+  font-size: 1.05rem;
 }
 
 /* FAQ question */
-.MuiTypography-h6 {
-  color: #333 !important;
-  font-weight: 600 !important;
-  margin-bottom: 1rem !important;
-  font-size: 1.2rem !important;
-  line-height: 1.5 !important;
-  background-color: rgba(164, 226, 46, 0.1) !important;
-  padding: 1rem !important;
-  border-radius: 10px !important;
-  border-left: 4px solid #a4e22e !important; /* primary color */
+.faq-question {
+  color: var(--text-color);
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  background-color: rgba(164, 226, 46, 0.1);
+  padding: 1rem;
+  border-radius: 10px;
+  border-left: 4px solid var(--primary-color);
 }
 
 /* FAQ answer */
 .faq-answer {
-  color: #333 !important;
-  line-height: 1.8 !important;
-  font-size: 1.05rem !important;
-  background-color: #f8f9fa !important;
-  padding: 1.5rem !important;
-  border-radius: 10px !important;
+  color: var(--text-color);
+  line-height: 1.8;
+  font-size: 1.05rem;
+  background-color: var(--background-color);
+  padding: 1.5rem;
+  border-radius: 10px;
 }
 
 /* Loading state */
@@ -104,68 +109,85 @@
   padding: 3rem;
 }
 
-.loading-container .MuiCircularProgress-root {
-  color: #a4e22e !important; /* primary color */
+.loading-spinner {
+  border: 4px solid rgba(164, 226, 46, 0.3);
+  border-radius: 50%;
+  border-top: 4px solid var(--primary-color);
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
   margin-bottom: 1rem;
 }
 
-.loading-container .MuiTypography-root {
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
   color: #6c757d;
 }
 
 /* Error state */
-.MuiTypography-root[color='error'] {
+.error-message {
   margin: 2rem 0;
   padding: 1rem;
   border-radius: 10px;
   background-color: rgba(220, 53, 69, 0.1);
-  border: 1px solid #dc3545;
+  border: 1px solid var(--error-color);
+  color: var(--error-color);
+  text-align: center;
+  font-weight: 600;
 }
 
 /* Enhanced content styling for better readability */
-.MuiTypography-body1 a {
-  color: #2e6e31 !important;
-  text-decoration: underline !important;
-  font-weight: 600 !important;
-  transition: color 0.3s ease !important;
+.board-content a {
+  color: var(--accent-color);
+  text-decoration: underline;
+  font-weight: 600;
+  transition: color 0.3s ease;
 }
 
-.MuiTypography-body1 a:hover {
-  color: #a4e22e !important;
+.board-content a:hover {
+  color: var(--primary-color);
 }
 
-.MuiTypography-body1 strong,
-.MuiTypography-body1 b {
-  color: #2e6e31 !important;
+.board-content strong,
+.board-content b {
+  color: var(--accent-color);
 }
 
-.MuiTypography-body1 em,
-.MuiTypography-body1 i {
-  color: #666 !important;
+.board-content em,
+.board-content i {
+  color: var(--text-light);
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .MuiCardContent-root {
-    padding: 1.5rem !important;
+  .board-card {
+    padding: 1.5rem;
   }
 
-  .MuiTypography-h5 {
-    font-size: 1.5rem !important;
+  .board-title {
+    font-size: 1.5rem;
   }
 }
 
 @media (max-width: 480px) {
-  .MuiCardContent-root {
-    padding: 1rem !important;
+  .board-card {
+    padding: 1rem;
   }
 
-  .MuiTypography-h5 {
-    font-size: 1.3rem !important;
+  .board-title {
+    font-size: 1.3rem;
   }
 
-  .MuiTypography-body1,
+  .board-content,
   .faq-answer {
-    font-size: 1rem !important;
+    font-size: 1rem;
   }
 }
