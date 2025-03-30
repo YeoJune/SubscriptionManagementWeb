@@ -81,6 +81,7 @@
 .footer-bottom p {
   margin: 0;
   opacity: 0.9;
+  line-height: 1.6;
 }
 
 /* Responsive adjustments */

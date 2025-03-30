@@ -35,9 +35,11 @@ const Footer: React.FC = () => {
         {/* Contact Information */}
         <div className="footer-section">
           <h4>연락처</h4>
-          <p>제주시 첨단로 123</p>
-          <p>전화: 064-750-0910 / 010-4896-3633</p>
-          <p>이메일: hello@saluv.co.kr</p>
+          <p>상호: 셀럽올데이 | 대표: 김봉준</p>
+          <p>사업자등록번호: 640-30-01556</p>
+          <p>주소: 제주시 귀아랑길 13, 1층(연동)</p>
+          <p>전화: 064-750-0910</p>
+          <p>이메일: tenacity0910@gmail.com</p>
         </div>
       </div>
 
