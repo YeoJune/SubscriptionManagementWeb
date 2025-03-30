@@ -37,38 +37,40 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className={`header ${scrolled ? 'header-scrolled' : ''}`}>
+    <header className={`sal-header ${scrolled ? 'sal-header-scrolled' : ''}`}>
       <div className="container">
-        <div className="toolbar">
+        <div className="sal-toolbar">
           {/* 왼쪽 영역: 로고(또는 앱 타이틀) */}
-          <div className="logo-section">
-            <Link to="/" className="logo-link">
+          <div className="sal-logo-section">
+            <Link to="/" className="sal-logo-link">
               <img
                 src="/public/images/logo.jpg"
                 alt="Saluv All Day"
-                className="logo-image"
+                className="sal-logo-image"
               />
-              <span className="logo-text">Saluv All Day</span>
+              <span className="sal-logo-text">Saluv All Day</span>
             </Link>
           </div>
 
           {/* 모바일 메뉴 토글 버튼 */}
-          <button className="mobile-menu-toggle" onClick={toggleMobileMenu}>
-            <span className="menu-icon"></span>
+          <button className="sal-mobile-menu-toggle" onClick={toggleMobileMenu}>
+            <span className="sal-menu-icon"></span>
           </button>
 
           {/* 중앙 영역: 네비게이션 메뉴 */}
-          <nav className={`nav-section ${mobileMenuOpen ? 'menu-open' : ''}`}>
+          <nav
+            className={`sal-nav-section ${mobileMenuOpen ? 'sal-menu-open' : ''}`}
+          >
             <Link
               to="/"
-              className={`nav-button ${isActive('/') ? 'active-nav-button' : ''}`}
+              className={`sal-nav-button ${isActive('/') ? 'sal-active-nav-button' : ''}`}
               onClick={() => setMobileMenuOpen(false)}
             >
               홈
             </Link>
             <Link
               to="/board"
-              className={`nav-button ${isActive('/board') ? 'active-nav-button' : ''}`}
+              className={`sal-nav-button ${isActive('/board') ? 'sal-active-nav-button' : ''}`}
               onClick={() => setMobileMenuOpen(false)}
             >
               공지사항
@@ -78,21 +80,21 @@ const Header: React.FC = () => {
               <>
                 <Link
                   to="/profile"
-                  className={`nav-button ${isActive('/profile') ? 'active-nav-button' : ''}`}
+                  className={`sal-nav-button ${isActive('/profile') ? 'sal-active-nav-button' : ''}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   내 프로필
                 </Link>
                 <Link
                   to="/subscription"
-                  className={`nav-button ${isActive('/subscription') ? 'active-nav-button' : ''}`}
+                  className={`sal-nav-button ${isActive('/subscription') ? 'sal-active-nav-button' : ''}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   구독신청
                 </Link>
                 <Link
                   to="/inquiry"
-                  className={`nav-button ${isActive('/inquiry') ? 'active-nav-button' : ''}`}
+                  className={`sal-nav-button ${isActive('/inquiry') ? 'sal-active-nav-button' : ''}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   고객의 소리
@@ -103,7 +105,7 @@ const Header: React.FC = () => {
             {isAdmin && (
               <Link
                 to="/admin"
-                className={`admin-button ${location.pathname.startsWith('/admin') ? 'active-admin-button' : ''}`}
+                className={`sal-admin-button ${location.pathname.startsWith('/admin') ? 'sal-active-admin-button' : ''}`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 관리자
@@ -112,28 +114,31 @@ const Header: React.FC = () => {
           </nav>
 
           {/* 오른쪽 영역: 로그인/로그아웃 버튼 */}
-          <div className="auth-section">
+          <div className="sal-auth-section">
             {!isAuthenticated ? (
               <>
-                <Link to="/register" className="auth-button register-button">
+                <Link
+                  to="/register"
+                  className="sal-auth-button sal-register-button"
+                >
                   회원가입
                 </Link>
-                <Link
-                  to="/login"
-                  className="auth-button login-button btn-primary"
-                >
+                <Link to="/login" className="sal-auth-button sal-login-button">
                   로그인
                 </Link>
               </>
             ) : (
               <>
                 {user?.delivery_count !== undefined && (
-                  <div className="delivery-count">
-                    <span className="badge-label">남은 배송</span>
-                    <span className="badge">{user.delivery_count}</span>
+                  <div className="sal-delivery-count">
+                    <span className="sal-badge-label">남은 배송</span>
+                    <span className="sal-badge">{user.delivery_count}</span>
                   </div>
                 )}
-                <button className="auth-button logout-button" onClick={logout}>
+                <button
+                  className="sal-auth-button sal-logout-button"
+                  onClick={logout}
+                >
                   로그아웃
                 </button>
               </>

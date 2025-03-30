@@ -1,7 +1,7 @@
 /* src/components/header.css */
 
 /* Header container */
-.header {
+.sal-header {
   position: sticky;
   top: 0;
   left: 0;
@@ -12,12 +12,12 @@
   transition: all 0.3s ease;
 }
 
-.header-scrolled {
+.sal-header-scrolled {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   padding: 0.3rem 0;
 }
 
-.toolbar {
+.sal-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -26,12 +26,12 @@
 }
 
 /* Logo/title section */
-.logo-section {
+.sal-logo-section {
   display: flex;
   align-items: center;
 }
 
-.logo-link {
+.sal-logo-link {
   display: flex;
   align-items: center;
   text-decoration: none;
@@ -41,22 +41,22 @@
   transition: color 0.3s ease;
 }
 
-.logo-link:hover {
+.sal-logo-link:hover {
   color: var(--primary-color);
 }
 
-.logo-image {
+.sal-logo-image {
   height: 50px;
   margin-right: 10px;
 }
 
-.logo-text {
+.sal-logo-text {
   font-weight: 800;
   letter-spacing: -0.5px;
 }
 
 /* Mobile menu toggle */
-.mobile-menu-toggle {
+.sal-mobile-menu-toggle {
   display: none;
   background: none;
   border: none;
@@ -65,7 +65,7 @@
   margin-left: auto;
 }
 
-.menu-icon {
+.sal-menu-icon {
   display: block;
   width: 24px;
   height: 2px;
@@ -74,8 +74,8 @@
   transition: all 0.3s ease;
 }
 
-.menu-icon::before,
-.menu-icon::after {
+.sal-menu-icon::before,
+.sal-menu-icon::after {
   content: '';
   position: absolute;
   width: 24px;
@@ -84,23 +84,23 @@
   transition: all 0.3s ease;
 }
 
-.menu-icon::before {
+.sal-menu-icon::before {
   top: -8px;
 }
 
-.menu-icon::after {
+.sal-menu-icon::after {
   bottom: -8px;
 }
 
 /* Navigation section */
-.nav-section {
+.sal-nav-section {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 0.75rem;
 }
 
-.nav-button {
+.sal-nav-button {
   color: var(--accent-color);
   font-weight: 600;
   padding: 0.5rem 1rem;
@@ -110,19 +110,19 @@
   text-align: center;
 }
 
-.nav-button:hover {
+.sal-nav-button:hover {
   background-color: rgba(164, 226, 46, 0.1);
   transform: translateY(-2px);
   color: var(--primary-color);
 }
 
-.active-nav-button {
+.sal-active-nav-button {
   background-color: rgba(164, 226, 46, 0.15);
   color: var(--primary-dark);
   position: relative;
 }
 
-.active-nav-button::after {
+.sal-active-nav-button::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -135,7 +135,7 @@
 }
 
 /* Admin button */
-.admin-button {
+.sal-admin-button {
   background-color: var(--primary-color);
   color: var(--accent-color);
   font-weight: 700;
@@ -146,20 +146,20 @@
   box-shadow: 0 4px 8px rgba(164, 226, 46, 0.3);
 }
 
-.admin-button:hover {
+.sal-admin-button:hover {
   background-color: var(--primary-dark);
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(164, 226, 46, 0.4);
   color: white;
 }
 
-.active-admin-button {
+.sal-active-admin-button {
   background-color: var(--primary-dark);
   color: white;
 }
 
 /* Auth section */
-.auth-section {
+.sal-auth-section {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
@@ -167,7 +167,7 @@
   flex-wrap: nowrap;
 }
 
-.auth-button {
+.sal-auth-button {
   width: auto;
   display: inline-block;
   font-weight: 600;
@@ -180,48 +180,48 @@
   cursor: pointer;
 }
 
-.register-button {
+.sal-register-button {
   color: var(--accent-color);
   border: 2px solid var(--primary-color);
   background-color: white;
 }
 
-.register-button:hover {
+.sal-register-button:hover {
   background-color: var(--primary-light);
   transform: translateY(-2px);
 }
 
-.login-button {
+.sal-login-button {
   background-color: var(--primary-color);
   color: var(--accent-color);
   border: 2px solid var(--primary-color);
 }
 
-.login-button:hover {
+.sal-login-button:hover {
   background-color: var(--primary-dark);
   color: white;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(164, 226, 46, 0.3);
 }
 
-.logout-button {
+.sal-logout-button {
   color: var(--text-light);
   background-color: transparent;
 }
 
-.logout-button:hover {
+.sal-logout-button:hover {
   color: var(--error-color);
   background-color: rgba(220, 53, 69, 0.1);
 }
 
 /* Delivery count badge */
-.delivery-count {
+.sal-delivery-count {
   display: flex;
   align-items: center;
   margin-right: 0.5rem;
 }
 
-.badge {
+.sal-badge {
   background-color: var(--secondary-color);
   color: white;
   font-weight: 700;
@@ -231,7 +231,7 @@
   box-shadow: 0 2px 4px rgba(255, 126, 51, 0.3);
 }
 
-.badge-label {
+.sal-badge-label {
   color: var(--text-light);
   font-weight: 600;
   font-size: 0.9rem;
@@ -240,16 +240,16 @@
 
 /* Responsive adjustments */
 @media (max-width: 992px) {
-  .mobile-menu-toggle {
+  .sal-mobile-menu-toggle {
     display: block;
     order: 3;
   }
 
-  .logo-section {
+  .sal-logo-section {
     flex: 1;
   }
 
-  .nav-section {
+  .sal-nav-section {
     position: absolute;
     top: 100%;
     left: 0;
@@ -265,59 +265,59 @@
     z-index: 99;
   }
 
-  .nav-section.menu-open {
+  .sal-nav-section.sal-menu-open {
     transform: translateY(0);
     opacity: 1;
     visibility: visible;
   }
 
-  .nav-button,
-  .admin-button {
+  .sal-nav-button,
+  .sal-admin-button {
     width: 100%;
     text-align: center;
     padding: 0.8rem;
   }
 
-  .auth-section {
+  .sal-auth-section {
     margin-left: auto;
     margin-right: 1rem;
   }
 }
 
 @media (max-width: 768px) {
-  .logo-text {
+  .sal-logo-text {
     font-size: 1.2rem;
   }
 
-  .logo-image {
+  .sal-logo-image {
     height: 32px;
   }
 
-  .auth-button {
+  .sal-auth-button {
     padding: 0.4rem 1rem;
     font-size: 0.85rem;
   }
 }
 
 @media (max-width: 576px) {
-  .auth-section {
+  .sal-auth-section {
     gap: 0.4rem;
   }
 
-  .badge-label {
+  .sal-badge-label {
     display: none;
   }
 
-  .logo-text {
+  .sal-logo-text {
     display: none;
   }
 
-  .logo-image {
+  .sal-logo-image {
     height: 36px;
     margin-right: 0;
   }
 
-  .auth-button {
+  .sal-auth-button {
     padding: 0.4rem 0.8rem;
     font-size: 0.8rem;
   }
