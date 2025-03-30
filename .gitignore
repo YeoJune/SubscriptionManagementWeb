@@ -3,7 +3,7 @@ node_modules
 .env
 temp**
 legacy*
-bundle.js*
+*bundle.js*
 
 # sqlite
 *.sqlite
