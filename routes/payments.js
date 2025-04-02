@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS payments (
 );
 */
 
-// POST /api/payments - 결제 처리 (로그인 필요)
+// routes/payments.js의 결제 처리 (POST /api/payments)
 router.post('/', authMiddleware, (req, res) => {
   try {
     const { product_id } = req.body;
@@ -50,45 +50,69 @@ router.post('/', authMiddleware, (req, res) => {
         // 항상 count는 1로 고정 (수량 개념 없음)
         const count = 1;
 
-        // 결제 정보 저장 (실제 결제는 생략하고 데이터만 저장)
-        db.run(
-          `INSERT INTO payments (user_id, product_id, count, amount) VALUES (?, ?, ?, ?)`,
-          [user_id, product_id, count, amount],
-          function (err) {
-            if (err) {
-              return res.status(500).json({ error: err.message });
-            }
-
-            const payment_id = this.lastID;
-
-            // 사용자 배송 잔여 횟수 업데이트
-            db.run(
-              `UPDATE users SET delivery_count = delivery_count + ? WHERE id = ?`,
-              [deliveryCount, user_id],
-              function (err) {
-                if (err) {
-                  return res.status(500).json({ error: err.message });
-                }
-
-                // 배송 일정 생성 (deliveryManager 사용)
-                deliveryManager
-                  .createDeliverySchedule(user_id, product_id, deliveryCount)
-                  .then((deliveries) => {
-                    res.status(201).json({
-                      message: '결제 및 배송 일정 등록이 완료되었습니다.',
-                      payment_id,
-                      amount,
-                      delivery_count: deliveryCount,
-                      deliveries,
-                    });
-                  })
-                  .catch((error) => {
-                    res.status(500).json({ error: error.message });
-                  });
-              }
-            );
+        // 트랜잭션 시작
+        db.run('BEGIN TRANSACTION', (err) => {
+          if (err) {
+            return res.status(500).json({ error: err.message });
           }
-        );
+
+          // 결제 정보 저장
+          db.run(
+            `INSERT INTO payments (user_id, product_id, count, amount) VALUES (?, ?, ?, ?)`,
+            [user_id, product_id, count, amount],
+            function (err) {
+              if (err) {
+                db.run('ROLLBACK');
+                return res.status(500).json({ error: err.message });
+              }
+
+              const payment_id = this.lastID;
+
+              // 사용자별 상품 배송 잔여 횟수 업데이트
+              db.run(
+                `INSERT INTO user_product_delivery (user_id, product_id, remaining_count)
+                 VALUES (?, ?, ?)
+                 ON CONFLICT(user_id, product_id) 
+                 DO UPDATE SET remaining_count = remaining_count + ?, updated_at = CURRENT_TIMESTAMP`,
+                [user_id, product_id, deliveryCount, deliveryCount],
+                function (err) {
+                  if (err) {
+                    db.run('ROLLBACK');
+                    return res.status(500).json({ error: err.message });
+                  }
+
+                  // 트랜잭션 커밋
+                  db.run('COMMIT', (err) => {
+                    if (err) {
+                      db.run('ROLLBACK');
+                      return res.status(500).json({ error: err.message });
+                    }
+
+                    // 배송 일정 생성 (트랜잭션 외부에서)
+                    deliveryManager
+                      .createDeliverySchedule(
+                        user_id,
+                        product_id,
+                        deliveryCount
+                      )
+                      .then((deliveries) => {
+                        res.status(201).json({
+                          message: '결제 및 배송 일정 등록이 완료되었습니다.',
+                          payment_id,
+                          amount,
+                          delivery_count: deliveryCount,
+                          deliveries,
+                        });
+                      })
+                      .catch((error) => {
+                        res.status(500).json({ error: error.message });
+                      });
+                  });
+                }
+              );
+            }
+          );
+        });
       }
     );
   } catch (error) {

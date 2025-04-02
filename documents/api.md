@@ -1,4 +1,4 @@
-# 배송 관리 시스템 API 문서
+# 배송 관리 시스템 API 문서 (상품별 배송 횟수 관리 추가)
 
 이 문서는 배송 관리 시스템의 백엔드 API를 설명합니다. 프론트엔드 개발자가 API를 활용하여 사용자 인터페이스를 구축하는 데 필요한 정보를 제공합니다.
 
@@ -105,7 +105,7 @@ POST /api/auth/login
     "phone_number": "01012345678",
     "email": "user123@example.com",
     "address": "서울시 강남구",
-    "delivery_count": 10,
+    "total_delivery_count": 10,
     "isAdmin": false,
     "created_at": "2023-01-01T00:00:00.000Z",
     "last_login": "2023-01-05T00:00:00.000Z"
@@ -143,11 +143,23 @@ GET /api/auth
     "phone_number": "01012345678",
     "email": "user123@example.com",
     "address": "서울시 강남구",
-    "delivery_count": 10,
+    "total_delivery_count": 10,
     "isAdmin": false,
     "created_at": "2023-01-01T00:00:00.000Z",
     "last_login": "2023-01-05T00:00:00.000Z"
-  }
+  },
+  "product_delivery": [
+    {
+      "product_id": 1,
+      "product_name": "프리미엄 세트",
+      "remaining_count": 5
+    },
+    {
+      "product_id": 2,
+      "product_name": "스페셜 세트",
+      "remaining_count": 5
+    }
+  ]
 }
 ```
 
@@ -178,7 +190,7 @@ GET /api/users
       "phone_number": "01012345678",
       "email": "user123@example.com",
       "address": "서울시 강남구",
-      "delivery_count": 10,
+      "total_delivery_count": 10,
       "created_at": "2023-01-01T00:00:00.000Z",
       "last_login": "2023-01-05T00:00:00.000Z"
     },
@@ -208,9 +220,21 @@ GET /api/users/:id
   "phone_number": "01012345678",
   "email": "user123@example.com",
   "address": "서울시 강남구",
-  "delivery_count": 10,
+  "total_delivery_count": 10,
   "created_at": "2023-01-01T00:00:00.000Z",
-  "last_login": "2023-01-05T00:00:00.000Z"
+  "last_login": "2023-01-05T00:00:00.000Z",
+  "product_deliveries": [
+    {
+      "product_id": 1,
+      "product_name": "프리미엄 세트",
+      "remaining_count": 5
+    },
+    {
+      "product_id": 2,
+      "product_name": "스페셜 세트",
+      "remaining_count": 5
+    }
+  ]
 }
 ```
 
@@ -230,7 +254,12 @@ POST /api/users
   "phone_number": "01087654321",
   "email": "newuser@example.com",
   "address": "부산시 해운대구",
-  "delivery_count": 5
+  "product_deliveries": [
+    {
+      "product_id": 1,
+      "remaining_count": 3
+    }
+  ]
 }
 ```
 
@@ -254,11 +283,20 @@ PUT /api/users/:id
 ```json
 {
   "name": "김철수",
-  "delivery_count": 15,
   "phone_number": "01012345678",
   "email": "updated@example.com",
   "address": "인천시 연수구",
-  "password": "newpassword" // 선택 사항
+  "password": "newpassword", // 선택 사항
+  "product_deliveries": [
+    {
+      "product_id": 1,
+      "remaining_count": 5
+    },
+    {
+      "product_id": 2,
+      "remaining_count": 10
+    }
+  ]
 }
 ```
 
@@ -762,7 +800,8 @@ GET /api/delivery
       "product_id": 1,
       "product_name": "프리미엄 세트",
       "phone_number": "01012345678",
-      "address": "서울시 강남구"
+      "address": "서울시 강남구",
+      "remaining_count_for_product": 9
     },
     ...
   ],
@@ -878,6 +917,31 @@ GET /api/delivery/my
 }
 ```
 
+### 사용자별 상품 배송 잔여 횟수 조회
+
+```
+GET /api/delivery/products
+```
+
+**응답:**
+
+```json
+{
+  "products": [
+    {
+      "product_id": 1,
+      "product_name": "프리미엄 세트",
+      "remaining_count": 5
+    },
+    {
+      "product_id": 2,
+      "product_name": "스페셜 세트",
+      "remaining_count": 3
+    }
+  ]
+}
+```
+
 ### 배송 가능 날짜 조회
 
 ```
@@ -930,7 +994,7 @@ CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   password_hash TEXT NOT NULL,
   salt TEXT NOT NULL,
-  delivery_count INTEGER DEFAULT 0,
+  delivery_count INTEGER DEFAULT 0,  /* 호환성을 위해 유지, 더 이상 직접 사용하지 않음 */
   name TEXT,
   phone_number TEXT,
   email TEXT,
@@ -950,6 +1014,20 @@ CREATE TABLE IF NOT EXISTS product (
   price REAL NOT NULL,
   delivery_count INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 사용자별 상품 배송 잔여 횟수 (user_product_delivery)
+
+```sql
+CREATE TABLE IF NOT EXISTS user_product_delivery (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT NOT NULL,
+  product_id INTEGER NOT NULL,
+  remaining_count INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, product_id)
 );
 ```
 

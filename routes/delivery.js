@@ -234,4 +234,16 @@ router.get('/available-dates', authMiddleware, (req, res) => {
   }
 });
 
+// GET /api/delivery/products - 사용자별 상품 배송 잔여 횟수 조회
+router.get('/products', authMiddleware, async (req, res) => {
+  try {
+    const user_id = req.session.user.id;
+
+    const products = await deliveryManager.getUserProductDeliveries(user_id);
+    res.json({ products });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

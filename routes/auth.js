@@ -198,14 +198,14 @@ router.post('/logout', authMiddleware, (req, res) => {
   }
 });
 
-// GET /api/auth - 현재 로그인한 사용자 정보 조회
+// routes/auth.js의 GET /api/auth
 router.get('/', authMiddleware, (req, res) => {
   try {
     const userId = req.session.user.id;
 
-    // 최신 사용자 정보 조회
+    // 사용자 기본 정보 조회
     db.get(
-      `SELECT id, name, phone_number, email, address, delivery_count, created_at, last_login FROM users WHERE id = ?`,
+      `SELECT id, name, phone_number, email, address, created_at, last_login FROM users WHERE id = ?`,
       [userId],
       (err, user) => {
         if (err) {
@@ -213,26 +213,47 @@ router.get('/', authMiddleware, (req, res) => {
         }
 
         if (!user) {
-          // 세션은 있지만 사용자 정보가 없는 경우 (사용자가 삭제됨)
           req.session.destroy();
           return res
             .status(404)
             .json({ error: '사용자 정보를 찾을 수 없습니다.' });
         }
 
-        res.json({
-          user: {
-            id: user.id,
-            name: user.name,
-            phone_number: user.phone_number,
-            email: user.email,
-            address: user.address,
-            delivery_count: user.delivery_count,
-            isAdmin: req.session.user.isAdmin,
-            created_at: user.created_at,
-            last_login: user.last_login,
-          },
-        });
+        // 상품별 배송 횟수 조회
+        db.all(
+          `SELECT upd.product_id, p.name as product_name, upd.remaining_count
+           FROM user_product_delivery upd
+           JOIN product p ON upd.product_id = p.id
+           WHERE upd.user_id = ?
+           ORDER BY p.name ASC`,
+          [userId],
+          (err, products) => {
+            if (err) {
+              return res.status(500).json({ error: err.message });
+            }
+
+            // 전체 남은 배송 횟수 계산
+            const totalDeliveryCount = products.reduce(
+              (sum, p) => sum + p.remaining_count,
+              0
+            );
+
+            res.json({
+              user: {
+                id: user.id,
+                name: user.name,
+                phone_number: user.phone_number,
+                email: user.email,
+                address: user.address,
+                isAdmin: req.session.user.isAdmin,
+                created_at: user.created_at,
+                last_login: user.last_login,
+                total_delivery_count: totalDeliveryCount,
+              },
+              product_delivery: products,
+            });
+          }
+        );
       }
     );
   } catch (error) {

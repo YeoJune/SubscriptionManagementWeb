@@ -106,8 +106,9 @@ router.get('/:id', checkAdmin, (req, res) => {
   try {
     const { id } = req.params;
 
+    // 사용자 기본 정보
     db.get(
-      `SELECT id, name, phone_number, email, address, delivery_count, created_at, last_login FROM users WHERE id = ?`,
+      `SELECT id, name, phone_number, email, address, created_at, last_login FROM users WHERE id = ?`,
       [id],
       (err, user) => {
         if (err) {
@@ -118,7 +119,33 @@ router.get('/:id', checkAdmin, (req, res) => {
           return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
         }
 
-        res.json(user);
+        // 상품별 배송 횟수도 함께 조회
+        db.all(
+          `SELECT upd.product_id, p.name as product_name, upd.remaining_count
+           FROM user_product_delivery upd
+           JOIN product p ON upd.product_id = p.id
+           WHERE upd.user_id = ?
+           ORDER BY p.name ASC`,
+          [id],
+          (err, products) => {
+            if (err) {
+              return res.status(500).json({ error: err.message });
+            }
+
+            // 전체 남은 배송 횟수 계산
+            const totalDeliveryCount = products.reduce(
+              (sum, p) => sum + p.remaining_count,
+              0
+            );
+
+            // 사용자 정보와 상품별 배송 횟수 반환
+            res.json({
+              ...user,
+              total_delivery_count: totalDeliveryCount,
+              product_deliveries: products,
+            });
+          }
+        );
       }
     );
   } catch (error) {
@@ -130,73 +157,78 @@ router.get('/:id', checkAdmin, (req, res) => {
 router.put('/:id', checkAdmin, (req, res) => {
   try {
     const { id } = req.params;
-    const { delivery_count, name, phone_number, email, address, password } =
+    const { name, phone_number, email, address, password, product_deliveries } =
       req.body;
 
-    // 사용자 존재 여부 확인
-    db.get(`SELECT * FROM users WHERE id = ?`, [id], (err, user) => {
+    // 트랜잭션 시작
+    db.run('BEGIN TRANSACTION', async (err) => {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
 
-      if (!user) {
-        return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
-      }
+      try {
+        // 1. 사용자 기본 정보 업데이트
+        if (password) {
+          // 비밀번호 변경이 있는 경우
+          const salt = generateSalt();
+          const password_hash = hashPassword(password, salt);
 
-      // 비밀번호 변경이 있는 경우
-      if (password) {
-        const salt = generateSalt();
-        const password_hash = hashPassword(password, salt);
+          await new Promise((resolve, reject) => {
+            db.run(
+              `UPDATE users SET password_hash = ?, salt = ?, name = ?, phone_number = ?, email = ?, address = ? WHERE id = ?`,
+              [password_hash, salt, name, phone_number, email, address, id],
+              function (err) {
+                if (err) reject(err);
+                else resolve();
+              }
+            );
+          });
+        } else {
+          // 비밀번호 변경이 없는 경우
+          await new Promise((resolve, reject) => {
+            db.run(
+              `UPDATE users SET name = ?, phone_number = ?, email = ?, address = ? WHERE id = ?`,
+              [name, phone_number, email, address, id],
+              function (err) {
+                if (err) reject(err);
+                else resolve();
+              }
+            );
+          });
+        }
 
-        db.run(
-          `UPDATE users SET password_hash = ?, salt = ?, delivery_count = ?, name = ?, phone_number = ?, email = ?, address = ? WHERE id = ?`,
-          [
-            password_hash,
-            salt,
-            delivery_count,
-            name,
-            phone_number,
-            email,
-            address,
-            id,
-          ],
-          function (err) {
-            if (err) {
-              return res.status(500).json({ error: err.message });
-            }
+        // 2. 상품별 배송 횟수 업데이트 (제공된 경우)
+        if (product_deliveries && Array.isArray(product_deliveries)) {
+          for (const item of product_deliveries) {
+            const { product_id, remaining_count } = item;
 
-            if (this.changes === 0) {
-              return res
-                .status(404)
-                .json({ error: '사용자 업데이트에 실패했습니다.' });
-            }
-
-            res.json({
-              message: '사용자 정보가 성공적으로 업데이트되었습니다.',
+            await new Promise((resolve, reject) => {
+              db.run(
+                `INSERT INTO user_product_delivery (user_id, product_id, remaining_count)
+                 VALUES (?, ?, ?)
+                 ON CONFLICT(user_id, product_id) 
+                 DO UPDATE SET remaining_count = ?, updated_at = CURRENT_TIMESTAMP`,
+                [id, product_id, remaining_count, remaining_count],
+                function (err) {
+                  if (err) reject(err);
+                  else resolve();
+                }
+              );
             });
           }
-        );
-      } else {
-        // 비밀번호 변경이 없는 경우
-        db.run(
-          `UPDATE users SET delivery_count = ?, name = ?, phone_number = ?, email = ?, address = ? WHERE id = ?`,
-          [delivery_count, name, phone_number, email, address, id],
-          function (err) {
-            if (err) {
-              return res.status(500).json({ error: err.message });
-            }
+        }
 
-            if (this.changes === 0) {
-              return res
-                .status(404)
-                .json({ error: '사용자 업데이트에 실패했습니다.' });
-            }
-
-            res.json({
-              message: '사용자 정보가 성공적으로 업데이트되었습니다.',
-            });
+        // 트랜잭션 커밋
+        db.run('COMMIT', (err) => {
+          if (err) {
+            db.run('ROLLBACK');
+            return res.status(500).json({ error: err.message });
           }
-        );
+          res.json({ message: '사용자 정보가 성공적으로 업데이트되었습니다.' });
+        });
+      } catch (error) {
+        db.run('ROLLBACK');
+        res.status(500).json({ error: error.message });
       }
     });
   } catch (error) {
