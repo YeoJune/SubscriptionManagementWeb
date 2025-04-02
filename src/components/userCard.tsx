@@ -25,6 +25,20 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
         <div className="user-info-stack">
           {user.phone_number && (
             <div className="user-info-item">
+              <span className="user-info-label">아이디:</span>
+              <span className="user-info-value">{user.id}</span>
+            </div>
+          )}
+
+          {user.phone_number && (
+            <div className="user-info-item">
+              <span className="user-info-label">이름:</span>
+              <span className="user-info-value">{user.name}</span>
+            </div>
+          )}
+
+          {user.phone_number && (
+            <div className="user-info-item">
               <span className="user-info-label">전화번호:</span>
               <span className="user-info-value">{user.phone_number}</span>
             </div>
@@ -41,15 +55,6 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
             <div className="user-info-item">
               <span className="user-info-label">주소:</span>
               <span className="user-info-value">{user.address}</span>
-            </div>
-          )}
-
-          {typeof user.delivery_count !== 'undefined' && (
-            <div className="user-info-item">
-              <span className="user-info-label">남은 배송 횟수:</span>
-              <span className="user-info-value delivery-count">
-                {user.delivery_count}
-              </span>
             </div>
           )}
 

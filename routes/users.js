@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   password_hash TEXT NOT NULL,
   salt TEXT NOT NULL,
-  delivery_count INTEGER DEFAULT 0,
+  total_delivery_count INTEGER DEFAULT 0,
   name TEXT,
   phone_number TEXT,
   email TEXT,
@@ -38,7 +38,7 @@ router.get('/', checkAdmin, (req, res) => {
       'name',
       'phone_number',
       'email',
-      'delivery_count',
+      'total_delivery_count',
       'created_at',
       'last_login',
     ];
@@ -49,7 +49,7 @@ router.get('/', checkAdmin, (req, res) => {
 
     const order = req.query.order === 'desc' ? 'DESC' : 'ASC';
 
-    let query = `SELECT id, name, phone_number, email, address, delivery_count, created_at, last_login FROM users`;
+    let query = `SELECT id, name, phone_number, email, address, total_delivery_count, created_at, last_login FROM users`;
     let countQuery = `SELECT COUNT(*) as total FROM users`;
 
     const params = [];
@@ -267,7 +267,7 @@ router.post('/', checkAdmin, (req, res) => {
       phone_number,
       email,
       address,
-      delivery_count = 0,
+      total_delivery_count = 0,
     } = req.body;
 
     if (!id || !password || !phone_number) {
@@ -306,12 +306,12 @@ router.post('/', checkAdmin, (req, res) => {
           const password_hash = hashPassword(password, salt);
 
           db.run(
-            `INSERT INTO users (id, password_hash, salt, delivery_count, name, phone_number, email, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO users (id, password_hash, salt, total_delivery_count, name, phone_number, email, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
               password_hash,
               salt,
-              delivery_count,
+              total_delivery_count,
               name,
               phone_number,
               email,

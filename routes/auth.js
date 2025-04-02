@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   password_hash TEXT NOT NULL,
   salt TEXT NOT NULL,
-  delivery_count INTEGER DEFAULT 0,
+  total_delivery_count INTEGER DEFAULT 0,
   name TEXT,
   phone_number TEXT,
   email TEXT,
@@ -83,7 +83,7 @@ router.post('/signup', (req, res) => {
 
           // 사용자 생성
           db.run(
-            `INSERT INTO users (id, password_hash, salt, delivery_count, name, phone_number, email, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO users (id, password_hash, salt, total_delivery_count, name, phone_number, email, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [id, password_hash, salt, 0, name, phone_number, email, address],
             function (err) {
               if (err) {
@@ -154,25 +154,47 @@ router.post('/login', (req, res) => {
         phone_number: user.phone_number,
         email: user.email,
         address: user.address,
-        delivery_count: user.delivery_count,
+        total_delivery_count: user.total_delivery_count,
         // 관리자 권한 확인 (예: 특정 아이디를 관리자로 지정)
         isAdmin: user.id === 'admin', // 예시: 'admin'이란 아이디를 가진 사용자가 관리자
       };
 
-      res.json({
-        message: '로그인 성공',
-        user: {
-          id: user.id,
-          name: user.name,
-          phone_number: user.phone_number,
-          email: user.email,
-          address: user.address,
-          delivery_count: user.delivery_count,
-          isAdmin: req.session.user.isAdmin,
-          created_at: user.created_at,
-          last_login: user.last_login,
-        },
-      });
+      // 상품별 배송 횟수 조회 추가
+      db.all(
+        `SELECT upd.product_id, p.name as product_name, upd.remaining_count
+         FROM user_product_delivery upd
+         JOIN product p ON upd.product_id = p.id
+         WHERE upd.user_id = ?
+         ORDER BY p.name ASC`,
+        [user.id],
+        (err, products) => {
+          if (err) {
+            return res.status(500).json({ error: err.message });
+          }
+
+          // 전체 남은 배송 횟수 계산
+          const totalDeliveryCount = products.reduce(
+            (sum, p) => sum + p.remaining_count,
+            0
+          );
+
+          res.json({
+            message: '로그인 성공',
+            user: {
+              id: user.id,
+              name: user.name,
+              phone_number: user.phone_number,
+              email: user.email,
+              address: user.address,
+              total_delivery_count: totalDeliveryCount,
+              isAdmin: req.session.user.isAdmin,
+              created_at: user.created_at,
+              last_login: user.last_login,
+            },
+            product_delivery: products,
+          });
+        }
+      );
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

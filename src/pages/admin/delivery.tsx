@@ -212,6 +212,7 @@ const Delivery: React.FC = () => {
                   <th className="hide-xs">연락처</th>
                   <th className="hide-sm">주소</th>
                   <th style={{ textAlign: 'center' }}>상태</th>
+                  <th style={{ textAlign: 'center' }}>잔여</th>
                   <th style={{ textAlign: 'center' }}>액션</th>
                 </tr>
               </thead>
@@ -230,6 +231,15 @@ const Delivery: React.FC = () => {
                         <span className={`status-chip ${statusInfo.className}`}>
                           {statusInfo.label}
                         </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        {delivery.remaining_count_for_product !== undefined ? (
+                          <span className="remaining-count-badge">
+                            {delivery.remaining_count_for_product}
+                          </span>
+                        ) : (
+                          '-'
+                        )}
                       </td>
                       <td style={{ textAlign: 'center' }}>
                         {delivery.status === 'pending' && (

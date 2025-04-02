@@ -29,6 +29,34 @@ const run = (sql, params = []) => {
   });
 };
 
+// 단일 행 조회
+const get = (sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) {
+        console.error('쿼리 실행 오류:', err.message);
+        reject(err);
+        return;
+      }
+      resolve(row);
+    });
+  });
+};
+
+// 여러 행 조회
+const all = (sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) {
+        console.error('쿼리 실행 오류:', err.message);
+        reject(err);
+        return;
+      }
+      resolve(rows);
+    });
+  });
+};
+
 // 트랜잭션 시작
 const beginTransaction = () => {
   return new Promise((resolve, reject) => {
@@ -67,7 +95,7 @@ const createTables = async () => {
       id TEXT PRIMARY KEY,
       password_hash TEXT NOT NULL,
       salt TEXT NOT NULL,
-      delivery_count INTEGER DEFAULT 0,
+      total_delivery_count INTEGER DEFAULT 0,
       name TEXT,
       phone_number TEXT,
       email TEXT,
@@ -136,7 +164,7 @@ const createTables = async () => {
     )
   `);
 
-  // 고객의 소리 테이블 생성 - 새로 추가
+  // 고객의 소리 테이블 생성
   await run(`
     CREATE TABLE IF NOT EXISTS inquiries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -147,6 +175,19 @@ const createTables = async () => {
       status TEXT CHECK(status IN ('answered', 'unanswered')) NOT NULL DEFAULT 'unanswered',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       answered_at TIMESTAMP
+    )
+  `);
+
+  // 사용자별 상품 배송 잔여 횟수 테이블 생성 (신규)
+  await run(`
+    CREATE TABLE IF NOT EXISTS user_product_delivery (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      product_id INTEGER NOT NULL,
+      remaining_count INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, product_id)
     )
   `);
 
@@ -176,7 +217,7 @@ const insertTestData = async () => {
         phone_number: '01012345678',
         email: 'admin@example.com',
         address: '서울시 강남구 테헤란로 123',
-        delivery_count: 0,
+        total_delivery_count: 0,
       },
       {
         id: 'user1',
@@ -185,7 +226,7 @@ const insertTestData = async () => {
         phone_number: '01023456789',
         email: 'user1@example.com',
         address: '서울시 서초구 반포대로 45',
-        delivery_count: 10,
+        total_delivery_count: 10,
       },
       {
         id: 'user2',
@@ -194,7 +235,7 @@ const insertTestData = async () => {
         phone_number: '01034567890',
         email: 'user2@example.com',
         address: '서울시 송파구 올림픽로 123',
-        delivery_count: 5,
+        total_delivery_count: 5,
       },
       {
         id: 'user3',
@@ -203,7 +244,7 @@ const insertTestData = async () => {
         phone_number: '01045678901',
         email: 'user3@example.com',
         address: '서울시 마포구 월드컵북로 456',
-        delivery_count: 15,
+        total_delivery_count: 15,
       },
       {
         id: 'user4',
@@ -212,7 +253,7 @@ const insertTestData = async () => {
         phone_number: '01056789012',
         email: 'user4@example.com',
         address: '서울시 용산구 한남대로 78',
-        delivery_count: 8,
+        total_delivery_count: 8,
       },
       {
         id: 'user5',
@@ -221,7 +262,7 @@ const insertTestData = async () => {
         phone_number: '01067890123',
         email: 'user5@example.com',
         address: '서울시 강서구 공항대로 254',
-        delivery_count: 2,
+        total_delivery_count: 2,
       },
     ];
 
@@ -229,13 +270,13 @@ const insertTestData = async () => {
       const salt = generateSalt();
       const hash = hashPassword(user.password, salt);
       await run(
-        "INSERT INTO users (id, password_hash, salt, name, delivery_count, phone_number, email, address, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))",
+        "INSERT INTO users (id, password_hash, salt, name, total_delivery_count, phone_number, email, address, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))",
         [
           user.id,
           hash,
           salt,
           user.name,
-          user.delivery_count,
+          user.total_delivery_count,
           user.phone_number,
           user.email,
           user.address,
@@ -351,13 +392,14 @@ const insertTestData = async () => {
 
     // 결제 데이터 삽입
     const payments = [
-      { user_id: 'user1', product_id: 1, count: 5, amount: 250000 },
-      { user_id: 'user1', product_id: 3, count: 5, amount: 200000 },
-      { user_id: 'user2', product_id: 2, count: 5, amount: 150000 },
-      { user_id: 'user3', product_id: 4, count: 10, amount: 350000 },
-      { user_id: 'user3', product_id: 1, count: 5, amount: 250000 },
-      { user_id: 'user4', product_id: 5, count: 8, amount: 200000 },
-      { user_id: 'user5', product_id: 2, count: 2, amount: 60000 },
+      { user_id: 'user1', product_id: 1, count: 1, amount: 50000 },
+      { user_id: 'user1', product_id: 3, count: 1, amount: 40000 },
+      { user_id: 'user2', product_id: 2, count: 1, amount: 30000 },
+      { user_id: 'user3', product_id: 4, count: 1, amount: 35000 },
+      { user_id: 'user3', product_id: 1, count: 1, amount: 50000 },
+      { user_id: 'user4', product_id: 5, count: 1, amount: 25000 },
+      { user_id: 'user4', product_id: 1, count: 1, amount: 50000 },
+      { user_id: 'user5', product_id: 2, count: 1, amount: 30000 },
     ];
 
     for (const payment of payments) {
@@ -410,7 +452,7 @@ const insertTestData = async () => {
       },
       {
         user_id: 'user1',
-        status: 'pending',
+        status: 'complete',
         date: getDateString(-4),
         product_id: 3,
       },
@@ -568,19 +610,19 @@ const insertTestData = async () => {
         user_id: 'user4',
         status: 'pending',
         date: getDateString(4),
-        product_id: 5,
+        product_id: 1,
       },
       {
         user_id: 'user4',
         status: 'pending',
         date: getDateString(6),
-        product_id: 5,
+        product_id: 1,
       },
       {
         user_id: 'user4',
         status: 'pending',
         date: getDateString(8),
-        product_id: 5,
+        product_id: 1,
       },
 
       // user5의 배송 데이터
@@ -606,7 +648,7 @@ const insertTestData = async () => {
     }
     console.log('배송 데이터가 생성되었습니다.');
 
-    // 고객의 소리 데이터 삽입 - 새로 추가
+    // 고객의 소리 데이터 삽입
     const inquiries = [
       {
         user_id: 'user1',
@@ -653,7 +695,7 @@ const insertTestData = async () => {
         user_id: 'user5',
         title: '추가 배송 구매 문의',
         content:
-          '현재 남은 배송 횟수를, 다 소진했는데 추가로 구매하고 싶습니다. 어떻게 해야 하나요?',
+          '현재 남은 배송 횟수를 다 소진했는데 추가로 구매하고 싶습니다. 어떻게 해야 하나요?',
         answer:
           '마이페이지 > 구독/결제 메뉴에서 추가 배송을 구매하실 수 있습니다. 감사합니다.',
         status: 'answered',
@@ -679,7 +721,7 @@ const insertTestData = async () => {
     }
     console.log('고객의 소리 데이터가 생성되었습니다.');
 
-    // SMS 로그 데이터 삽입 - 새로 추가
+    // SMS 로그 데이터 삽입
     const smsLogs = [
       {
         recipient: '01023456789', // user1
@@ -737,6 +779,120 @@ const insertTestData = async () => {
       );
     }
     console.log('SMS 로그 데이터가 생성되었습니다.');
+
+    // 사용자별 상품 배송 잔여 횟수 데이터 생성
+    // 사용자별로 상품 구매 및 배송 현황을 분석하여 잔여 횟수 계산
+
+    // 1. 각 사용자의 상품별 배송 횟수 계산
+    const userProductMap = {}; // 사용자별 상품 배송 현황 맵
+
+    // 배송 목록에서 사용자-상품별로 완료된 배송 수 계산
+    const deliveryCount = await all(`
+      SELECT user_id, product_id, COUNT(*) as count 
+      FROM delivery_list 
+      WHERE status = 'complete' 
+      GROUP BY user_id, product_id
+    `);
+
+    // 결제 정보에서 사용자-상품별로 구매한 배송 횟수 계산
+    const paymentInfo = await all(`
+      SELECT p.user_id, p.product_id, SUM(p.count * pr.delivery_count) as total_delivery_count
+      FROM payments p
+      JOIN product pr ON p.product_id = pr.id
+      GROUP BY p.user_id, p.product_id
+    `);
+    // 각 사용자별 상품별 잔여 배송 횟수 계산
+    for (const payment of paymentInfo) {
+      const { user_id, product_id, total_delivery_count } = payment;
+
+      // 해당 사용자-상품의 완료된 배송 수 찾기
+      const completedDelivery = deliveryCount.find(
+        (d) => d.user_id === user_id && d.product_id === product_id
+      );
+
+      const usedCount = completedDelivery ? completedDelivery.count : 0;
+      const remainingCount = total_delivery_count - usedCount;
+
+      // 맵에 추가
+      if (!userProductMap[user_id]) {
+        userProductMap[user_id] = {};
+      }
+
+      userProductMap[user_id][product_id] = remainingCount;
+    }
+
+    // 2. 현재 대기 중인(pending) 배송도 계산에 포함
+    const pendingDeliveries = await all(`
+  SELECT user_id, product_id, COUNT(*) as count 
+  FROM delivery_list 
+  WHERE status = 'pending' 
+  GROUP BY user_id, product_id
+`);
+
+    for (const pending of pendingDeliveries) {
+      const { user_id, product_id, count } = pending;
+
+      // 이미 결제 내역이 있는 사용자-상품인 경우만 처리
+      if (
+        userProductMap[user_id] &&
+        userProductMap[user_id][product_id] !== undefined
+      ) {
+        // 대기 중인 배송 수만큼 잔여 횟수에서 차감
+        userProductMap[user_id][product_id] -= count;
+
+        // 음수가 되지 않도록 보정
+        if (userProductMap[user_id][product_id] < 0) {
+          userProductMap[user_id][product_id] = 0;
+        }
+      }
+    }
+
+    // 3. user_product_delivery 테이블에 데이터 삽입
+    for (const userId in userProductMap) {
+      for (const productId in userProductMap[userId]) {
+        const remainingCount = userProductMap[userId][productId];
+
+        // 0보다 큰 잔여 횟수만 저장
+        if (remainingCount > 0) {
+          await run(
+            `INSERT INTO user_product_delivery (user_id, product_id, remaining_count, created_at, updated_at) 
+         VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+            [userId, productId, remainingCount]
+          );
+        }
+      }
+    }
+
+    // 4. 추가 테스트 데이터: 몇몇 사용자에게 여러 상품의 배송 횟수 추가
+    const additionalProductDeliveries = [
+      { user_id: 'user1', product_id: 2, remaining_count: 3 }, // user1에게 기본 세트 3회 추가
+      { user_id: 'user1', product_id: 4, remaining_count: 2 }, // user1에게 고급 채소 세트 2회 추가
+      { user_id: 'user2', product_id: 3, remaining_count: 4 }, // user2에게 신선 과일 세트 4회 추가
+      { user_id: 'user3', product_id: 2, remaining_count: 6 }, // user3에게 기본 세트 6회 추가
+      { user_id: 'user3', product_id: 5, remaining_count: 3 }, // user3에게 간식 세트 3회 추가
+      { user_id: 'user4', product_id: 2, remaining_count: 5 }, // user4에게 기본 세트 5회 추가
+      { user_id: 'user4', product_id: 3, remaining_count: 2 }, // user4에게 신선 과일 세트 2회 추가
+      { user_id: 'user5', product_id: 1, remaining_count: 1 }, // user5에게 프리미엄 세트 1회 추가
+      { user_id: 'user5', product_id: 5, remaining_count: 3 }, // user5에게 간식 세트 3회 추가
+    ];
+
+    for (const delivery of additionalProductDeliveries) {
+      // 이미 있는 데이터면 업데이트, 없으면 삽입
+      await run(
+        `INSERT INTO user_product_delivery (user_id, product_id, remaining_count, created_at, updated_at) 
+     VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+     ON CONFLICT(user_id, product_id) 
+     DO UPDATE SET remaining_count = remaining_count + ?, updated_at = CURRENT_TIMESTAMP`,
+        [
+          delivery.user_id,
+          delivery.product_id,
+          delivery.remaining_count,
+          delivery.remaining_count,
+        ]
+      );
+    }
+
+    console.log('사용자별 상품 배송 잔여 횟수 데이터가 생성되었습니다.');
 
     await commitTransaction();
     console.log('모든 테스트 데이터가 성공적으로 생성되었습니다.');

@@ -12,6 +12,8 @@ const Profile: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  console.log(user);
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchDeliveries();
@@ -63,46 +65,23 @@ const Profile: React.FC = () => {
 
         <div className="profile-card">
           <div className="profile-card-content">
-            <h2 className="user-info-title">사용자 정보</h2>
-            <div className="user-info-item">
-              <span className="user-info-label">아이디:</span>
-              <span className="user-info-value">{user.id}</span>
-            </div>
-
-            {user.name && (
-              <div className="user-info-item">
-                <span className="user-info-label">이름:</span>
-                <span className="user-info-value">{user.name}</span>
+            <h3 className="delivery-info-title">배송 잔여 횟수</h3>
+            {user.product_delivery && user.product_delivery.length > 0 ? (
+              <div className="product-delivery-list">
+                {user.product_delivery.map((product) => (
+                  <div key={product.product_id} className="delivery-count">
+                    <span>{product.product_name}:</span>
+                    <span className="delivery-count-number">
+                      {product.remaining_count}회
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="delivery-count">
+                <span>구독 중인 상품이 없습니다</span>
               </div>
             )}
-
-            {user.phone_number && (
-              <div className="user-info-item">
-                <span className="user-info-label">전화번호:</span>
-                <span className="user-info-value">{user.phone_number}</span>
-              </div>
-            )}
-
-            {user.email && (
-              <div className="user-info-item">
-                <span className="user-info-label">이메일:</span>
-                <span className="user-info-value">{user.email}</span>
-              </div>
-            )}
-
-            {user.address && (
-              <div className="user-info-item">
-                <span className="user-info-label">주소:</span>
-                <span className="user-info-value">{user.address}</span>
-              </div>
-            )}
-
-            <div className="delivery-count">
-              <span>남은 배송 횟수:</span>
-              <span className="delivery-count-number">
-                {user.delivery_count || 0}
-              </span>
-            </div>
           </div>
         </div>
       </div>

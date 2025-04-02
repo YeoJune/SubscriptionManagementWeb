@@ -1,7 +1,7 @@
 // src/app.tsx
 import './global.css';
 import { AuthProvider } from './components/auth/authProvider';
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react'; // useEffect 추가
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
@@ -44,6 +44,11 @@ const LoadingComponent = () => (
 );
 
 const App: React.FC = () => {
+  // 앱 마운트 시 문서 제목을 설정
+  useEffect(() => {
+    document.title = '샐럽올데이';
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>

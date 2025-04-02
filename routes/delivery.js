@@ -136,30 +136,6 @@ router.put('/:id', checkAdmin, async (req, res) => {
     // 배송 상태 업데이트
     const result = await deliveryManager.updateDeliveryStatus(id, status);
 
-    // 사용자 배송 잔여 횟수 감소 (배송 취소 시)
-    if (status === 'cancel') {
-      db.get(
-        `SELECT user_id FROM delivery_list WHERE id = ?`,
-        [id],
-        (err, delivery) => {
-          if (err || !delivery) {
-            console.error('배송 취소 시 사용자 정보 조회 오류:', err);
-          } else {
-            // 사용자의 배송 잔여 횟수 증가 (환불)
-            db.run(
-              `UPDATE users SET delivery_count = delivery_count + 1 WHERE id = ?`,
-              [delivery.user_id],
-              (err) => {
-                if (err) {
-                  console.error('배송 횟수 업데이트 오류:', err);
-                }
-              }
-            );
-          }
-        }
-      );
-    }
-
     res.json({
       message: `배송 상태가 '${status}'로 변경되었습니다.`,
       delivery: result,

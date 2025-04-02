@@ -4,10 +4,16 @@ import './users.css';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
+interface ProductDelivery {
+  product_id: number;
+  product_name: string;
+  remaining_count: number;
+}
+
 interface User {
   id: number;
   phone_number: string;
-  delivery_count: number;
+  product_delivery: ProductDelivery[];
   isAdmin: boolean;
 }
 
@@ -78,6 +84,17 @@ const AdminUsers: React.FC = () => {
     if (count > 10) return 'delivery-count-high';
     if (count > 5) return 'delivery-count-medium';
     return 'delivery-count-low';
+  };
+
+  // 상품별 배송 횟수 합산
+  const getTotalDeliveryCount = (
+    productDeliveries: ProductDelivery[] | undefined
+  ) => {
+    if (!productDeliveries || productDeliveries.length === 0) return 0;
+    return productDeliveries.reduce(
+      (total, product) => total + product.remaining_count,
+      0
+    );
   };
 
   // 인증 및 권한 검사
@@ -193,7 +210,7 @@ const AdminUsers: React.FC = () => {
                 <tr>
                   <th className="hide-xs">ID</th>
                   <th>전화번호</th>
-                  <th>구독(배송) 수</th>
+                  <th>총 배송 횟수</th>
                   <th>관리자 여부</th>
                 </tr>
               </thead>
@@ -208,9 +225,11 @@ const AdminUsers: React.FC = () => {
                     <td className="users-table-cell">{user.phone_number}</td>
                     <td className="users-table-cell">
                       <span
-                        className={getDeliveryCountClass(user.delivery_count)}
+                        className={getDeliveryCountClass(
+                          getTotalDeliveryCount(user.product_delivery)
+                        )}
                       >
-                        {user.delivery_count}
+                        {getTotalDeliveryCount(user.product_delivery)}
                       </span>
                     </td>
                     <td className="users-table-cell">

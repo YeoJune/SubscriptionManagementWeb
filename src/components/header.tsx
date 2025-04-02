@@ -36,6 +36,17 @@ const Header: React.FC = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+  // 모든 상품의 배송 잔여 횟수의 총합 계산
+  const getTotalRemainingDeliveries = () => {
+    if (!user?.product_delivery || user.product_delivery.length === 0) {
+      return 0;
+    }
+    return user.product_delivery.reduce(
+      (total, product) => total + product.remaining_count,
+      0
+    );
+  };
+
   return (
     <header className={`sal-header ${scrolled ? 'sal-header-scrolled' : ''}`}>
       <div className="container">
@@ -129,10 +140,12 @@ const Header: React.FC = () => {
               </>
             ) : (
               <>
-                {user?.delivery_count !== undefined && (
+                {user?.product_delivery && (
                   <div className="sal-delivery-count">
                     <span className="sal-badge-label">남은 배송</span>
-                    <span className="sal-badge">{user.delivery_count}</span>
+                    <span className="sal-badge">
+                      {getTotalRemainingDeliveries()}
+                    </span>
                   </div>
                 )}
                 <button

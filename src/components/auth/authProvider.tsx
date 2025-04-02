@@ -1,6 +1,6 @@
 // src/components/auth/authProvider.tsx
 import React, { createContext, useState, useEffect } from 'react';
-import { AuthContextProps, UserProps } from '../../types';
+import { AuthContextProps, UserProps, AuthResponse } from '../../types';
 
 export const AuthContext = createContext<AuthContextProps>({
   user: null,
@@ -18,6 +18,23 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserProps | null>(null);
 
+  // 응답 데이터를 처리하는 헬퍼 함수
+  const processUserData = (data: any) => {
+    // console.log('Processing user data:', data); // 디버깅용
+
+    // 사용자 데이터 추출
+    const userData = data.user || data;
+
+    // product_delivery 데이터 추출 (없으면 빈 배열)
+    const productDelivery = data.product_delivery || [];
+
+    // 통합된 사용자 객체 생성
+    return {
+      ...userData,
+      product_delivery: productDelivery,
+    };
+  };
+
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -26,7 +43,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
         if (response.ok) {
           const data = await response.json();
-          setUser(data.user);
+          const processedUser = processUserData(data);
+          setUser(processedUser);
         }
       } catch (error) {
         console.error('Session check failed:', error);
@@ -58,7 +76,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       const data = await response.json();
-      setUser(data.user);
+      // console.log('Login response data:', data); // 디버깅용
+      const processedUser = processUserData(data);
+      setUser(processedUser);
+
       return {
         success: true,
         message: data.message || '로그인에 성공했습니다.',

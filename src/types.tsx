@@ -1,4 +1,10 @@
 // src/types.tsx
+export interface ProductDelivery {
+  product_id: number;
+  product_name: string;
+  remaining_count: number;
+}
+
 export interface UserProps {
   id: string;
   name?: string;
@@ -6,9 +12,16 @@ export interface UserProps {
   email?: string;
   address?: string;
   isAdmin?: boolean;
-  delivery_count?: number;
+  delivery_count?: number; // 호환성을 위해 유지, 더 이상 직접 사용하지 않음
+  product_delivery?: ProductDelivery[]; // 상품별 배송 잔여 횟수 정보
   created_at?: string;
   last_login?: string;
+  total_delivery_count?: number; // 전체 배송 잔여 횟수
+}
+
+export interface AuthResponse {
+  user: UserProps;
+  product_delivery: ProductDelivery[];
 }
 
 export interface BoardProps {
@@ -65,6 +78,7 @@ export interface DeliveryProps {
   product_name?: string;
   phone_number?: string;
   address?: string;
+  remaining_count_for_product?: number; // 해당 상품의 남은 배송 횟수
 }
 
 export interface BoardListProps {

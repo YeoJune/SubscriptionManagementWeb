@@ -6,7 +6,11 @@ import { Link } from 'react-router-dom';
 import './home.css';
 
 interface DeliveryInfo {
-  remainingCount?: number;
+  productDeliveries?: Array<{
+    product_id: number;
+    product_name: string;
+    remaining_count: number;
+  }>;
   nextDelivery?: Date;
   upcomingDeliveries?: Array<{ date: string; status: string }>;
 }
@@ -25,7 +29,11 @@ const Home: React.FC = () => {
   const fetchDeliveryInfo = async () => {
     setLoading(true);
     try {
+      // 배송 목록 가져오기
       const response = await axios.get('/api/delivery/my');
+
+      // 상품별 배송 잔여 횟수 가져오기
+      const productResponse = await axios.get('/api/delivery/products');
 
       const deliveries = response.data.deliveries || [];
       const pendingDeliveries = deliveries
@@ -36,7 +44,7 @@ const Home: React.FC = () => {
         );
 
       setDeliveryInfo({
-        remainingCount: user?.delivery_count || 0,
+        productDeliveries: productResponse.data.products || [],
         nextDelivery:
           pendingDeliveries.length > 0
             ? new Date(pendingDeliveries[0].date)
@@ -75,10 +83,20 @@ const Home: React.FC = () => {
               <p>데이터를 불러오는 중...</p>
             ) : (
               <>
-                <p>
-                  남은 배송 횟수:{' '}
-                  <strong>{deliveryInfo?.remainingCount || 0}회</strong>
-                </p>
+                {deliveryInfo?.productDeliveries &&
+                deliveryInfo.productDeliveries.length > 0 ? (
+                  <div className="product-deliveries">
+                    <p>남은 배송 횟수:</p>
+                    {deliveryInfo.productDeliveries.map((product) => (
+                      <p key={product.product_id}>
+                        {product.product_name}:{' '}
+                        <strong>{product.remaining_count}회</strong>
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <p>구독 중인 상품이 없습니다.</p>
+                )}
                 {deliveryInfo?.nextDelivery && (
                   <p>
                     다음 배송 일정:{' '}
