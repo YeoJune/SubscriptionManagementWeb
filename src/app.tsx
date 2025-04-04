@@ -44,11 +44,6 @@ const LoadingComponent = () => (
 );
 
 const App: React.FC = () => {
-  // 앱 마운트 시 문서 제목을 설정
-  useEffect(() => {
-    document.title = '샐럽올데이';
-  }, []);
-
   return (
     <BrowserRouter>
       <AuthProvider>
