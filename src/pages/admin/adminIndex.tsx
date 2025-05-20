@@ -10,6 +10,7 @@ interface DashboardData {
   todayDeliveries: number;
   pendingInquiries: number;
   totalProducts: number;
+  totalNotices: number; // 공지사항 수 추가
 }
 
 const AdminIndex: React.FC = () => {
@@ -20,6 +21,7 @@ const AdminIndex: React.FC = () => {
     todayDeliveries: 0,
     pendingInquiries: 0,
     totalProducts: 0,
+    totalNotices: 0, // 공지사항 수 초기화
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,17 +35,19 @@ const AdminIndex: React.FC = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // 여러 API 요청을 병렬로 처리
+      // 여러 API 요청을 병렬로 처리 (공지사항 추가)
       const [
         usersResponse,
         deliveriesResponse,
         inquiriesResponse,
         productsResponse,
+        noticesResponse, // 공지사항 API 추가
       ] = await Promise.all([
         axios.get('/api/users?limit=1'),
         axios.get('/api/delivery/today'),
         axios.get('/api/inquiries?status=unanswered&limit=1'),
         axios.get('/api/products?limit=1'),
+        axios.get('/api/notices?limit=1'), // 공지사항 API 호출
       ]);
 
       setDashboardData({
@@ -51,6 +55,7 @@ const AdminIndex: React.FC = () => {
         todayDeliveries: deliveriesResponse.data.deliveries.length || 0,
         pendingInquiries: inquiriesResponse.data.pagination.total || 0,
         totalProducts: productsResponse.data.pagination.total || 0,
+        totalNotices: noticesResponse.data.pagination.total || 0, // 공지사항 수 설정
       });
 
       setLoading(false);
@@ -151,6 +156,21 @@ const AdminIndex: React.FC = () => {
                 </svg>
               </div>
             </div>
+
+            {/* 공지사항 카드 추가 */}
+            <div className="summary-card notices-card">
+              <div className="summary-title">전체 공지사항</div>
+              <div className="summary-value notices-value">
+                {dashboardData.totalNotices}
+                <svg
+                  className="notices-icon"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 9h-2V5h2v6zm0 4h-2v-2h2v2z" />
+                </svg>
+              </div>
+            </div>
           </div>
 
           {/* 기능 카드 */}
@@ -231,6 +251,24 @@ const AdminIndex: React.FC = () => {
                     <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z" />
                   </svg>
                   <div className="feature-title">고객의 소리</div>
+                </div>
+              </div>
+            </div>
+            {/* 공지사항 관리 카드 추가 */}
+            <div className="feature-card notices-feature">
+              <div
+                className="feature-card-action"
+                onClick={() => handleCardClick('/admin/notices')}
+              >
+                <div className="feature-content">
+                  <svg
+                    className="feature-icon"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 9h-2V5h2v6zm0 4h-2v-2h2v2z" />
+                  </svg>
+                  <div className="feature-title">공지사항 관리</div>
                 </div>
               </div>
             </div>

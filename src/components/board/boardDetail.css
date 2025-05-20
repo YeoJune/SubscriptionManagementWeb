@@ -62,6 +62,21 @@
   margin-bottom: 1rem;
 }
 
+/* 이미지 스타일링 */
+.board-image {
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  max-width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.board-image img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
 /* Divider */
 .board-divider {
   margin: 1.5rem 0;

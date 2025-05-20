@@ -13,6 +13,7 @@ interface BoardDetailProps {
   question?: string;
   answer?: string;
   createdAt: Date;
+  image_path?: string; // 이미지 경로 추가
 }
 
 const formatNewlines = (text: string = '') => {
@@ -56,6 +57,7 @@ const BoardDetail: React.FC = () => {
         question: boardData.question,
         answer: boardData.answer,
         createdAt: new Date(boardData.created_at),
+        image_path: boardData.image_path, // 이미지 경로 추가
       };
 
       setBoard(transformedBoard);
@@ -104,6 +106,13 @@ const BoardDetail: React.FC = () => {
             {board.type === 'normal' ? '공지사항' : 'FAQ'} | 작성일:{' '}
             {board.createdAt.toLocaleDateString()}
           </div>
+
+          {/* 이미지가 있는 경우 표시 */}
+          {board.image_path && (
+            <div className="board-image">
+              <img src={board.image_path} alt="첨부 이미지" />
+            </div>
+          )}
 
           <hr className="board-divider" />
 

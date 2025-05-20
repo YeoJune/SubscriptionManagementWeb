@@ -19,13 +19,14 @@ const BoardList: React.FC<BoardListProps> = ({ boards, onBoardClick }) => {
             <th>구분</th>
             <th>제목</th>
             <th className="board-content-column">내용</th>
+            <th className="board-image-column">이미지</th>
             <th>작성일</th>
           </tr>
         </thead>
         <tbody className="board-table-body">
           {boards.length === 0 ? (
             <tr>
-              <td colSpan={4} className="board-empty-message">
+              <td colSpan={5} className="board-empty-message">
                 게시글이 없습니다.
               </td>
             </tr>
@@ -44,6 +45,19 @@ const BoardList: React.FC<BoardListProps> = ({ boards, onBoardClick }) => {
                   {board.type === 'normal'
                     ? truncateContent(board.content || '')
                     : truncateContent(board.question || '')}
+                </td>
+                <td className="board-image-column">
+                  {board.image_path ? (
+                    <div className="board-thumbnail-container">
+                      <img
+                        src={board.image_path}
+                        alt="첨부 이미지"
+                        className="board-thumbnail"
+                      />
+                    </div>
+                  ) : (
+                    <span className="no-image">없음</span>
+                  )}
                 </td>
                 <td>
                   {board.createdAt instanceof Date

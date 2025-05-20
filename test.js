@@ -126,7 +126,7 @@ const createTables = async () => {
       content TEXT,
       question TEXT,
       answer TEXT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      image_path TEXT
     )
   `);
 

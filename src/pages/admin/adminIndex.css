@@ -309,3 +309,86 @@
     font-size: 1rem;
   }
 }
+
+/* 공지사항 카드 스타일링 */
+.notices-card {
+  background-color: rgba(164, 226, 46, 0.1);
+  border-left: 4px solid var(--primary-color);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.notices-card::before {
+  content: '';
+  position: absolute;
+  top: -30%;
+  right: -30%;
+  width: 100px;
+  height: 100px;
+  background-color: rgba(164, 226, 46, 0.2);
+  border-radius: 50%;
+  z-index: 0;
+}
+
+.notices-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.notices-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+}
+
+.notices-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--primary-color);
+  margin-left: 1rem;
+}
+
+/* 공지사항 특성 카드 스타일링 */
+.notices-feature {
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  background-color: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.notices-feature:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.notices-feature .feature-card-action {
+  padding: 1.5rem;
+  cursor: pointer;
+  height: 100%;
+}
+
+.notices-feature .feature-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+}
+
+.notices-feature .feature-icon {
+  width: 42px;
+  height: 42px;
+  color: var(--primary-color);
+}
+
+.notices-feature .feature-title {
+  font-weight: 600;
+  color: var(--accent-color);
+}

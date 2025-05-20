@@ -19,6 +19,7 @@ const AdminDelivery = React.lazy(() => import('../pages/admin/delivery'));
 const AdminUsers = React.lazy(() => import('../pages/admin/users'));
 const AdminInquiry = React.lazy(() => import('../pages/admin/inquiry'));
 const AdminProducts = React.lazy(() => import('../pages/admin/products'));
+const AdminNotices = React.lazy(() => import('../pages/admin/notices'));
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
@@ -149,6 +150,15 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute adminOnly>
               <AdminProducts />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/notices"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminNotices />
             </ProtectedRoute>
           }
         />
