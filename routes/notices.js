@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS notice (
   question TEXT,
   answer TEXT,
   image_path TEXT
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 */
 
