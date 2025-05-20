@@ -4,6 +4,7 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const path = require('path');
+const bodyParser = require('body-parser');
 
 const app = express();
 const server = http.createServer(app);
@@ -19,6 +20,8 @@ app.use(
     cookie: { secure: process.env.NODE_ENV === 'production' },
   })
 );
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
 
 // React 빌드 파일을 정적 파일로 서빙
