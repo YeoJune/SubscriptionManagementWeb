@@ -67,7 +67,9 @@ const upload = multer({
 router.post('/', checkAdmin, upload.single('image'), (req, res) => {
   try {
     const { type, title, content, question, answer } = req.body;
-    const imagePath = req.file ? `/uploads/notices/${req.file.filename}` : null;
+    const imagePath = req.file
+      ? `/public/uploads/notices/${req.file.filename}`
+      : null;
 
     // 유효성 검사
     if (!type || !title) {
@@ -156,7 +158,7 @@ router.put('/:id', checkAdmin, upload.single('image'), (req, res) => {
     const { id } = req.params;
     const { type, title, content, question, answer, removeImage } = req.body;
     const newImagePath = req.file
-      ? `/uploads/notices/${req.file.filename}`
+      ? `/public/uploads/notices/${req.file.filename}`
       : null;
 
     // 유효성 검사
