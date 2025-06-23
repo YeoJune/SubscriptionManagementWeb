@@ -7,13 +7,13 @@
   left: 0;
   right: 0;
   background-color: var(--background-light);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 15px rgba(255, 140, 66, 0.1);
   z-index: 100;
   transition: all 0.3s ease;
 }
 
 .sal-header-scrolled {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(255, 140, 66, 0.15);
   padding: 0.3rem 0;
 }
 
@@ -111,13 +111,13 @@
 }
 
 .sal-nav-button:hover {
-  background-color: rgba(164, 226, 46, 0.1);
+  background-color: rgba(255, 140, 66, 0.1);
   transform: translateY(-2px);
   color: var(--primary-color);
 }
 
 .sal-active-nav-button {
-  background-color: rgba(164, 226, 46, 0.15);
+  background-color: rgba(255, 140, 66, 0.15);
   color: var(--primary-dark);
   position: relative;
 }
@@ -143,13 +143,13 @@
   border-radius: 25px;
   transition: all 0.3s ease;
   text-decoration: none;
-  box-shadow: 0 4px 8px rgba(164, 226, 46, 0.3);
+  box-shadow: 0 4px 8px rgba(255, 140, 66, 0.3);
 }
 
 .sal-admin-button:hover {
   background-color: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(164, 226, 46, 0.4);
+  box-shadow: 0 6px 12px rgba(255, 140, 66, 0.4);
   color: white;
 }
 
@@ -201,7 +201,7 @@
   background-color: var(--primary-dark);
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(164, 226, 46, 0.3);
+  box-shadow: 0 4px 8px rgba(255, 140, 66, 0.3);
 }
 
 .sal-logout-button {
@@ -228,7 +228,7 @@
   padding: 0.25rem 0.6rem;
   border-radius: 15px;
   font-size: 0.85rem;
-  box-shadow: 0 2px 4px rgba(255, 126, 51, 0.3);
+  box-shadow: 0 2px 4px rgba(255, 107, 26, 0.3);
 }
 
 .sal-badge-label {
@@ -257,7 +257,7 @@
     background-color: white;
     flex-direction: column;
     padding: 1rem;
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 15px rgba(255, 140, 66, 0.1);
     transform: translateY(-100%);
     opacity: 0;
     visibility: hidden;

@@ -68,7 +68,7 @@ const Header: React.FC = () => {
             <span className="sal-menu-icon"></span>
           </button>
 
-          {/* 중앙 영역: 네비게이션 메뉴 */}
+          {/* 중앙 영역: 4개의 주요 카테고리 네비게이션 메뉴 */}
           <nav
             className={`sal-nav-section ${mobileMenuOpen ? 'sal-menu-open' : ''}`}
           >
@@ -101,18 +101,19 @@ const Header: React.FC = () => {
                   className={`sal-nav-button ${isActive('/subscription') ? 'sal-active-nav-button' : ''}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  구독신청
+                  정기배송신청
                 </Link>
                 <Link
                   to="/inquiry"
                   className={`sal-nav-button ${isActive('/inquiry') ? 'sal-active-nav-button' : ''}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  고객의 소리
+                  불편/건의 사항
                 </Link>
               </>
             )}
 
+            {/* 관리자 메뉴 (관리자만 표시) */}
             {isAdmin && (
               <Link
                 to="/admin"

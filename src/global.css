@@ -1,20 +1,21 @@
 /* src/global.css */
 
 :root {
-  /* Saluv All Day Brand Colors */
-  --primary-color: #a4e22e; /* Bright lime green */
-  --primary-dark: #7baa23; /* Darker green for hover states */
-  --primary-light: #c6f76a; /* Lighter green for highlights */
-  --secondary-color: #ff7e33; /* Orange from carrot in logo */
-  --secondary-dark: #e06826; /* Darker orange */
-  --accent-color: #2e6e31; /* Dark green from logo */
-  --text-color: #333333; /* Dark gray for main text */
-  --text-light: #666666; /* Lighter gray for secondary text */
-  --background-color: #f8f9fa; /* Light gray background */
-  --background-light: #ffffff; /* White background for cards */
-  --background-dark: #e9ecef; /* Darker gray for alternate sections */
-  --error-color: #dc3545; /* Error/alert red */
-  --success-color: #28a745; /* Success green */
+  /* Saluv All Day Brand Colors - 감귤색 테마 */
+  --primary-color: #ff8c42; /* 밝은 감귤색 */
+  --primary-dark: #e67332; /* 진한 감귤색 */
+  --primary-light: #ffab70; /* 연한 감귤색 */
+  --secondary-color: #ff6b1a; /* 진한 오렌지 */
+  --secondary-dark: #cc5415; /* 더 진한 오렌지 */
+  --accent-color: #2d3748; /* 진한 회색 (텍스트용) */
+  --text-color: #333333; /* 진한 회색 메인 텍스트 */
+  --text-light: #666666; /* 연한 회색 보조 텍스트 */
+  --background-color: #fef7f0; /* 매우 연한 감귤색 배경 */
+  --background-light: #ffffff; /* 흰색 배경 (카드용) */
+  --background-dark: #f5ebe1; /* 연한 감귤색 배경 (대체 섹션용) */
+  --error-color: #dc3545; /* 에러/알림 빨간색 */
+  --success-color: #28a745; /* 성공 녹색 */
+  --border-color: #ffe4d1; /* 연한 감귤색 보더 */
 }
 
 /* Basic reset */
@@ -94,39 +95,44 @@ a:hover {
 
 .btn-primary {
   background-color: var(--primary-color);
-  color: var(--accent-color);
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 140, 66, 0.3);
 }
 
 .btn-primary:hover {
   background-color: var(--primary-dark);
   color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 140, 66, 0.4);
 }
 
 .btn-secondary {
   background-color: white;
-  color: var(--accent-color);
+  color: var(--primary-color);
   border: 2px solid var(--primary-color);
 }
 
 .btn-secondary:hover {
-  background-color: var(--primary-light);
+  background-color: var(--primary-color);
+  color: white;
 }
 
 /* Card styling */
 .card {
   background-color: var(--background-light);
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(255, 140, 66, 0.1);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
+  border: 1px solid var(--border-color);
 }
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 20px rgba(255, 140, 66, 0.15);
 }
 
 /* Container */
@@ -143,15 +149,25 @@ textarea {
   width: 100%;
   padding: 0.75rem;
   margin-bottom: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
   font-family: inherit;
+  transition: border-color 0.3s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.1);
 }
 
 label {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
+  color: var(--accent-color);
 }
 
 /* Utility classes */
@@ -261,8 +277,11 @@ label {
 }
 
 .board-hero {
-  background: url('https://via.placeholder.com/1200x600') no-repeat center
-    center/cover;
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   height: 300px;
   display: flex;
   flex-direction: column;
@@ -270,12 +289,13 @@ label {
   align-items: center;
   text-align: center;
   color: white;
-  border-radius: 10px;
+  border-radius: 15px;
   margin-bottom: 2rem;
+  box-shadow: 0 10px 25px rgba(255, 140, 66, 0.2);
 }
 
 .board-hero h1,
 .board-hero h3 {
   color: white;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
 }
