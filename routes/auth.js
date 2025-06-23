@@ -156,7 +156,7 @@ router.post('/login', (req, res) => {
         address: user.address,
         total_delivery_count: user.total_delivery_count,
         // 관리자 권한 확인 (예: 특정 아이디를 관리자로 지정)
-        isAdmin: user.id === 'admin', // 예시: 'admin'이란 아이디를 가진 사용자가 관리자
+        isAdmin: user.id === process.env.ADMIN_ID, // 예시: 'admin'이란 아이디를 가진 사용자가 관리자
       };
 
       // 상품별 배송 횟수 조회 추가
