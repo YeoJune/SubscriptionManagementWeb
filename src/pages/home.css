@@ -127,8 +127,8 @@
   padding: 0.6rem 1.5rem;
 }
 
-/* 공지사항 섹션 */
-.notices-section {
+/* 전체 공지사항 섹션 */
+.full-notices-section {
   background-color: var(--background-light);
   border-radius: 15px;
   padding: 2rem;

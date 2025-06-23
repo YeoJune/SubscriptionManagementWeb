@@ -5,7 +5,6 @@ import { useAuth } from '../hooks/useAuth';
 
 // Lazy 로드하는 컴포넌트
 const Home = React.lazy(() => import('../pages/home'));
-const Board = React.lazy(() => import('../pages/board'));
 const BoardDetail = React.lazy(() => import('../components/board/boardDetail'));
 const Login = React.lazy(() => import('../pages/login'));
 const NotFound = React.lazy(() => import('../pages/notFound'));
@@ -81,7 +80,8 @@ const AppRoutes: React.FC = () => {
       <Routes>
         {/* 공개 라우트 */}
         <Route path="/" element={<Home />} />
-        <Route path="/board" element={<Board />} />
+        {/* 공지사항을 홈으로 리다이렉트 */}
+        <Route path="/board" element={<Navigate to="/" replace />} />
         <Route path="/board/:id" element={<BoardDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

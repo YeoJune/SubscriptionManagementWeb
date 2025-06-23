@@ -74,17 +74,10 @@ const Header: React.FC = () => {
           >
             <Link
               to="/"
-              className={`sal-nav-button ${isActive('/') ? 'sal-active-nav-button' : ''}`}
+              className={`sal-nav-button ${isActive('/') || isActive('/board') ? 'sal-active-nav-button' : ''}`}
               onClick={() => setMobileMenuOpen(false)}
             >
-              홈
-            </Link>
-            <Link
-              to="/board"
-              className={`sal-nav-button ${isActive('/board') ? 'sal-active-nav-button' : ''}`}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              공지사항
+              홈/공지사항
             </Link>
 
             {isAuthenticated && (

@@ -186,14 +186,6 @@ const Home: React.FC = () => {
       <section className="featured-services">
         <h2>샐럽올데이 서비스</h2>
         <div className="service-cards">
-          <div className="service-card">
-            <h3>공지사항 & FAQ</h3>
-            <p>최신 메뉴 업데이트 및 자주 묻는 질문</p>
-            <Link to="/board" className="card-link">
-              바로가기
-            </Link>
-          </div>
-
           {isAuthenticated && (
             <div className="service-card">
               <h3>내 프로필</h3>
@@ -205,7 +197,7 @@ const Home: React.FC = () => {
           )}
 
           <div className="service-card">
-            <h3>구독 서비스</h3>
+            <h3>정기배송신청</h3>
             <p>건강한 식단 정기 구독 신청</p>
             <Link to="/subscription" className="card-link">
               바로가기
@@ -213,13 +205,44 @@ const Home: React.FC = () => {
           </div>
 
           <div className="service-card">
-            <h3>고객 지원</h3>
+            <h3>불편/건의 사항</h3>
             <p>문의 및 피드백</p>
             <Link to="/inquiry" className="card-link">
               바로가기
             </Link>
           </div>
         </div>
+      </section>
+
+      {/* 공지사항 전체 목록 섹션 */}
+      <section className="full-notices-section">
+        <div className="section-header">
+          <h2>공지사항 & FAQ</h2>
+        </div>
+
+        {noticesLoading ? (
+          <div className="notices-loading">
+            <div className="loading-spinner"></div>
+            <p>공지사항을 불러오는 중...</p>
+          </div>
+        ) : (
+          <div className="notices-list">
+            {notices.length > 0 ? (
+              notices.map((notice) => (
+                <div key={notice.id} className="notice-item">
+                  <Link to={`/board/${notice.id}`} className="notice-link">
+                    <h4>{notice.title}</h4>
+                    <p className="notice-date">
+                      {notice.createdAt.toLocaleDateString()}
+                    </p>
+                  </Link>
+                </div>
+              ))
+            ) : (
+              <p className="no-notices">공지사항이 없습니다.</p>
+            )}
+          </div>
+        )}
       </section>
     </div>
   );
