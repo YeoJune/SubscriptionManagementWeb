@@ -15,7 +15,6 @@ const server = http.createServer(app);
 // Redis 클라이언트 생성
 let redisClient = createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6379',
-  password: process.env.REDIS_PASSWORD || undefined,
 });
 
 // Redis 연결
