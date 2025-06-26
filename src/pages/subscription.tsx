@@ -314,15 +314,24 @@ const Subscription: React.FC = () => {
 
   // 커스텀 스테퍼 렌더링
   const renderStepper = () => {
+    const searchParams = new URLSearchParams(location.search);
+    const isQuickOrder = searchParams.get('productId');
+
     return (
       <div className="stepper">
         {steps.map((label, index) => (
           <div
             key={label}
-            className={`step ${index === activeStep ? 'active' : ''} ${index < activeStep ? 'completed' : ''}`}
+            className={`step ${index === activeStep ? 'active' : ''} ${
+              index < activeStep || (isQuickOrder && index === 0)
+                ? 'completed'
+                : ''
+            }`}
           >
             <div className="step-icon">
-              {index < activeStep ? '✓' : index + 1}
+              {index < activeStep || (isQuickOrder && index === 0)
+                ? '✓'
+                : index + 1}
             </div>
             <div className="step-label">{label}</div>
           </div>
