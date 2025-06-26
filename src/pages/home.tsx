@@ -1,9 +1,10 @@
 // src/pages/home.tsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { BoardProps } from '../types';
+import { BoardProps, ProductProps } from '../types';
 import './home.css';
 
 interface DeliveryInfo {
@@ -18,16 +19,20 @@ interface DeliveryInfo {
 
 const Home: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [notices, setNotices] = useState<BoardProps[]>([]);
   const [noticesLoading, setNoticesLoading] = useState<boolean>(false);
+  const [products, setProducts] = useState<ProductProps[]>([]);
+  const [productsLoading, setProductsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchDeliveryInfo();
     }
     fetchRecentNotices();
+    fetchProducts();
   }, [isAuthenticated]);
 
   const fetchDeliveryInfo = async () => {
@@ -92,6 +97,22 @@ const Home: React.FC = () => {
     }
   };
 
+  const fetchProducts = async () => {
+    setProductsLoading(true);
+    try {
+      const response = await axios.get('/api/products');
+      setProducts(response.data.products || []);
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  const handleQuickOrder = () => {
+    navigate('/subscription');
+  };
+
   return (
     <div className="home-container">
       <section className="home-hero">
@@ -142,6 +163,40 @@ const Home: React.FC = () => {
                   </Link>
                 </div>
               </>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* 빠른 구매 섹션 */}
+      <section className="quick-order-section">
+        <h2>빠른 주문하기</h2>
+        <p>원하는 메뉴를 선택하고 바로 주문하세요</p>
+
+        {productsLoading ? (
+          <div className="products-loading">
+            <div className="loading-spinner"></div>
+            <p>상품을 불러오는 중...</p>
+          </div>
+        ) : (
+          <div className="quick-order-menu">
+            {products.length > 0 ? (
+              products.slice(0, 4).map((product) => (
+                <div
+                  key={product.id}
+                  className="menu-item"
+                  onClick={handleQuickOrder}
+                >
+                  <div className="menu-icon">🍱</div>
+                  <h3>{product.name}</h3>
+                  <p>{product.description}</p>
+                  <div className="menu-price">
+                    {product.price.toLocaleString()}원
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="no-products">등록된 상품이 없습니다.</p>
             )}
           </div>
         )}
@@ -212,37 +267,6 @@ const Home: React.FC = () => {
             </Link>
           </div>
         </div>
-      </section>
-
-      {/* 공지사항 전체 목록 섹션 */}
-      <section className="full-notices-section">
-        <div className="section-header">
-          <h2>공지사항 & FAQ</h2>
-        </div>
-
-        {noticesLoading ? (
-          <div className="notices-loading">
-            <div className="loading-spinner"></div>
-            <p>공지사항을 불러오는 중...</p>
-          </div>
-        ) : (
-          <div className="notices-list">
-            {notices.length > 0 ? (
-              notices.map((notice) => (
-                <div key={notice.id} className="notice-item">
-                  <Link to={`/board/${notice.id}`} className="notice-link">
-                    <h4>{notice.title}</h4>
-                    <p className="notice-date">
-                      {notice.createdAt.toLocaleDateString()}
-                    </p>
-                  </Link>
-                </div>
-              ))
-            ) : (
-              <p className="no-notices">공지사항이 없습니다.</p>
-            )}
-          </div>
-        )}
       </section>
     </div>
   );
