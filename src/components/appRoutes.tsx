@@ -9,6 +9,7 @@ const BoardDetail = React.lazy(() => import('../components/board/boardDetail'));
 const Login = React.lazy(() => import('../pages/login'));
 const NotFound = React.lazy(() => import('../pages/notFound'));
 const Subscription = React.lazy(() => import('../pages/subscription'));
+const PaymentResult = React.lazy(() => import('../pages/PaymentResult')); // 추가
 const Register = React.lazy(() => import('../pages/register'));
 const Profile = React.lazy(() => import('../pages/profile'));
 const Inquiry = React.lazy(() => import('../pages/inquiry'));
@@ -101,6 +102,16 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute>
               <Subscription />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 결제 결과 페이지 - 인증 필요 */}
+        <Route
+          path="/payment-result"
+          element={
+            <ProtectedRoute>
+              <PaymentResult />
             </ProtectedRoute>
           }
         />

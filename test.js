@@ -89,17 +89,6 @@ const rollbackTransaction = () => {
 
 // 테이블 생성 함수
 const createTables = async () => {
-  await run(`
-    ALTER TABLE payments ADD COLUMN order_id TEXT;
-ALTER TABLE payments ADD COLUMN status TEXT DEFAULT 'pending';
-ALTER TABLE payments ADD COLUMN payment_method TEXT;
-ALTER TABLE payments ADD COLUMN payment_gateway_transaction_id TEXT;
-ALTER TABLE payments ADD COLUMN raw_response_data TEXT;
-ALTER TABLE payments ADD COLUMN paid_at TIMESTAMP;
-
--- 인덱스 추가
-CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
-CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);`);
   // 사용자 테이블 생성 - 최신 스키마에 맞게 업데이트
   await run(`
     CREATE TABLE IF NOT EXISTS users (
@@ -148,8 +137,14 @@ CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);`);
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id TEXT NOT NULL,
       product_id INTEGER NOT NULL,
-      count INTEGER NOT NULL,
+      count INTEGER NOT NULL DEFAULT 1,
       amount REAL NOT NULL,
+      order_id TEXT UNIQUE,
+      status TEXT NOT NULL DEFAULT 'pending',
+      payment_method TEXT,
+      payment_gateway_transaction_id TEXT,
+      raw_response_data TEXT,
+      paid_at TIMESTAMP,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);

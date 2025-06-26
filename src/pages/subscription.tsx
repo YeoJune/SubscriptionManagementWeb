@@ -6,8 +6,29 @@ import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { ProductProps } from '../types';
 
-// 단계를 3단계로 변경 (배송 일정 선택 단계 제거)
-const steps = ['상품 선택', '결제 정보 입력', '확인'];
+// 나이스페이 SDK 타입 정의
+declare global {
+  interface Window {
+    AUTHNICE?: {
+      requestPay: (params: NicePayParams) => void;
+    };
+  }
+}
+
+interface NicePayParams {
+  clientId: string;
+  method: string;
+  orderId: string;
+  amount: number;
+  goodsName: string;
+  returnUrl: string;
+  timestamp: string;
+  signature: string;
+  fnError?: (result: { errorMsg: string }) => void;
+}
+
+// 단계를 2단계로 변경 (결제 정보 입력 단계 제거)
+const steps = ['상품 선택', '주문 확인'];
 
 const Subscription: React.FC = () => {
   const navigate = useNavigate();
@@ -19,13 +40,6 @@ const Subscription: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<ProductProps | null>(
     null
   );
-
-  const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: '',
-    cardName: '',
-    expiryDate: '',
-    cvv: '',
-  });
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
@@ -34,8 +48,28 @@ const Subscription: React.FC = () => {
       navigate('/login');
     } else {
       fetchProducts();
+      loadNicePaySDK();
     }
   }, [isAuthenticated, navigate]);
+
+  // 나이스페이 SDK 로드
+  const loadNicePaySDK = () => {
+    if (window.AUTHNICE) {
+      return; // 이미 로드됨
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://pay.nicepay.co.kr/v1/js/';
+    script.async = true;
+    script.onload = () => {
+      console.log('NICE Pay SDK 로드 완료');
+    };
+    script.onerror = () => {
+      console.error('NICE Pay SDK 로드 실패');
+      setError('결제 시스템을 불러오는 중 오류가 발생했습니다.');
+    };
+    document.head.appendChild(script);
+  };
 
   const fetchProducts = async () => {
     try {
@@ -55,13 +89,6 @@ const Subscription: React.FC = () => {
       return;
     }
 
-    if (activeStep === 1) {
-      // 결제 정보 검증
-      if (!validatePaymentInfo()) {
-        return;
-      }
-    }
-
     setError(null);
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
@@ -75,36 +102,24 @@ const Subscription: React.FC = () => {
     setError(null);
   };
 
-  const handlePaymentInfoChange =
-    (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-      setPaymentInfo({
-        ...paymentInfo,
-        [field]: event.target.value,
-      });
-    };
-
-  const validatePaymentInfo = () => {
-    if (!paymentInfo.cardNumber.trim()) {
-      setError('카드 번호를 입력해주세요.');
-      return false;
+  // 나이스페이 결제 요청
+  const requestNicePayment = (paymentData: NicePayParams) => {
+    if (!window.AUTHNICE) {
+      setError('결제 시스템이 준비되지 않았습니다. 페이지를 새로고침해주세요.');
+      setProcessingPayment(false);
+      return;
     }
 
-    if (!paymentInfo.cardName.trim()) {
-      setError('카드 소유자 이름을 입력해주세요.');
-      return false;
-    }
-
-    if (!paymentInfo.expiryDate.trim()) {
-      setError('유효 기간을 입력해주세요.');
-      return false;
-    }
-
-    if (!paymentInfo.cvv.trim()) {
-      setError('CVV를 입력해주세요.');
-      return false;
-    }
-
-    return true;
+    window.AUTHNICE.requestPay({
+      ...paymentData,
+      fnError: (result) => {
+        console.error('나이스페이 결제 에러:', result.errorMsg);
+        setError(
+          `결제 처리 중 오류가 발생했습니다: ${result.errorMsg || '알 수 없는 오류'}`
+        );
+        setProcessingPayment(false);
+      },
+    });
   };
 
   const handleSubmitPayment = async () => {
@@ -114,22 +129,30 @@ const Subscription: React.FC = () => {
     }
 
     setProcessingPayment(true);
+    setError(null);
 
     try {
-      // API 호출: product_id만 전송
-      await axios.post('/api/payments', {
+      // 1단계: 결제 준비 API 호출
+      const prepareResponse = await axios.post('/api/payments/prepare', {
         product_id: selectedProduct.id,
       });
 
-      setPaymentSuccess(true);
-      // 5초 후 홈페이지로 이동
-      setTimeout(() => {
-        navigate('/');
-      }, 5000);
-    } catch (err) {
-      console.error('Payment failed:', err);
-      setError('결제 처리 중 오류가 발생했습니다.');
-    } finally {
+      if (!prepareResponse.data.success) {
+        throw new Error(
+          prepareResponse.data.error || '결제 준비 중 오류가 발생했습니다.'
+        );
+      }
+
+      const { paramsForNicePaySDK } = prepareResponse.data;
+
+      // 2단계: 나이스페이 결제창 호출
+      requestNicePayment(paramsForNicePaySDK);
+
+      // 결제창이 열린 후 결과는 returnUrl에서 처리됨
+      // payment-result 페이지로 이동하게 됨
+    } catch (err: any) {
+      console.error('Payment preparation failed:', err);
+      setError(err.message || '결제 준비 중 오류가 발생했습니다.');
       setProcessingPayment(false);
     }
   };
@@ -179,93 +202,8 @@ const Subscription: React.FC = () => {
     );
   };
 
-  // 결제 정보 입력 스텝 렌더링
-  const renderPaymentForm = () => {
-    return (
-      <>
-        <div className="payment-form">
-          <div className="form-grid">
-            <div className="form-group full-width">
-              <label htmlFor="cardNumber" className="form-label">
-                카드 번호
-              </label>
-              <input
-                id="cardNumber"
-                type="text"
-                className="form-control"
-                value={paymentInfo.cardNumber}
-                onChange={handlePaymentInfoChange('cardNumber')}
-                placeholder="1234 5678 9012 3456"
-              />
-            </div>
-            <div className="form-group full-width">
-              <label htmlFor="cardName" className="form-label">
-                카드 소유자 이름
-              </label>
-              <input
-                id="cardName"
-                type="text"
-                className="form-control"
-                value={paymentInfo.cardName}
-                onChange={handlePaymentInfoChange('cardName')}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="expiryDate" className="form-label">
-                유효 기간 (MM/YY)
-              </label>
-              <input
-                id="expiryDate"
-                type="text"
-                className="form-control"
-                value={paymentInfo.expiryDate}
-                onChange={handlePaymentInfoChange('expiryDate')}
-                placeholder="MM/YY"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="cvv" className="form-label">
-                CVV
-              </label>
-              <input
-                id="cvv"
-                type="password"
-                className="form-control"
-                value={paymentInfo.cvv}
-                onChange={handlePaymentInfoChange('cvv')}
-                maxLength={3}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="order-summary">
-          <h3 className="summary-title">주문 요약</h3>
-          <div className="summary-content">
-            <p className="summary-item">
-              <strong>상품:</strong> {selectedProduct?.name}
-            </p>
-            <p className="summary-item">
-              <strong>포함 배송 횟수:</strong> {selectedProduct?.delivery_count}
-              회
-            </p>
-            <p className="summary-item">
-              <strong>배송 날짜:</strong> 결제 완료 후 월/수/금 기준으로 자동
-              생성됩니다.
-            </p>
-            <hr className="divider" />
-            <p className="total-amount">
-              <strong>총 금액:</strong>{' '}
-              {selectedProduct ? selectedProduct.price.toLocaleString() : 0}원
-            </p>
-          </div>
-        </div>
-      </>
-    );
-  };
-
-  // 확인 스텝 렌더링
-  const renderConfirmation = () => {
+  // 주문 확인 스텝 렌더링 (결제 정보 입력 단계 제거됨)
+  const renderOrderConfirmation = () => {
     if (paymentSuccess) {
       return (
         <div className="alert alert-success">
@@ -303,13 +241,12 @@ const Subscription: React.FC = () => {
 
             <hr className="divider" />
 
-            <h4>결제 정보</h4>
+            <h4>결제 방법</h4>
             <p className="summary-item">
-              <strong>카드 번호:</strong> **** **** ****{' '}
-              {paymentInfo.cardNumber.slice(-4)}
+              <strong>결제 수단:</strong> 신용카드 (나이스페이)
             </p>
-            <p className="summary-item">
-              <strong>카드 소유자:</strong> {paymentInfo.cardName}
+            <p className="summary-item text-muted">
+              결제하기 버튼을 클릭하면 안전한 나이스페이 결제창이 열립니다.
             </p>
 
             <hr className="divider" />
@@ -333,9 +270,12 @@ const Subscription: React.FC = () => {
                 style={{ width: '20px', height: '20px' }}
               ></div>
             ) : (
-              '결제하기'
+              '안전결제 진행하기'
             )}
           </button>
+          <p className="payment-notice">
+            클릭 시 나이스페이 안전결제창이 열립니다
+          </p>
         </div>
       </>
     );
@@ -354,12 +294,10 @@ const Subscription: React.FC = () => {
       case 1:
         return (
           <div>
-            <h2 className="step-title">결제 정보 입력</h2>
-            {renderPaymentForm()}
+            <h2 className="step-title">주문 확인</h2>
+            {renderOrderConfirmation()}
           </div>
         );
-      case 2:
-        return <div>{renderConfirmation()}</div>;
       default:
         return '알 수 없는 단계';
     }
@@ -418,7 +356,7 @@ const Subscription: React.FC = () => {
               loading || processingPayment || activeStep === steps.length - 1
             }
           >
-            {activeStep === steps.length - 1 ? '완료' : '다음'}
+            {activeStep === steps.length - 1 ? '결제 진행' : '다음'}
           </button>
         </div>
       </div>
