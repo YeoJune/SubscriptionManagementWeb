@@ -1,4 +1,4 @@
-// src/pages/subscription.tsx
+// src/pages/subscription.tsx (나이스페이 통합 버전)
 import React, { useState, useEffect } from 'react';
 import './subscription.css';
 import axios from 'axios';
@@ -204,6 +204,9 @@ const Subscription: React.FC = () => {
 
   // 주문 확인 스텝 렌더링 (결제 정보 입력 단계 제거됨)
   const renderOrderConfirmation = () => {
+    const searchParams = new URLSearchParams(location.search);
+    const isQuickOrder = searchParams.get('productId');
+
     if (paymentSuccess) {
       return (
         <div className="alert alert-success">
@@ -214,6 +217,12 @@ const Subscription: React.FC = () => {
 
     return (
       <>
+        {isQuickOrder && (
+          <div className="quick-order-notice">
+            ⚡ 빠른 주문으로 선택된 상품입니다
+          </div>
+        )}
+
         <div className="confirmation-section">
           <h3 className="section-title">주문 확인</h3>
           <div className="summary-content">

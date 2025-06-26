@@ -109,8 +109,8 @@ const Home: React.FC = () => {
     }
   };
 
-  const handleQuickOrder = () => {
-    navigate('/subscription');
+  const handleQuickOrder = (productId: number) => {
+    navigate(`/subscription?productId=${productId}`);
   };
 
   return (
@@ -185,7 +185,7 @@ const Home: React.FC = () => {
                 <div
                   key={product.id}
                   className="menu-item"
-                  onClick={handleQuickOrder}
+                  onClick={() => handleQuickOrder(product.id)}
                 >
                   <div className="menu-icon">🍱</div>
                   <h3>{product.name}</h3>
