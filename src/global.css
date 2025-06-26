@@ -1,5 +1,8 @@
 /* src/global.css */
 
+/* Pretendard 폰트 가져오기 */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
 :root {
   /* Saluv All Day Brand Colors - 감귤색 테마 */
   --primary-color: #ff8c42; /* 밝은 감귤색 */
@@ -26,10 +29,23 @@
 }
 
 body {
-  font-family: 'Noto Sans KR', 'Arial', sans-serif;
+  font-family:
+    'Pretendard',
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    Roboto,
+    'Helvetica Neue',
+    'Segoe UI',
+    'Apple SD Gothic Neo',
+    'Noto Sans KR',
+    'Malgun Gothic',
+    sans-serif;
   background-color: var(--background-color);
   color: var(--text-color);
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .app-container {
