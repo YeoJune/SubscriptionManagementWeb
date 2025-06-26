@@ -13,6 +13,7 @@
   margin-bottom: 2.5rem;
   position: relative;
   padding-bottom: 0.75rem;
+  font-size: 2.2rem;
 }
 
 .admin-title::after {
@@ -20,9 +21,13 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 60px;
+  width: 80px;
   height: 4px;
-  background-color: var(--primary-color);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   border-radius: 2px;
 }
 
@@ -30,53 +35,54 @@
 .summary-card {
   padding: 1.5rem;
   height: 140px;
-  border-radius: 15px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(255, 140, 66, 0.1);
   transition: all 0.3s ease;
-  background: linear-gradient(135deg, white, var(--background-color));
+  background: white;
+  border: 1px solid var(--border-color);
   border-bottom: 4px solid transparent;
 }
 
 .summary-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(255, 140, 66, 0.15);
 }
 
 .summary-title {
   color: var(--text-light);
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1rem;
   margin-bottom: 0.75rem;
 }
 
 .summary-value {
-  font-size: 2.5rem;
-  font-weight: 800;
+  font-size: 2.2rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
 }
 
-/* Users card */
+/* Summary card variants - 일관된 컬러 스킴 */
 .users-card {
-  border-bottom-color: #0d6efd;
+  border-bottom-color: #3b82f6;
 }
 
 .users-card:hover {
-  background: linear-gradient(135deg, white, rgba(13, 110, 253, 0.05));
+  background: linear-gradient(135deg, white, rgba(59, 130, 246, 0.05));
 }
 
 .users-value {
-  color: #0d6efd;
+  color: #3b82f6;
 }
 
 .users-icon {
-  font-size: 2.5rem;
-  color: #0d6efd;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #3b82f6;
   margin-left: auto;
   opacity: 0.8;
 }
 
-/* Delivery card */
 .delivery-card {
   border-bottom-color: var(--success-color);
 }
@@ -90,48 +96,69 @@
 }
 
 .delivery-icon {
-  font-size: 2.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
   color: var(--success-color);
   margin-left: auto;
   opacity: 0.8;
 }
 
-/* Inquiry card */
 .inquiry-card {
-  border-bottom-color: #ffc107;
+  border-bottom-color: #f59e0b;
 }
 
 .inquiry-card:hover {
-  background: linear-gradient(135deg, white, rgba(255, 193, 7, 0.05));
+  background: linear-gradient(135deg, white, rgba(245, 158, 11, 0.05));
 }
 
 .inquiry-value {
-  color: #ffc107;
+  color: #f59e0b;
 }
 
 .inquiry-icon {
-  font-size: 2.5rem;
-  color: #ffc107;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #f59e0b;
   margin-left: auto;
   opacity: 0.8;
 }
 
-/* Products card */
 .products-card {
-  border-bottom-color: #17a2b8;
+  border-bottom-color: #06b6d4;
 }
 
 .products-card:hover {
-  background: linear-gradient(135deg, white, rgba(23, 162, 184, 0.05));
+  background: linear-gradient(135deg, white, rgba(6, 182, 212, 0.05));
 }
 
 .products-value {
-  color: #17a2b8;
+  color: #06b6d4;
 }
 
 .products-icon {
-  font-size: 2.5rem;
-  color: #17a2b8;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #06b6d4;
+  margin-left: auto;
+  opacity: 0.8;
+}
+
+.notices-card {
+  border-bottom-color: var(--primary-color);
+}
+
+.notices-card:hover {
+  background: linear-gradient(135deg, white, rgba(255, 140, 66, 0.05));
+}
+
+.notices-value {
+  color: var(--primary-color);
+}
+
+.notices-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--primary-color);
   margin-left: auto;
   opacity: 0.8;
 }
@@ -141,21 +168,23 @@
   color: var(--accent-color);
   font-weight: 700;
   margin-bottom: 2rem;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
 }
 
-/* Feature cards */
+/* Feature cards - 일관된 스타일 */
 .feature-card {
-  height: 180px;
-  border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  height: 160px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(255, 140, 66, 0.1);
   transition: all 0.3s ease;
   overflow: hidden;
+  background: white;
+  border: 1px solid var(--border-color);
 }
 
 .feature-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(255, 140, 66, 0.15);
 }
 
 .feature-card-action {
@@ -174,52 +203,81 @@
   align-items: center;
   justify-content: center;
   height: 100%;
+  gap: 1rem;
 }
 
 .feature-icon {
-  font-size: 3.5rem;
-  margin-bottom: 1rem;
+  width: 3rem;
+  height: 3rem;
   transition: all 0.3s ease;
 }
 
 .feature-title {
   font-weight: 600;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   text-align: center;
-  color: var(--text-color);
+  color: var(--accent-color);
 }
 
-/* Feature card variants */
+/* Feature card variants - 일관된 호버 효과 */
 .delivery-feature .feature-icon {
   color: var(--success-color);
 }
 
 .delivery-feature:hover {
-  background-color: rgba(40, 167, 69, 0.05);
+  background: linear-gradient(135deg, white, rgba(40, 167, 69, 0.05));
+}
+
+.delivery-feature:hover .feature-icon {
+  transform: scale(1.1);
 }
 
 .users-feature .feature-icon {
-  color: #0d6efd;
+  color: #3b82f6;
 }
 
 .users-feature:hover {
-  background-color: rgba(13, 110, 253, 0.05);
+  background: linear-gradient(135deg, white, rgba(59, 130, 246, 0.05));
+}
+
+.users-feature:hover .feature-icon {
+  transform: scale(1.1);
 }
 
 .products-feature .feature-icon {
-  color: #17a2b8;
+  color: #06b6d4;
 }
 
 .products-feature:hover {
-  background-color: rgba(23, 162, 184, 0.05);
+  background: linear-gradient(135deg, white, rgba(6, 182, 212, 0.05));
+}
+
+.products-feature:hover .feature-icon {
+  transform: scale(1.1);
 }
 
 .inquiry-feature .feature-icon {
-  color: #ffc107;
+  color: #f59e0b;
 }
 
 .inquiry-feature:hover {
-  background-color: rgba(255, 193, 7, 0.05);
+  background: linear-gradient(135deg, white, rgba(245, 158, 11, 0.05));
+}
+
+.inquiry-feature:hover .feature-icon {
+  transform: scale(1.1);
+}
+
+.notices-feature .feature-icon {
+  color: var(--primary-color);
+}
+
+.notices-feature:hover {
+  background: linear-gradient(135deg, white, rgba(255, 140, 66, 0.05));
+}
+
+.notices-feature:hover .feature-icon {
+  transform: scale(1.1);
 }
 
 /* Loading state */
@@ -232,11 +290,11 @@
 }
 
 .loading-spinner {
-  border: 4px solid rgba(164, 226, 46, 0.3);
+  border: 4px solid rgba(255, 140, 66, 0.1);
   border-radius: 50%;
   border-top: 4px solid var(--primary-color);
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
 }
@@ -252,13 +310,15 @@
 
 .loading-text {
   color: var(--text-light);
+  font-size: 1.1rem;
 }
 
 /* Alert styling */
 .alert {
   border-radius: 10px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
 }
 
 .alert-error {
@@ -269,13 +329,17 @@
 
 /* Responsive adjustments */
 @media (max-width: 960px) {
+  .admin-title {
+    font-size: 2rem;
+  }
+
   .summary-card {
-    height: 120px;
-    margin-bottom: 1rem;
+    height: 130px;
+    padding: 1.25rem;
   }
 
   .summary-title {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
   .summary-value {
@@ -283,26 +347,12 @@
   }
 
   .feature-card {
-    margin-bottom: 1rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .admin-title {
-    font-size: 1.8rem;
-  }
-
-  .section-title {
-    font-size: 1.3rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .summary-card {
-    padding: 1rem;
+    height: 150px;
   }
 
   .feature-icon {
-    font-size: 2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
   }
 
   .feature-title {
@@ -310,85 +360,81 @@
   }
 }
 
-/* 공지사항 카드 스타일링 */
-.notices-card {
-  background-color: rgba(164, 226, 46, 0.1);
-  border-left: 4px solid var(--primary-color);
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
+@media (max-width: 768px) {
+  .admin-dashboard-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .admin-title {
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+  }
+
+  .section-title {
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .summary-card {
+    height: 120px;
+    padding: 1rem;
+  }
+
+  .summary-value {
+    font-size: 1.8rem;
+  }
+
+  .feature-card {
+    height: 140px;
+  }
+
+  .feature-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .feature-title {
+    font-size: 0.95rem;
+  }
 }
 
-.notices-card::before {
-  content: '';
-  position: absolute;
-  top: -30%;
-  right: -30%;
-  width: 100px;
-  height: 100px;
-  background-color: rgba(164, 226, 46, 0.2);
-  border-radius: 50%;
-  z-index: 0;
-}
+@media (max-width: 480px) {
+  .admin-title {
+    font-size: 1.6rem;
+  }
 
-.notices-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-}
+  .summary-card {
+    height: 110px;
+    padding: 0.875rem;
+  }
 
-.notices-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--accent-color);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-  z-index: 1;
-}
+  .summary-title {
+    font-size: 0.9rem;
+  }
 
-.notices-icon {
-  width: 32px;
-  height: 32px;
-  color: var(--primary-color);
-  margin-left: 1rem;
-}
+  .summary-value {
+    font-size: 1.6rem;
+  }
 
-/* 공지사항 특성 카드 스타일링 */
-.notices-feature {
-  border-radius: 12px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  background-color: white;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
+  .users-icon,
+  .delivery-icon,
+  .inquiry-icon,
+  .products-icon,
+  .notices-icon {
+    width: 2rem;
+    height: 2rem;
+  }
 
-.notices-feature:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-}
+  .feature-card {
+    height: 130px;
+  }
 
-.notices-feature .feature-card-action {
-  padding: 1.5rem;
-  cursor: pointer;
-  height: 100%;
-}
+  .feature-icon {
+    width: 2rem;
+    height: 2rem;
+  }
 
-.notices-feature .feature-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 1rem;
-}
-
-.notices-feature .feature-icon {
-  width: 42px;
-  height: 42px;
-  color: var(--primary-color);
-}
-
-.notices-feature .feature-title {
-  font-weight: 600;
-  color: var(--accent-color);
+  .feature-title {
+    font-size: 0.9rem;
+  }
 }
