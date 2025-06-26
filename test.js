@@ -89,7 +89,6 @@ const rollbackTransaction = () => {
 
 // 테이블 생성 함수
 const createTables = async () => {
-  await run(`DROP TABLE payments`); // 기존 결제 테이블 삭제 (테스트용)
   // 사용자 테이블 생성 - 최신 스키마에 맞게 업데이트
   await run(`
     CREATE TABLE IF NOT EXISTS users (
