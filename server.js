@@ -5,19 +5,41 @@ const http = require('http');
 const cors = require('cors');
 const path = require('path');
 const bodyParser = require('body-parser');
+const session = require('express-session');
+const RedisStore = require('connect-redis')(session);
+const redis = require('redis');
 
 const app = express();
 const server = http.createServer(app);
 
-const session = require('express-session');
+// Redis 클라이언트 생성
+const redisClient = redis.createClient({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: process.env.REDIS_PORT || 6379,
+  password: process.env.REDIS_PASSWORD || undefined,
+});
+
+// Redis 연결 확인
+redisClient.on('connect', () => {
+  console.log('Redis connected');
+});
+
+redisClient.on('error', (err) => {
+  console.error('Redis connection error:', err);
+});
+
 // 공통 미들웨어
 app.use(express.json());
 app.use(
   session({
+    store: new RedisStore({ client: redisClient }),
     secret: process.env.SESSION_SECRET || 'default',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === 'production' },
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 24 * 60 * 60 * 1000, // 24시간 (선택사항)
+    },
   })
 );
 app.use(bodyParser.json({ limit: '50mb' }));
