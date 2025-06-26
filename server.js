@@ -6,14 +6,14 @@ const cors = require('cors');
 const path = require('path');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const RedisStore = require('connect-redis').default;
-const redis = require('redis');
+const { RedisStore } = require('connect-redis');
+const { createClient } = require('redis');
 
 const app = express();
 const server = http.createServer(app);
 
 // Redis 클라이언트 생성
-const redisClient = redis.createClient({
+let redisClient = createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6379',
   password: process.env.REDIS_PASSWORD || undefined,
 });
@@ -34,13 +34,16 @@ redisClient.on('error', (err) => {
 app.use(express.json());
 app.use(
   session({
-    store: new RedisStore({ client: redisClient }),
+    store: new RedisStore({
+      client: redisClient,
+      prefix: 'myapp:',
+    }),
     secret: process.env.SESSION_SECRET || 'default',
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 24 * 60 * 60 * 1000, // 24시간 (선택사항)
+      maxAge: 24 * 60 * 60 * 1000, // 24시간
     },
   })
 );
