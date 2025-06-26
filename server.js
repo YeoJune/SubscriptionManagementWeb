@@ -6,7 +6,7 @@ const cors = require('cors');
 const path = require('path');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const RedisStore = require('connect-redis')(session);
+const RedisStore = require('connect-redis').default;
 const redis = require('redis');
 
 const app = express();
@@ -14,10 +14,12 @@ const server = http.createServer(app);
 
 // Redis 클라이언트 생성
 const redisClient = redis.createClient({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: process.env.REDIS_PORT || 6379,
+  url: process.env.REDIS_URL || 'redis://localhost:6379',
   password: process.env.REDIS_PASSWORD || undefined,
 });
+
+// Redis 연결
+redisClient.connect().catch(console.error);
 
 // Redis 연결 확인
 redisClient.on('connect', () => {
