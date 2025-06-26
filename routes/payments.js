@@ -275,12 +275,19 @@ router.post('/approve', authMiddleware, (req, res) => {
                             }
 
                             // 배송 일정 생성 (트랜잭션 외부에서)
-                            deliveryManager
-                              .createDeliverySchedule(
-                                user_id,
-                                payment.product_id,
-                                product.delivery_count
-                              )
+                            const deliveryPromise = req.body.selected_dates
+                              ? deliveryManager.createCustomDeliverySchedule(
+                                  user_id,
+                                  payment.product_id,
+                                  req.body.selected_dates
+                                )
+                              : deliveryManager.createDeliverySchedule(
+                                  user_id,
+                                  payment.product_id,
+                                  product.delivery_count
+                                );
+
+                            deliveryPromise
                               .then((deliveries) => {
                                 res.json({
                                   success: true,

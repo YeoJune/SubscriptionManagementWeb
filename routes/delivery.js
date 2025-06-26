@@ -6,6 +6,12 @@ const { authMiddleware } = require('../lib/auth');
 const db = require('../lib/db');
 const deliveryManager = require('../lib/deliveryManager');
 
+// 환경변수에서 배송 가능 요일 가져오기
+const getDeliveryDays = () => {
+  const deliveryDaysEnv = process.env.DELIVERY_DAYS || '1,3,5'; // 기본값: 월,수,금
+  return deliveryDaysEnv.split(',').map((day) => parseInt(day.trim()));
+};
+
 /*
 -- 배달 목록 테이블 (delivery_list)
 CREATE TABLE IF NOT EXISTS delivery_list (
@@ -176,7 +182,7 @@ router.get('/my', authMiddleware, async (req, res) => {
   }
 });
 
-// GET /api/delivery/available-dates - 배송 가능 날짜 조회
+// GET /api/delivery/available-dates - 배송 가능 날짜 조회 (환경변수 사용)
 router.get('/available-dates', authMiddleware, (req, res) => {
   try {
     const { month } = req.query; // YYYY-MM 형식
@@ -184,7 +190,10 @@ router.get('/available-dates', authMiddleware, (req, res) => {
     // month가 없으면 현재 월 사용
     const targetMonth = month || new Date().toISOString().slice(0, 7);
 
-    // 해당 월의 모든 날짜를 가져온 후 월/수/금만 필터링
+    // 환경변수에서 배송 가능 요일 가져오기
+    const deliveryDays = getDeliveryDays();
+
+    // 해당 월의 모든 날짜를 가져온 후 설정된 요일만 필터링
     const availableDates = [];
     const [year, monthNum] = targetMonth.split('-');
     const date = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
@@ -192,19 +201,21 @@ router.get('/available-dates', authMiddleware, (req, res) => {
     // 해당 월의 마지막 날짜 구하기
     const lastDay = new Date(parseInt(year), parseInt(monthNum), 0).getDate();
 
-    // 월/수/금(1, 3, 5) 날짜만 필터링
+    // 환경변수에서 설정된 요일에 해당하는 날짜만 필터링
     for (let day = 1; day <= lastDay; day++) {
       date.setDate(day);
       const dayOfWeek = date.getDay();
 
-      // 월(1), 수(3), 금(5)에 해당하는지 확인
-      if (dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5) {
+      // 환경변수에서 설정된 요일인지 확인
+      if (deliveryDays.includes(dayOfWeek)) {
         const formattedDate = date.toISOString().split('T')[0];
         availableDates.push(formattedDate);
       }
     }
 
-    res.json({ available_dates: availableDates });
+    res.json({
+      available_dates: availableDates,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -217,6 +228,34 @@ router.get('/products', authMiddleware, async (req, res) => {
 
     const products = await deliveryManager.getUserProductDeliveries(user_id);
     res.json({ products });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/delivery/config - 배송 설정 정보 조회 (관리자/사용자 공통)
+router.get('/config', (req, res) => {
+  try {
+    const deliveryDays = getDeliveryDays();
+
+    // 요일명 매핑
+    const dayNames = {
+      0: '일요일',
+      1: '월요일',
+      2: '화요일',
+      3: '수요일',
+      4: '목요일',
+      5: '금요일',
+      6: '토요일',
+    };
+
+    const deliveryDayNames = deliveryDays.map((day) => dayNames[day]);
+
+    res.json({
+      delivery_days: deliveryDays,
+      delivery_day_names: deliveryDayNames,
+      delivery_schedule: `매주 ${deliveryDayNames.join(', ')} 배송`,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

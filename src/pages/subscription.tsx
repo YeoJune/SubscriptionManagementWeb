@@ -1,12 +1,12 @@
-// src/pages/subscription.tsx (나이스페이 통합 버전)
+// src/pages/subscription.tsx
 import React, { useState, useEffect } from 'react';
 import './subscription.css';
 import axios from 'axios';
 import { useAuth } from '../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ProductProps } from '../types';
+import DeliveryCalendar from '../components/DeliveryCalendar';
 
-// 나이스페이 SDK 타입 정의
 declare global {
   interface Window {
     AUTHNICE?: {
@@ -27,12 +27,13 @@ interface NicePayParams {
   fnError?: (result: { errorMsg: string }) => void;
 }
 
-// 단계를 2단계로 변경 (결제 정보 입력 단계 제거)
-const steps = ['상품 선택', '주문 확인'];
+const steps = ['상품 선택', '배송일 선택', '주문 확인'];
 
 const Subscription: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated } = useAuth();
+
   const [activeStep, setActiveStep] = useState(0);
   const [products, setProducts] = useState<ProductProps[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,36 +41,18 @@ const Subscription: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<ProductProps | null>(
     null
   );
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
-    } else {
-      fetchProducts();
-      loadNicePaySDK();
+      return;
     }
+
+    fetchProducts();
+    loadNicePaySDK();
   }, [isAuthenticated, navigate]);
-
-  // 나이스페이 SDK 로드
-  const loadNicePaySDK = () => {
-    if (window.AUTHNICE) {
-      return; // 이미 로드됨
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://pay.nicepay.co.kr/v1/js/';
-    script.async = true;
-    script.onload = () => {
-      console.log('NICE Pay SDK 로드 완료');
-    };
-    script.onerror = () => {
-      console.error('NICE Pay SDK 로드 실패');
-      setError('결제 시스템을 불러오는 중 오류가 발생했습니다.');
-    };
-    document.head.appendChild(script);
-  };
 
   const fetchProducts = async () => {
     try {
@@ -77,7 +60,7 @@ const Subscription: React.FC = () => {
       const productsList = response.data.products || [];
       setProducts(productsList);
 
-      // 상품 로드 후 즉시 URL 파라미터 확인
+      // 빠른 주문 처리
       const searchParams = new URLSearchParams(location.search);
       const productId = searchParams.get('productId');
       if (productId && productsList.length > 0) {
@@ -86,16 +69,27 @@ const Subscription: React.FC = () => {
         );
         if (product) {
           setSelectedProduct(product);
-          setActiveStep(1); // 바로 주문 확인 단계로 이동
+          setActiveStep(1);
         }
       }
 
       setLoading(false);
     } catch (err) {
-      console.error('Failed to fetch products:', err);
+      console.error('상품 조회 실패:', err);
       setError('상품 정보를 불러오는 중 오류가 발생했습니다.');
       setLoading(false);
     }
+  };
+
+  const loadNicePaySDK = () => {
+    if (window.AUTHNICE) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://pay.nicepay.co.kr/v1/js/';
+    script.async = true;
+    script.onload = () => console.log('NICE Pay SDK 로드 완료');
+    script.onerror = () => setError('결제 시스템 로드 실패');
+    document.head.appendChild(script);
   };
 
   const handleNext = () => {
@@ -104,80 +98,72 @@ const Subscription: React.FC = () => {
       return;
     }
 
+    if (
+      activeStep === 1 &&
+      selectedDates.length !== selectedProduct?.delivery_count
+    ) {
+      setError(`${selectedProduct?.delivery_count}개의 배송일을 선택해주세요.`);
+      return;
+    }
+
     setError(null);
-    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    setActiveStep((prev) => prev + 1);
   };
 
   const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+    setActiveStep((prev) => prev - 1);
   };
 
   const handleSelectProduct = (product: ProductProps) => {
     setSelectedProduct(product);
+    setSelectedDates([]);
     setError(null);
   };
 
-  // 나이스페이 결제 요청
-  const requestNicePayment = (paymentData: NicePayParams) => {
-    if (!window.AUTHNICE) {
-      setError('결제 시스템이 준비되지 않았습니다. 페이지를 새로고침해주세요.');
-      setProcessingPayment(false);
-      return;
-    }
-
-    window.AUTHNICE.requestPay({
-      ...paymentData,
-      fnError: (result) => {
-        console.error('나이스페이 결제 에러:', result.errorMsg);
-        setError(
-          `결제 처리 중 오류가 발생했습니다: ${result.errorMsg || '알 수 없는 오류'}`
-        );
-        setProcessingPayment(false);
-      },
-    });
-  };
-
   const handleSubmitPayment = async () => {
-    if (!selectedProduct) {
-      setError('선택 정보가 유효하지 않습니다.');
-      return;
-    }
+    if (!selectedProduct) return;
 
     setProcessingPayment(true);
     setError(null);
 
     try {
-      // 1단계: 결제 준비 API 호출
       const prepareResponse = await axios.post('/api/payments/prepare', {
         product_id: selectedProduct.id,
       });
 
       if (!prepareResponse.data.success) {
-        throw new Error(
-          prepareResponse.data.error || '결제 준비 중 오류가 발생했습니다.'
-        );
+        throw new Error(prepareResponse.data.error || '결제 준비 실패');
       }
+
+      // 선택된 날짜를 세션에 저장
+      sessionStorage.setItem('selectedDates', JSON.stringify(selectedDates));
 
       const { paramsForNicePaySDK } = prepareResponse.data;
 
-      // 2단계: 나이스페이 결제창 호출
-      requestNicePayment(paramsForNicePaySDK);
+      if (!window.AUTHNICE) {
+        throw new Error('결제 시스템이 준비되지 않았습니다.');
+      }
 
-      // 결제창이 열린 후 결과는 returnUrl에서 처리됨
-      // payment-result 페이지로 이동하게 됨
+      window.AUTHNICE.requestPay({
+        ...paramsForNicePaySDK,
+        fnError: (result) => {
+          setError(`결제 오류: ${result.errorMsg || '알 수 없는 오류'}`);
+          setProcessingPayment(false);
+        },
+      });
     } catch (err: any) {
-      console.error('Payment preparation failed:', err);
-      setError(err.message || '결제 준비 중 오류가 발생했습니다.');
+      setError(err.message || '결제 준비 중 오류 발생');
       setProcessingPayment(false);
     }
   };
 
-  // 상품 선택 스텝 렌더링
+  // 상품 선택 렌더링
   const renderProductSelection = () => {
     if (loading) {
       return (
         <div className="loading-container">
           <div className="loading-spinner"></div>
+          <p>상품 정보를 불러오는 중...</p>
         </div>
       );
     }
@@ -201,7 +187,7 @@ const Subscription: React.FC = () => {
                 {product.price.toLocaleString()}원
               </p>
               <div className="product-delivery-count">
-                포함 배송 횟수: {product.delivery_count}회
+                배송 횟수: {product.delivery_count}회
               </div>
             </div>
             <div className="product-actions">
@@ -217,18 +203,34 @@ const Subscription: React.FC = () => {
     );
   };
 
-  // 주문 확인 스텝 렌더링 (결제 정보 입력 단계 제거됨)
+  // 배송일 선택 렌더링
+  const renderDeliveryDateSelection = () => {
+    if (!selectedProduct) return null;
+
+    return (
+      <div>
+        <div className="delivery-selection-info">
+          <p>
+            <strong>{selectedProduct.name}</strong>의 배송일을 선택해주세요.
+          </p>
+          <p>
+            총 <strong>{selectedProduct.delivery_count}회</strong> 배송이
+            예정됩니다.
+          </p>
+        </div>
+        <DeliveryCalendar
+          requiredCount={selectedProduct.delivery_count}
+          selectedDates={selectedDates}
+          onDatesChange={setSelectedDates}
+        />
+      </div>
+    );
+  };
+
+  // 주문 확인 렌더링
   const renderOrderConfirmation = () => {
     const searchParams = new URLSearchParams(location.search);
     const isQuickOrder = searchParams.get('productId');
-
-    if (paymentSuccess) {
-      return (
-        <div className="alert alert-success">
-          결제가 완료되었습니다! 5초 후 홈페이지로 이동합니다.
-        </div>
-      );
-    }
 
     return (
       <>
@@ -258,26 +260,29 @@ const Subscription: React.FC = () => {
             <p className="summary-item">
               <strong>배송 횟수:</strong> {selectedProduct?.delivery_count}회
             </p>
-            <p className="summary-item">
-              <strong>배송 일정:</strong> 결제 완료 후 월/수/금 기준으로 자동
-              생성됩니다.
-            </p>
 
-            <hr className="divider" />
-
-            <h4>결제 방법</h4>
-            <p className="summary-item">
-              <strong>결제 수단:</strong> 신용카드 (나이스페이)
-            </p>
-            <p className="summary-item text-muted">
-              결제하기 버튼을 클릭하면 안전한 나이스페이 결제창이 열립니다.
-            </p>
+            {selectedDates.length > 0 ? (
+              <div className="selected-dates-summary">
+                <strong>선택한 배송일:</strong>
+                <div className="dates-list">
+                  {selectedDates.map((date, index) => (
+                    <span key={date} className="date-item">
+                      {new Date(date).toLocaleDateString('ko-KR')}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="summary-item">
+                <strong>배송 일정:</strong> 자동 스케줄링 (월/수/금)
+              </p>
+            )}
 
             <hr className="divider" />
 
             <p className="total-amount">
               <strong>총 결제 금액:</strong>{' '}
-              {selectedProduct ? selectedProduct.price.toLocaleString() : 0}원
+              {selectedProduct?.price.toLocaleString()}원
             </p>
           </div>
         </div>
@@ -305,7 +310,7 @@ const Subscription: React.FC = () => {
     );
   };
 
-  // 각 스텝에 맞는 컨텐츠 렌더링
+  // 스텝 컨텐츠
   const getStepContent = (step: number) => {
     switch (step) {
       case 0:
@@ -318,6 +323,13 @@ const Subscription: React.FC = () => {
       case 1:
         return (
           <div>
+            <h2 className="step-title">배송일 선택</h2>
+            {renderDeliveryDateSelection()}
+          </div>
+        );
+      case 2:
+        return (
+          <div>
             <h2 className="step-title">주문 확인</h2>
             {renderOrderConfirmation()}
           </div>
@@ -327,7 +339,7 @@ const Subscription: React.FC = () => {
     }
   };
 
-  // 커스텀 스테퍼 렌더링
+  // 스테퍼 렌더링
   const renderStepper = () => {
     const searchParams = new URLSearchParams(location.search);
     const isQuickOrder = searchParams.get('productId');

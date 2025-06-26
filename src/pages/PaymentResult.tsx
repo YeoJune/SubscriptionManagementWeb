@@ -53,13 +53,32 @@ const PaymentResult: React.FC = () => {
       // 결제 인증 성공 (나이스페이에서 리다이렉트됨)
       if (authResultCode === '0000' && tid && authToken) {
         try {
+          // 세션에서 선택된 배송일 가져오기
+          const selectedDatesStr = sessionStorage.getItem('selectedDates');
+          const selectedDates = selectedDatesStr
+            ? JSON.parse(selectedDatesStr)
+            : null;
+
           // 승인 요청 API 호출
-          const approvalResponse = await axios.post('/api/payments/approve', {
+          const approvalData: any = {
             orderId: orderId,
             authToken: authToken,
             tid: tid,
             signature: signature,
-          });
+          };
+
+          // 선택된 배송일이 있으면 추가
+          if (selectedDates && selectedDates.length > 0) {
+            approvalData.selected_dates = selectedDates;
+          }
+
+          const approvalResponse = await axios.post(
+            '/api/payments/approve',
+            approvalData
+          );
+
+          // 세션에서 배송일 정보 제거
+          sessionStorage.removeItem('selectedDates');
 
           setResult(approvalResponse.data);
         } catch (error: any) {
