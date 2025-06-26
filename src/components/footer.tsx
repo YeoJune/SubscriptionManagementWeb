@@ -21,13 +21,16 @@ const Footer: React.FC = () => {
           <h4>메뉴</h4>
           <ul>
             <li>
-              <Link to="/">홈</Link>
+              <Link to="/">홈/공지사항</Link>
             </li>
             <li>
-              <Link to="/board">공지사항</Link>
+              <Link to="/profile">내 프로필</Link>
             </li>
             <li>
-              <Link to="/inquiry">고객의 소리</Link>
+              <Link to="/subscription">정기배송신청</Link>
+            </li>
+            <li>
+              <Link to="/inquiry">불편/건의 사항</Link>
             </li>
           </ul>
         </div>
