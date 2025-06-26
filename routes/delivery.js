@@ -192,6 +192,8 @@ router.get('/available-dates', authMiddleware, (req, res) => {
 
     // 환경변수에서 배송 가능 요일 가져오기
     const deliveryDays = getDeliveryDays();
+    console.log('🔍 환경변수 DELIVERY_DAYS:', process.env.DELIVERY_DAYS);
+    console.log('🔍 파싱된 배송 요일:', deliveryDays);
 
     // 해당 월의 모든 날짜를 가져온 후 설정된 요일만 필터링
     const availableDates = [];
@@ -210,6 +212,12 @@ router.get('/available-dates', authMiddleware, (req, res) => {
       if (deliveryDays.includes(dayOfWeek)) {
         const formattedDate = date.toISOString().split('T')[0];
         availableDates.push(formattedDate);
+
+        // 첫 5개 날짜만 로그로 확인
+        if (availableDates.length <= 5) {
+          const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+          console.log(`🔍 ${formattedDate} (${dayNames[dayOfWeek]}요일)`);
+        }
       }
     }
 
