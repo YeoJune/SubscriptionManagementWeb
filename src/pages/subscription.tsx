@@ -74,7 +74,22 @@ const Subscription: React.FC = () => {
   const fetchProducts = async () => {
     try {
       const response = await axios.get('/api/products');
-      setProducts(response.data.products);
+      const productsList = response.data.products || [];
+      setProducts(productsList);
+
+      // 상품 로드 후 즉시 URL 파라미터 확인
+      const searchParams = new URLSearchParams(location.search);
+      const productId = searchParams.get('productId');
+      if (productId && productsList.length > 0) {
+        const product = productsList.find(
+          (p: ProductProps) => p.id === parseInt(productId)
+        );
+        if (product) {
+          setSelectedProduct(product);
+          setActiveStep(1); // 바로 주문 확인 단계로 이동
+        }
+      }
+
       setLoading(false);
     } catch (err) {
       console.error('Failed to fetch products:', err);
