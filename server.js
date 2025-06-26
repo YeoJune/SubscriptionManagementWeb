@@ -29,6 +29,8 @@ redisClient.on('error', (err) => {
   console.error('Redis connection error:', err);
 });
 
+app.set('trust proxy', 1); // Nginx 프록시 신뢰
+
 // 공통 미들웨어
 app.use(express.json());
 app.use(
