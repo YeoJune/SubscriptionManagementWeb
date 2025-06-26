@@ -57,21 +57,28 @@ const DeliveryCalendar: React.FC<DeliveryCalendarProps> = ({
     setCurrentMonth(newMonth);
   };
 
+  // 날짜를 YYYY-MM-DD 형식으로 변환 (로컬 시간대 사용)
+  const formatDateLocal = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const renderCalendar = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
 
     const days = [];
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatDateLocal(new Date());
 
     for (let i = 0; i < 42; i++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = formatDateLocal(date);
       const isCurrentMonth = date.getMonth() === month;
       const isAvailable = availableDates.includes(dateStr);
       const isSelected = selectedDates.includes(dateStr);
