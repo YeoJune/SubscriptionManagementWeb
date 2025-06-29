@@ -237,61 +237,28 @@
   grid-column: 1 / -1;
 }
 
-/* 계좌번호 정보 스타일 */
+/* 계좌번호 정보 스타일 - 심플 버전 */
 .account-info {
-  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-  border: 2px solid var(--primary-color);
-  border-radius: 12px;
-  padding: 1.5rem;
+  background-color: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
   margin-top: 1.5rem;
   text-align: center;
-  position: relative;
-  overflow: hidden;
 }
 
-.account-info::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(
-    90deg,
-    var(--primary-color),
-    var(--secondary-color)
-  );
-}
-
-.account-info .account-label {
-  color: var(--accent-color);
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.account-info .account-text {
+  color: var(--text-color);
+  font-size: 1rem;
+  margin: 0;
+  line-height: 1.6;
 }
 
 .account-info .account-number {
   color: var(--primary-color);
-  font-size: 1.3rem;
-  font-weight: 700;
-  font-family: 'Courier New', monospace;
-  margin: 0;
-  letter-spacing: 1px;
-}
-
-.account-info .bank-name {
-  color: var(--text-color);
-  font-size: 1rem;
   font-weight: 600;
-  margin: 0.3rem 0 0 0;
-}
-
-.account-info .account-holder {
-  color: var(--text-light);
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
 }
 
 /* 공지사항 섹션 (로그인 시에만) */
@@ -584,12 +551,12 @@
 
   /* 계좌번호 반응형 */
   .account-info {
-    padding: 1.2rem;
+    padding: 1rem;
     margin-top: 1rem;
   }
 
-  .account-info .account-number {
-    font-size: 1.1rem;
+  .account-info .account-text {
+    font-size: 0.9rem;
   }
 }
 
