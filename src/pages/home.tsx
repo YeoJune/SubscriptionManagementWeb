@@ -199,7 +199,14 @@ const Home: React.FC = () => {
             )}
           </div>
         )}
-        <p>계좌번호: 카카오뱅크 3333-30-8265756 김봉준</p>
+
+        {/* 계좌번호 정보 */}
+        <div className="account-info">
+          <div className="account-label">입금 계좌번호</div>
+          <div className="bank-name">카카오뱅크</div>
+          <div className="account-number">3333-30-8265756</div>
+          <div className="account-holder">예금주: 김봉준</div>
+        </div>
       </section>
 
       {/* 로그인 시 공지사항 섹션 표시 */}
