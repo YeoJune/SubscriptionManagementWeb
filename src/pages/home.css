@@ -162,7 +162,7 @@
 
 .quick-order-menu {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
@@ -433,20 +433,21 @@
 /* Responsive styles */
 @media (max-width: 768px) {
   .home-hero {
-    padding: 2rem 1rem; /* 3rem에서 2rem으로 줄임 */
+    padding: 2rem 1rem;
   }
 
   .home-hero h1 {
-    font-size: 2.2rem; /* 2.5rem에서 2.2rem으로 줄임 */
+    font-size: 2.2rem;
   }
 
   .home-hero p {
-    font-size: 1.1rem; /* 1.2rem에서 1.1rem으로 줄임 */
+    font-size: 1.1rem;
   }
 
+  /* 태블릿에서 menu-item 크기 조정 */
   .quick-order-menu {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.2rem;
   }
 
   .service-cards {
@@ -468,11 +469,11 @@
 
 @media (max-width: 480px) {
   .home-hero h1 {
-    font-size: 1.8rem; /* 2rem에서 1.8rem으로 줄임 */
+    font-size: 1.8rem;
   }
 
   .home-hero p {
-    font-size: 1rem; /* 더 줄임 */
+    font-size: 1rem;
   }
 
   .cta-buttons {
@@ -487,8 +488,33 @@
     width: 100%;
   }
 
+  /* 모바일에서 menu-item을 2개씩 표시 */
   .quick-order-menu {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .menu-item {
+    padding: 1.2rem;
+  }
+
+  .menu-item h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .menu-item p {
+    font-size: 0.85rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .menu-price {
+    font-size: 1.1rem;
+  }
+
+  .menu-icon {
+    font-size: 2rem;
+    margin-bottom: 0.8rem;
   }
 
   .quick-order-section {
@@ -496,6 +522,17 @@
   }
 
   .notices-section {
+    padding: 1.5rem;
+  }
+}
+
+/* 매우 작은 화면 (360px 이하)에서 1개씩 표시 */
+@media (max-width: 360px) {
+  .quick-order-menu {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-item {
     padding: 1.5rem;
   }
 }
