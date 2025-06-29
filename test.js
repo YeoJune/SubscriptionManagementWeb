@@ -113,6 +113,8 @@ const createTables = async () => {
       description TEXT,
       price REAL NOT NULL,
       delivery_count INTEGER NOT NULL DEFAULT 1,
+      image_path TEXT,
+      sort_order INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
