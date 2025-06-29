@@ -421,9 +421,7 @@
 }
 
 .account-info .account-number {
-  color: var(--primary-color);
   font-weight: 600;
-  font-family: 'Courier New', monospace;
   letter-spacing: 0.5px;
 }
 
