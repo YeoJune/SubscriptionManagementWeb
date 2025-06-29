@@ -180,6 +180,19 @@ const Subscription: React.FC = () => {
             className={`product-card ${selectedProduct?.id === product.id ? 'selected' : ''}`}
             onClick={() => handleSelectProduct(product)}
           >
+            <div className="product-image-container">
+              {product.image_path ? (
+                <img
+                  src={product.image_path}
+                  alt={product.name}
+                  className="product-image"
+                />
+              ) : (
+                <div className="product-image-placeholder">
+                  <span className="placeholder-icon">🍱</span>
+                </div>
+              )}
+            </div>
             <div className="product-content">
               <h3 className="product-name">{product.name}</h3>
               <p className="product-description">{product.description}</p>
