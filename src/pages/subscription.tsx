@@ -386,6 +386,8 @@ const Subscription: React.FC = () => {
       <div className="content-paper">
         {getStepContent(activeStep)}
 
+        <p>계좌번호: 카카오뱅크 3333-30-8265756 김봉준</p>
+
         <div className="navigation-buttons">
           <button
             className="back-button"
