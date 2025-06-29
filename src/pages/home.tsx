@@ -170,8 +170,7 @@ const Home: React.FC = () => {
 
       {/* 빠른 구매 섹션 */}
       <section className="quick-order-section">
-        <h2>빠른 주문하기</h2>
-        <p>원하는 메뉴를 선택하고 바로 주문하세요</p>
+        <h2>정기배송 식단표</h2>
 
         {productsLoading ? (
           <div className="products-loading">
