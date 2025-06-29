@@ -186,7 +186,13 @@ const Home: React.FC = () => {
                   className="menu-item"
                   onClick={() => handleQuickOrder(product.id)}
                 >
-                  <div className="menu-icon">🍱</div>
+                  {product.image_path ? (
+                    <div className="menu-image">
+                      <img src={product.image_path} alt={product.name} />
+                    </div>
+                  ) : (
+                    <div className="menu-icon">🍱</div>
+                  )}
                   <h3>{product.name}</h3>
                   <p>{product.description}</p>
                   <div className="menu-price">
