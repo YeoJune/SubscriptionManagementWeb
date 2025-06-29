@@ -57,6 +57,8 @@ export interface ProductProps {
   description: string;
   price: number;
   delivery_count: number;
+  image_path: string;
+  sort_order: number;
   created_at: string;
 }
 

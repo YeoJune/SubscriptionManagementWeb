@@ -1,5 +1,5 @@
 // src/pages/admin/products.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './products.css';
 import axios from 'axios';
 import { ProductProps } from '../../types';
@@ -23,8 +23,16 @@ const AdminProducts: React.FC = () => {
     name: '',
     description: '',
     price: '',
-    delivery_count: '1', // 배송 횟수 필드 추가
+    delivery_count: '1',
+    sort_order: '0',
   });
+
+  // 이미지 관련 상태
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [currentImagePath, setCurrentImagePath] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
@@ -60,14 +68,70 @@ const AdminProducts: React.FC = () => {
     }
   };
 
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // 파일 타입 검증
+      const allowedTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        setDialogError(
+          '지원되지 않는 파일 형식입니다. (jpg, jpeg, png, gif만 허용)'
+        );
+        return;
+      }
+
+      // 파일 크기 검증 (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setDialogError('파일 크기는 5MB 이하여야 합니다.');
+        return;
+      }
+
+      setSelectedImage(file);
+      setRemoveImage(false);
+
+      // 이미지 미리보기 생성
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setRemoveImage(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const resetImageState = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setCurrentImagePath(null);
+    setRemoveImage(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleOpenAddDialog = () => {
     setDialogMode('add');
     setProductForm({
       name: '',
       description: '',
       price: '',
-      delivery_count: '1', // 기본값 설정
+      delivery_count: '1',
+      sort_order: '0',
     });
+    resetImageState();
     setOpenDialog(true);
     setDialogError(null);
   };
@@ -82,7 +146,16 @@ const AdminProducts: React.FC = () => {
       delivery_count: product.delivery_count
         ? product.delivery_count.toString()
         : '1',
+      sort_order: product.sort_order ? product.sort_order.toString() : '0',
     });
+
+    // 기존 이미지 설정
+    resetImageState();
+    if (product.image_path) {
+      setCurrentImagePath(product.image_path);
+      setImagePreview(product.image_path);
+    }
+
     setOpenDialog(true);
     setDialogError(null);
   };
@@ -90,6 +163,7 @@ const AdminProducts: React.FC = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedProduct(null);
+    resetImageState();
   };
 
   const handleOpenDeleteConfirm = (
@@ -145,20 +219,45 @@ const AdminProducts: React.FC = () => {
       return;
     }
 
+    // 순서 검증
+    if (
+      productForm.sort_order.trim() &&
+      isNaN(Number(productForm.sort_order))
+    ) {
+      setDialogError('순서는 숫자여야 합니다.');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      const productData = {
-        name: productForm.name,
-        description: productForm.description,
-        price: Number(productForm.price),
-        delivery_count: Number(productForm.delivery_count),
-      };
+      const formData = new FormData();
+      formData.append('name', productForm.name);
+      formData.append('description', productForm.description);
+      formData.append('price', productForm.price);
+      formData.append('delivery_count', productForm.delivery_count);
+      formData.append('sort_order', productForm.sort_order || '0');
+
+      if (selectedImage) {
+        formData.append('image', selectedImage);
+      }
+
+      if (removeImage) {
+        formData.append('removeImage', 'true');
+      }
 
       if (dialogMode === 'add') {
-        await axios.post('/api/products', productData);
+        await axios.post('/api/products', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
       } else {
-        await axios.put(`/api/products/${selectedProduct?.id}`, productData);
+        await axios.put(`/api/products/${selectedProduct?.id}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
       }
 
       handleCloseDialog();
@@ -224,6 +323,8 @@ const AdminProducts: React.FC = () => {
             <table className="products-table">
               <thead className="products-table-head">
                 <tr>
+                  <th>순서</th>
+                  <th>이미지</th>
                   <th>ID</th>
                   <th>상품명</th>
                   <th>설명</th>
@@ -236,6 +337,50 @@ const AdminProducts: React.FC = () => {
               <tbody>
                 {products.map((product) => (
                   <tr key={product.id} className="products-table-row">
+                    <td className="products-table-cell sort-order-cell">
+                      {product.sort_order || 0}
+                    </td>
+                    <td className="products-table-cell image-cell">
+                      {product.image_path ? (
+                        <img
+                          src={product.image_path}
+                          alt={product.name}
+                          className="product-image-thumbnail"
+                        />
+                      ) : (
+                        <div className="no-image-placeholder">
+                          <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                          >
+                            <rect
+                              x="3"
+                              y="3"
+                              width="18"
+                              height="18"
+                              rx="2"
+                              ry="2"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            />
+                            <circle
+                              cx="8.5"
+                              cy="8.5"
+                              r="1.5"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            />
+                            <path
+                              d="M21 15l-5-5L5 21"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            />
+                          </svg>
+                        </div>
+                      )}
+                    </td>
                     <td className="products-table-cell">{product.id}</td>
                     <td className="products-table-cell">{product.name}</td>
                     <td className="products-table-cell">
@@ -423,6 +568,102 @@ const AdminProducts: React.FC = () => {
                 <div className="helper-text">
                   상품 구매 시 제공되는 배송 횟수
                 </div>
+              </div>
+
+              <div className="form-field sort-order-field">
+                <label htmlFor="product-sort-order">순서</label>
+                <input
+                  id="product-sort-order"
+                  type="number"
+                  className="form-input"
+                  value={productForm.sort_order}
+                  onChange={(e) =>
+                    setProductForm({
+                      ...productForm,
+                      sort_order: e.target.value,
+                    })
+                  }
+                />
+                <div className="helper-text">
+                  상품 목록에서 표시될 순서 (숫자가 작을수록 먼저 표시)
+                </div>
+              </div>
+
+              <div className="form-field image-field">
+                <label>상품 이미지</label>
+                <div className="image-upload-container">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="image-input"
+                    id="product-image"
+                  />
+                  <label
+                    htmlFor="product-image"
+                    className="image-upload-button"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <rect
+                        x="3"
+                        y="3"
+                        width="18"
+                        height="18"
+                        rx="2"
+                        ry="2"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      />
+                      <circle
+                        cx="8.5"
+                        cy="8.5"
+                        r="1.5"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      />
+                      <path
+                        d="M21 15l-5-5L5 21"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      />
+                    </svg>
+                    이미지 선택
+                  </label>
+                  <div className="helper-text">
+                    JPG, PNG, GIF 파일만 허용 (최대 5MB)
+                  </div>
+                </div>
+
+                {imagePreview && (
+                  <div className="image-preview-container">
+                    <img
+                      src={imagePreview}
+                      alt="미리보기"
+                      className="image-preview"
+                    />
+                    <button
+                      type="button"
+                      className="remove-image-button"
+                      onClick={handleRemoveImage}
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <path
+                          d="M18 6L6 18M6 6l12 12"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             <div className="dialog-actions">

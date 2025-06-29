@@ -99,6 +99,40 @@
   border-bottom: 1px solid var(--background-dark);
 }
 
+/* Sort order cell */
+.sort-order-cell {
+  font-weight: 700;
+  color: var(--primary-color);
+  text-align: center;
+  background-color: rgba(164, 226, 46, 0.05);
+}
+
+/* Image cell */
+.image-cell {
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.product-image-thumbnail {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid var(--background-color);
+}
+
+.no-image-placeholder {
+  width: 50px;
+  height: 50px;
+  background-color: var(--background-color);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light);
+  margin: 0 auto;
+}
+
 /* Price cell */
 .price-cell {
   font-weight: 700;
@@ -359,6 +393,79 @@
   font-weight: 700;
 }
 
+.sort-order-field input {
+  padding-right: 10px;
+}
+
+/* Image upload styling */
+.image-field {
+  border-top: 1px solid var(--background-color);
+  padding-top: 1.5rem;
+}
+
+.image-upload-container {
+  position: relative;
+}
+
+.image-input {
+  display: none;
+}
+
+.image-upload-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--background-color);
+  color: var(--accent-color);
+  border: 2px dashed var(--primary-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.image-upload-button:hover {
+  background-color: rgba(164, 226, 46, 0.1);
+  border-color: var(--primary-dark);
+}
+
+.image-preview-container {
+  position: relative;
+  margin-top: 1rem;
+  display: inline-block;
+}
+
+.image-preview {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid var(--background-color);
+}
+
+.remove-image-button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: var(--error-color);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.remove-image-button:hover {
+  background-color: #c82333;
+  transform: scale(1.1);
+}
+
 .helper-text {
   color: var(--text-light);
   font-size: 0.8rem;
@@ -434,8 +541,8 @@
     font-size: 0.9rem;
   }
 
-  .products-table-cell:nth-child(3),
-  .products-table-cell:nth-child(6) {
+  .products-table-cell:nth-child(5),
+  .products-table-cell:nth-child(8) {
     display: none;
   }
 
@@ -447,6 +554,16 @@
 
   .add-button {
     width: 100%;
+  }
+
+  .product-image-thumbnail {
+    width: 40px;
+    height: 40px;
+  }
+
+  .no-image-placeholder {
+    width: 40px;
+    height: 40px;
   }
 }
 
@@ -460,11 +577,27 @@
     font-size: 0.8rem;
   }
 
+  .products-table-cell:nth-child(3),
   .products-table-cell:nth-child(1) {
     display: none;
   }
 
   .dialog-content {
     padding: 1.5rem;
+  }
+
+  .image-preview {
+    width: 120px;
+    height: 120px;
+  }
+
+  .product-image-thumbnail {
+    width: 35px;
+    height: 35px;
+  }
+
+  .no-image-placeholder {
+    width: 35px;
+    height: 35px;
   }
 }
