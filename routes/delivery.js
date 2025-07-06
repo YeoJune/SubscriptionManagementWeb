@@ -171,7 +171,7 @@ router.get('/my', authMiddleware, async (req, res) => {
   }
 });
 
-// GET /api/delivery/available-dates - requiredCount 기반 날짜 제한
+// GET /api/delivery/available-dates - requiredCount 기반 날짜 제한 (배송 가능일 기준)
 router.get('/available-dates', authMiddleware, async (req, res) => {
   try {
     const user_id = req.session.user.id;
@@ -187,51 +187,59 @@ router.get('/available-dates', authMiddleware, async (req, res) => {
     const scheduledDeliveries =
       await deliveryManager.getScheduledDeliveries(user_id);
 
-    // 최대 선택 가능 날짜 계산
-    let maxSelectableDays;
-    maxSelectableDays = Math.min(requiredCount * 2, 30);
-
     // 환경변수에서 배송 가능 요일 가져오기
     const deliveryDays = getDeliveryDays();
 
-    // 날짜 필터링 로직
+    // 배송 가능한 날짜를 기준으로 최대 선택 가능 개수 계산
+    const maxSelectableCount = requiredCount * 2;
+
+    // 날짜 필터링 로직 - 가능한 날짜부터 세기
     const availableDates = [];
     const today = new Date();
-    const maxDate = new Date(today);
-    maxDate.setDate(today.getDate() + maxSelectableDays);
+    let currentDate = new Date(today);
+    let foundDates = 0;
 
-    const [year, monthNum] = targetMonth.split('-');
-    const startDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
-    const endDate = new Date(parseInt(year), parseInt(monthNum), 0);
+    // 충분한 날짜를 찾을 때까지 앞으로 진행 (최대 90일)
+    const maxDaysToCheck = 90;
+    let daysChecked = 0;
 
-    // 요청한 월의 범위를 maxDate로 제한
-    const actualEndDate = endDate > maxDate ? maxDate : endDate;
-    const actualStartDate = startDate < today ? today : startDate;
+    while (foundDates < maxSelectableCount && daysChecked < maxDaysToCheck) {
+      currentDate.setDate(currentDate.getDate() + 1);
+      daysChecked++;
 
-    for (
-      let date = new Date(actualStartDate);
-      date <= actualEndDate;
-      date.setDate(date.getDate() + 1)
-    ) {
-      const dayOfWeek = date.getDay();
+      const dayOfWeek = currentDate.getDay();
+      const formattedDate = currentDate.toISOString().split('T')[0];
 
-      // 환경변수에서 설정된 요일인지 확인
+      // 배송 가능 요일인지 확인
       if (deliveryDays.includes(dayOfWeek)) {
-        const formattedDate = date.toISOString().split('T')[0];
-
-        // 이미 예약된 날짜는 제외
+        // 이미 예약된 날짜가 아닌지 확인
         const isScheduled = scheduledDeliveries.some(
           (delivery) => delivery.date === formattedDate
         );
+
         if (!isScheduled) {
           availableDates.push(formattedDate);
+          foundDates++;
         }
       }
     }
 
+    // 요청된 월에 해당하는 날짜만 필터링
+    const [year, monthNum] = targetMonth.split('-');
+    const targetYear = parseInt(year);
+    const targetMonthNum = parseInt(monthNum) - 1; // 0부터 시작
+
+    const monthFilteredDates = availableDates.filter((dateStr) => {
+      const date = new Date(dateStr);
+      return (
+        date.getFullYear() === targetYear && date.getMonth() === targetMonthNum
+      );
+    });
+
     res.json({
-      available_dates: availableDates,
-      max_selectable_days: maxSelectableDays,
+      available_dates: monthFilteredDates,
+      max_selectable_count: maxSelectableCount,
+      total_available_dates: availableDates.length,
       scheduled_deliveries: scheduledDeliveries.length,
       required_count: requiredCount,
     });
