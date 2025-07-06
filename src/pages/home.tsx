@@ -147,45 +147,6 @@ const Home: React.FC = () => {
         <div className="hero-content">
           <h1>Saluv All Day</h1>
           <p>기분이 좋아지는 음식, 건강한 하루를 만들어가세요</p>
-
-          {isAuthenticated && (
-            <div className="user-summary">
-              <h2>나의 구독 현황</h2>
-              {loading ? (
-                <p>데이터를 불러오는 중...</p>
-              ) : (
-                <>
-                  {deliveryInfo?.productDeliveries &&
-                  deliveryInfo.productDeliveries.length > 0 ? (
-                    <div className="product-deliveries">
-                      <p>남은 배송 횟수:</p>
-                      {deliveryInfo.productDeliveries.map((product) => (
-                        <p key={product.product_id}>
-                          {product.product_name}:{' '}
-                          <strong>{product.remaining_count}회</strong>
-                        </p>
-                      ))}
-                    </div>
-                  ) : (
-                    <p>구독 중인 상품이 없습니다.</p>
-                  )}
-                  {deliveryInfo?.nextDelivery && (
-                    <p>
-                      다음 배송 일정:{' '}
-                      <strong>
-                        {deliveryInfo.nextDelivery.toLocaleDateString()}
-                      </strong>
-                    </p>
-                  )}
-                  <div className="cta-buttons">
-                    <Link to="/profile" className="btn btn-primary">
-                      배송 내역 보기
-                    </Link>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
         </div>
       </section>
 
