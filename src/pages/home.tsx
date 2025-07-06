@@ -26,6 +26,14 @@ const Home: React.FC = () => {
   const [noticesLoading, setNoticesLoading] = useState<boolean>(false);
   const [products, setProducts] = useState<ProductProps[]>([]);
   const [productsLoading, setProductsLoading] = useState<boolean>(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+
+  const heroImages = [
+    '/public/images/home_hero_0.jpg',
+    '/public/images/home_hero_1.jpg',
+    '/public/images/home_hero_2.jpg',
+    '/public/images/home_hero_3.jpg',
+  ];
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -34,6 +42,17 @@ const Home: React.FC = () => {
     fetchRecentNotices();
     fetchProducts();
   }, [isAuthenticated]);
+
+  // 이미지 랜덤 변경 효과
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) =>
+        Math.floor(Math.random() * heroImages.length)
+      );
+    }, 4000); // 4초마다 변경
+
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
 
   const fetchDeliveryInfo = async () => {
     setLoading(true);
@@ -116,56 +135,58 @@ const Home: React.FC = () => {
   return (
     <div className="home-container">
       <section className="home-hero">
-        <h1>Saluv All Day</h1>
-        <p>기분이 좋아지는 음식, 샐럽올데이</p>
+        <div className="hero-background">
+          <img
+            src={heroImages[currentImageIndex]}
+            alt="Saluv All Day"
+            className="hero-image"
+          />
+          <div className="hero-overlay"></div>
+        </div>
 
-        {!isAuthenticated ? (
-          <div className="cta-buttons">
-            <Link to="/login" className="btn btn-primary">
-              로그인
-            </Link>
-            <Link to="/register" className="btn btn-secondary">
-              회원가입
-            </Link>
-          </div>
-        ) : (
-          <div className="user-summary">
-            <h2>나의 구독 현황</h2>
-            {loading ? (
-              <p>데이터를 불러오는 중...</p>
-            ) : (
-              <>
-                {deliveryInfo?.productDeliveries &&
-                deliveryInfo.productDeliveries.length > 0 ? (
-                  <div className="product-deliveries">
-                    <p>남은 배송 횟수:</p>
-                    {deliveryInfo.productDeliveries.map((product) => (
-                      <p key={product.product_id}>
-                        {product.product_name}:{' '}
-                        <strong>{product.remaining_count}회</strong>
-                      </p>
-                    ))}
+        <div className="hero-content">
+          <h1>Saluv All Day</h1>
+          <p>기분이 좋아지는 음식, 건강한 하루를 만들어가세요</p>
+
+          {isAuthenticated && (
+            <div className="user-summary">
+              <h2>나의 구독 현황</h2>
+              {loading ? (
+                <p>데이터를 불러오는 중...</p>
+              ) : (
+                <>
+                  {deliveryInfo?.productDeliveries &&
+                  deliveryInfo.productDeliveries.length > 0 ? (
+                    <div className="product-deliveries">
+                      <p>남은 배송 횟수:</p>
+                      {deliveryInfo.productDeliveries.map((product) => (
+                        <p key={product.product_id}>
+                          {product.product_name}:{' '}
+                          <strong>{product.remaining_count}회</strong>
+                        </p>
+                      ))}
+                    </div>
+                  ) : (
+                    <p>구독 중인 상품이 없습니다.</p>
+                  )}
+                  {deliveryInfo?.nextDelivery && (
+                    <p>
+                      다음 배송 일정:{' '}
+                      <strong>
+                        {deliveryInfo.nextDelivery.toLocaleDateString()}
+                      </strong>
+                    </p>
+                  )}
+                  <div className="cta-buttons">
+                    <Link to="/profile" className="btn btn-primary">
+                      배송 내역 보기
+                    </Link>
                   </div>
-                ) : (
-                  <p>구독 중인 상품이 없습니다.</p>
-                )}
-                {deliveryInfo?.nextDelivery && (
-                  <p>
-                    다음 배송 일정:{' '}
-                    <strong>
-                      {deliveryInfo.nextDelivery.toLocaleDateString()}
-                    </strong>
-                  </p>
-                )}
-                <div className="cta-buttons">
-                  <Link to="/profile" className="btn btn-primary">
-                    배송 내역 보기
-                  </Link>
-                </div>
-              </>
-            )}
-          </div>
-        )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* 빠른 구매 섹션 */}
