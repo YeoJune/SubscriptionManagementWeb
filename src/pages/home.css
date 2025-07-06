@@ -484,8 +484,8 @@
 
   /* 태블릿에서 menu-item 크기 조정 */
   .quick-order-menu {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.2rem;
   }
 
   .service-cards {
