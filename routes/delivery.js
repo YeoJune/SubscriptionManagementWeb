@@ -231,7 +231,6 @@ router.get('/available-dates', authMiddleware, async (req, res) => {
 
     res.json({
       available_dates: availableDates,
-      remaining_deliveries: totalRemainingDeliveries,
       max_selectable_days: maxSelectableDays,
       scheduled_deliveries: scheduledDeliveries.length,
       required_count: requiredCount,
