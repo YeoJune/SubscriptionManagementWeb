@@ -60,7 +60,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB 제한
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB 제한
 });
 
 // GET /api/products - 상품 목록 조회

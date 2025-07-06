@@ -85,9 +85,9 @@ const AdminProducts: React.FC = () => {
         return;
       }
 
-      // 파일 크기 검증 (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setDialogError('파일 크기는 5MB 이하여야 합니다.');
+      // 파일 크기 검증 (50MB)
+      if (file.size > 50 * 1024 * 1024) {
+        setDialogError('파일 크기는 50MB 이하여야 합니다.');
         return;
       }
 
@@ -631,7 +631,7 @@ const AdminProducts: React.FC = () => {
                     이미지 선택
                   </label>
                   <div className="helper-text">
-                    JPG, PNG, GIF 파일만 허용 (최대 5MB)
+                    JPG, PNG, GIF 파일만 허용 (최대 50MB)
                   </div>
                 </div>
 

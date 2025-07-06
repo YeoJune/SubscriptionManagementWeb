@@ -51,18 +51,6 @@ const Header: React.FC = () => {
     <header className={`sal-header ${scrolled ? 'sal-header-scrolled' : ''}`}>
       <div className="container">
         <div className="sal-toolbar">
-          {/* 왼쪽 영역: 로고(또는 앱 타이틀) */}
-          <div className="sal-logo-section">
-            <Link to="/" className="sal-logo-link">
-              <img
-                src="/public/images/logo.jpg"
-                alt="Saluv All Day"
-                className="sal-logo-image"
-              />
-              <span className="sal-logo-text">Saluv All Day</span>
-            </Link>
-          </div>
-
           {/* 모바일 메뉴 토글 버튼 */}
           <button className="sal-mobile-menu-toggle" onClick={toggleMobileMenu}>
             <span className="sal-menu-icon"></span>
