@@ -9,17 +9,20 @@ const BoardDetail = React.lazy(() => import('../components/board/boardDetail'));
 const Login = React.lazy(() => import('../pages/login'));
 const NotFound = React.lazy(() => import('../pages/notFound'));
 const Subscription = React.lazy(() => import('../pages/subscription'));
-const PaymentResult = React.lazy(() => import('../pages/PaymentResult')); // 추가
+const PaymentResult = React.lazy(() => import('../pages/PaymentResult'));
 const Register = React.lazy(() => import('../pages/register'));
 const Profile = React.lazy(() => import('../pages/profile'));
 const Inquiry = React.lazy(() => import('../pages/inquiry'));
 const InquiryDetail = React.lazy(() => import('../pages/inquiryDetail'));
+
+// 관리자 페이지들
 const AdminIndex = React.lazy(() => import('../pages/admin/adminIndex'));
 const AdminDelivery = React.lazy(() => import('../pages/admin/delivery'));
 const AdminUsers = React.lazy(() => import('../pages/admin/users'));
 const AdminInquiry = React.lazy(() => import('../pages/admin/inquiry'));
 const AdminProducts = React.lazy(() => import('../pages/admin/products'));
 const AdminNotices = React.lazy(() => import('../pages/admin/notices'));
+const AdminPayments = React.lazy(() => import('../pages/admin/payments')); // 결제 관리 추가
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
@@ -170,6 +173,16 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute adminOnly>
               <AdminNotices />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 결제 관리 라우트 추가 */}
+        <Route
+          path="/admin/payments"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminPayments />
             </ProtectedRoute>
           }
         />

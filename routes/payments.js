@@ -6,6 +6,7 @@ const { authMiddleware } = require('../lib/auth');
 const deliveryManager = require('../lib/deliveryManager');
 const axios = require('axios');
 const crypto = require('crypto');
+const { checkAdmin } = require('../lib/adminAuth');
 
 // 나이스페이 설정
 const NICEPAY_CLIENT_KEY = process.env.NICEPAY_CLIENT_KEY;
@@ -576,6 +577,201 @@ router.get('/', authMiddleware, (req, res) => {
           },
         });
       });
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/admin/payments - 관리자용 결제 내역 조회
+router.get('/payments', checkAdmin, async (req, res) => {
+  try {
+    // 페이지네이션 처리
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    // 검색 및 필터링
+    const { search, status, date_from, date_to } = req.query;
+
+    // 정렬
+    const sortBy = req.query.sortBy || 'created_at';
+    const order = req.query.order === 'asc' ? 'ASC' : 'DESC';
+
+    // 쿼리 구성
+    let query = `
+      SELECT p.id, p.user_id, p.product_id, p.count, p.amount, p.order_id, 
+             p.status, p.payment_method, p.payment_gateway_transaction_id,
+             p.paid_at, p.created_at,
+             u.name AS user_name, u.phone_number AS user_phone,
+             pr.name AS product_name
+      FROM payments p
+      JOIN users u ON p.user_id = u.id
+      JOIN product pr ON p.product_id = pr.id
+    `;
+
+    let countQuery = `
+      SELECT COUNT(*) as total
+      FROM payments p
+      JOIN users u ON p.user_id = u.id
+      JOIN product pr ON p.product_id = pr.id
+    `;
+
+    // 조건 추가
+    const conditions = [];
+    const params = [];
+
+    if (status) {
+      conditions.push(`p.status = ?`);
+      params.push(status);
+    }
+
+    if (date_from) {
+      conditions.push(`DATE(p.created_at) >= ?`);
+      params.push(date_from);
+    }
+
+    if (date_to) {
+      conditions.push(`DATE(p.created_at) <= ?`);
+      params.push(date_to);
+    }
+
+    if (search) {
+      conditions.push(
+        `(u.name LIKE ? OR u.phone_number LIKE ? OR p.order_id LIKE ? OR pr.name LIKE ? OR u.id LIKE ?)`
+      );
+      params.push(
+        `%${search}%`,
+        `%${search}%`,
+        `%${search}%`,
+        `%${search}%`,
+        `%${search}%`
+      );
+    }
+
+    if (conditions.length > 0) {
+      const whereClause = ` WHERE ${conditions.join(' AND ')}`;
+      query += whereClause;
+      countQuery += whereClause;
+    }
+
+    // 정렬 및 페이지네이션 추가
+    query += ` ORDER BY p.${sortBy} ${order} LIMIT ? OFFSET ?`;
+
+    // 전체 결제 수 조회
+    db.get(countQuery, params, (err, countResult) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      // 결제 목록 조회
+      db.all(query, [...params, limit, offset], (err, payments) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+
+        res.json({
+          payments,
+          pagination: {
+            total: countResult.total,
+            currentPage: page,
+            totalPages: Math.ceil(countResult.total / limit),
+            limit,
+          },
+        });
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/admin/payments/stats - 결제 통계 조회
+router.get('/payments/stats', checkAdmin, async (req, res) => {
+  try {
+    const { date_from, date_to } = req.query;
+
+    let whereClause = '';
+    let params = [];
+
+    if (date_from || date_to) {
+      const conditions = [];
+      if (date_from) {
+        conditions.push('DATE(created_at) >= ?');
+        params.push(date_from);
+      }
+      if (date_to) {
+        conditions.push('DATE(created_at) <= ?');
+        params.push(date_to);
+      }
+      whereClause = ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    const statsQuery = `
+      SELECT 
+        COUNT(*) as total_payments,
+        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_payments,
+        COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_payments,
+        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_payments,
+        SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) as total_amount,
+        AVG(CASE WHEN status = 'completed' THEN amount ELSE NULL END) as avg_amount
+      FROM payments${whereClause}
+    `;
+
+    db.get(statsQuery, params, (err, stats) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      res.json({
+        stats: {
+          total_payments: stats.total_payments || 0,
+          completed_payments: stats.completed_payments || 0,
+          failed_payments: stats.failed_payments || 0,
+          pending_payments: stats.pending_payments || 0,
+          total_amount: stats.total_amount || 0,
+          avg_amount: stats.avg_amount || 0,
+        },
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/admin/payments/:id - 특정 결제 상세 조회
+router.get('/payments/:id', checkAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const query = `
+      SELECT p.*, u.name AS user_name, u.phone_number AS user_phone, u.email AS user_email,
+             pr.name AS product_name, pr.price AS product_price
+      FROM payments p
+      JOIN users u ON p.user_id = u.id
+      JOIN product pr ON p.product_id = pr.id
+      WHERE p.id = ?
+    `;
+
+    db.get(query, [id], (err, payment) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      if (!payment) {
+        return res.status(404).json({ error: '결제 정보를 찾을 수 없습니다.' });
+      }
+
+      // raw_response_data가 있으면 JSON 파싱
+      if (payment.raw_response_data) {
+        try {
+          payment.raw_response_data = JSON.parse(payment.raw_response_data);
+        } catch (error) {
+          console.error('결제 응답 데이터 파싱 오류:', error);
+        }
+      }
+
+      res.json({ payment });
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

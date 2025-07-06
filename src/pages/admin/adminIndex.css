@@ -62,7 +62,7 @@
   align-items: center;
 }
 
-/* Summary card variants - 일관된 컬러 스킴 */
+/* Summary card variants */
 .users-card {
   border-bottom-color: #3b82f6;
 }
@@ -163,6 +163,28 @@
   opacity: 0.8;
 }
 
+/* 결제 카드 스타일 추가 */
+.payments-card {
+  border-bottom-color: #8b5cf6;
+}
+
+.payments-card:hover {
+  background: linear-gradient(135deg, white, rgba(139, 92, 246, 0.05));
+}
+
+.payments-value {
+  color: #8b5cf6;
+  font-size: 1.6rem; /* 금액이 길어서 조금 작게 */
+}
+
+.payments-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #8b5cf6;
+  margin-left: auto;
+  opacity: 0.8;
+}
+
 /* Section title */
 .section-title {
   color: var(--accent-color);
@@ -171,7 +193,7 @@
   font-size: 1.6rem;
 }
 
-/* Feature cards - 일관된 스타일 */
+/* Feature cards */
 .feature-card {
   height: 160px;
   border-radius: 12px;
@@ -219,7 +241,7 @@
   color: var(--accent-color);
 }
 
-/* Feature card variants - 일관된 호버 효과 */
+/* Feature card variants */
 .delivery-feature .feature-icon {
   color: var(--success-color);
 }
@@ -277,6 +299,19 @@
 }
 
 .notices-feature:hover .feature-icon {
+  transform: scale(1.1);
+}
+
+/* 결제 기능 카드 스타일 추가 */
+.payments-feature .feature-icon {
+  color: #8b5cf6;
+}
+
+.payments-feature:hover {
+  background: linear-gradient(135deg, white, rgba(139, 92, 246, 0.05));
+}
+
+.payments-feature:hover .feature-icon {
   transform: scale(1.1);
 }
 
@@ -346,6 +381,10 @@
     font-size: 2rem;
   }
 
+  .payments-value {
+    font-size: 1.4rem;
+  }
+
   .feature-card {
     height: 150px;
   }
@@ -384,6 +423,10 @@
     font-size: 1.8rem;
   }
 
+  .payments-value {
+    font-size: 1.2rem;
+  }
+
   .feature-card {
     height: 140px;
   }
@@ -416,11 +459,16 @@
     font-size: 1.6rem;
   }
 
+  .payments-value {
+    font-size: 1rem;
+  }
+
   .users-icon,
   .delivery-icon,
   .inquiry-icon,
   .products-icon,
-  .notices-icon {
+  .notices-icon,
+  .payments-icon {
     width: 2rem;
     height: 2rem;
   }

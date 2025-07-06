@@ -5,6 +5,44 @@ import { useAuth } from '../../hooks/useAuth';
 import { DeliveryProps } from '../../types';
 import axios from 'axios';
 
+interface UserScheduleInfo {
+  user: {
+    id: string;
+    name: string;
+    phone_number: string;
+    address: string;
+  };
+  user_products: Array<{
+    product_id: number;
+    product_name: string;
+    remaining_count: number;
+  }>;
+  scheduled_deliveries: Array<{
+    id: number;
+    date: string;
+    product_id: number;
+    product_name: string;
+  }>;
+  completed_deliveries: Array<{
+    id: number;
+    date: string;
+    product_id: number;
+    product_name: string;
+  }>;
+  total_remaining_deliveries: number;
+}
+
+interface SearchUser {
+  id: string;
+  name: string;
+  phone_number: string;
+  address: string;
+  email: string;
+  total_deliveries: number;
+  pending_deliveries: number;
+  completed_deliveries: number;
+}
+
 const Delivery: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const [deliveries, setDeliveries] = useState<DeliveryProps[]>([]);
@@ -25,11 +63,30 @@ const Delivery: React.FC = () => {
     'complete'
   );
 
+  // 스케줄 관리 관련 상태
+  const [activeTab, setActiveTab] = useState<'deliveries' | 'schedule'>(
+    'deliveries'
+  );
+  const [searchUsers, setSearchUsers] = useState<SearchUser[]>([]);
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState<UserScheduleInfo | null>(
+    null
+  );
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const [newScheduleDates, setNewScheduleDates] = useState<string[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(
+    null
+  );
+  const [openScheduleDialog, setOpenScheduleDialog] = useState(false);
+
   useEffect(() => {
     if (isAuthenticated && user?.isAdmin) {
-      fetchDeliveries();
+      if (activeTab === 'deliveries') {
+        fetchDeliveries();
+      }
     }
-  }, [page, rowsPerPage, filterStatus, filterDate]);
+  }, [page, rowsPerPage, filterStatus, filterDate, activeTab]);
 
   const fetchDeliveries = async () => {
     setLoading(true);
@@ -109,6 +166,112 @@ const Delivery: React.FC = () => {
     setPage(0);
   };
 
+  // 스케줄 관리 함수들
+  const searchUsersForSchedule = async () => {
+    if (!userSearchTerm.trim()) return;
+
+    setScheduleLoading(true);
+    setScheduleError(null);
+
+    try {
+      const response = await axios.get('/api/delivery/users/search', {
+        params: { q: userSearchTerm },
+      });
+      setSearchUsers(response.data.users);
+    } catch (err) {
+      console.error('Failed to search users:', err);
+      setScheduleError('사용자 검색 중 오류가 발생했습니다.');
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
+
+  const fetchUserSchedule = async (userId: string) => {
+    setScheduleLoading(true);
+    setScheduleError(null);
+
+    try {
+      const response = await axios.get(
+        `/api/delivery/users/${userId}/schedule`
+      );
+      setSelectedUser(response.data);
+      setNewScheduleDates([]);
+      setSelectedProductId(null);
+    } catch (err) {
+      console.error('Failed to fetch user schedule:', err);
+      setScheduleError('사용자 스케줄을 불러오는 중 오류가 발생했습니다.');
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
+
+  const updateUserSchedule = async () => {
+    if (!selectedUser || !selectedProductId || newScheduleDates.length === 0) {
+      setScheduleError('상품과 배송 날짜를 선택해주세요.');
+      return;
+    }
+
+    setScheduleLoading(true);
+    setScheduleError(null);
+
+    try {
+      await axios.put(`/api/delivery/users/${selectedUser.user.id}/schedule`, {
+        delivery_dates: newScheduleDates,
+        product_id: selectedProductId,
+      });
+
+      // 스케줄 업데이트 후 다시 조회
+      await fetchUserSchedule(selectedUser.user.id);
+      setOpenScheduleDialog(false);
+      setNewScheduleDates([]);
+      setSelectedProductId(null);
+    } catch (err: any) {
+      console.error('Failed to update user schedule:', err);
+      setScheduleError(
+        err.response?.data?.error || '스케줄 업데이트 중 오류가 발생했습니다.'
+      );
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
+
+  const deleteScheduledDelivery = async (deliveryId: number) => {
+    if (!selectedUser || !confirm('정말로 이 배송 일정을 삭제하시겠습니까?'))
+      return;
+
+    setScheduleLoading(true);
+    setScheduleError(null);
+
+    try {
+      await axios.delete(
+        `/api/delivery/users/${selectedUser.user.id}/schedule/${deliveryId}`
+      );
+      await fetchUserSchedule(selectedUser.user.id);
+    } catch (err: any) {
+      console.error('Failed to delete delivery:', err);
+      setScheduleError(
+        err.response?.data?.error || '배송 일정 삭제 중 오류가 발생했습니다.'
+      );
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
+
+  const addScheduleDate = () => {
+    const today = new Date().toISOString().split('T')[0];
+    setNewScheduleDates([...newScheduleDates, today]);
+  };
+
+  const removeScheduleDate = (index: number) => {
+    setNewScheduleDates(newScheduleDates.filter((_, i) => i !== index));
+  };
+
+  const updateScheduleDate = (index: number, date: string) => {
+    const updated = [...newScheduleDates];
+    updated[index] = date;
+    setNewScheduleDates(updated);
+  };
+
   // 배송 상태별 색상 및 라벨
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -135,176 +298,358 @@ const Delivery: React.FC = () => {
     <div className="admin-container">
       <h1 className="admin-title">배송 관리</h1>
 
-      {/* 필터 및 검색 */}
-      <div className="filter-paper">
-        <div className="filter-grid">
-          <div className="form-control">
-            <label htmlFor="status-filter">배송 상태</label>
-            <select
-              id="status-filter"
-              value={filterStatus}
-              onChange={(e) => {
-                setFilterStatus(e.target.value);
-                setPage(0);
-              }}
-            >
-              <option value="all">전체</option>
-              <option value="pending">배송 대기</option>
-              <option value="complete">배송 완료</option>
-              <option value="cancel">배송 취소</option>
-            </select>
-          </div>
-
-          <div className="form-control">
-            <label htmlFor="date-filter">배송일 (YYYY-MM-DD)</label>
-            <input
-              id="date-filter"
-              type="date"
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-            />
-          </div>
-
-          <div className="form-control">
-            <label htmlFor="search-term">검색</label>
-            <input
-              id="search-term"
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="이름, 주소 또는 연락처 검색"
-            />
-          </div>
-
-          <div className="form-control">
-            <label htmlFor="search-button">&nbsp;</label>
-            <button
-              id="search-button"
-              className="filter-button"
-              onClick={handleSearch}
-            >
-              검색
-            </button>
-          </div>
-        </div>
+      {/* 탭 메뉴 */}
+      <div className="tab-container">
+        <button
+          className={`tab-button ${activeTab === 'deliveries' ? 'active' : ''}`}
+          onClick={() => setActiveTab('deliveries')}
+        >
+          배송 목록
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'schedule' ? 'active' : ''}`}
+          onClick={() => setActiveTab('schedule')}
+        >
+          스케줄 관리
+        </button>
       </div>
 
-      {loading ? (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <div>데이터를 불러오는 중...</div>
-        </div>
-      ) : error ? (
-        <div className="alert alert-error">{error}</div>
-      ) : deliveries.length === 0 ? (
-        <div className="alert alert-info">배송 내역이 없습니다.</div>
-      ) : (
+      {activeTab === 'deliveries' ? (
+        // 기존 배송 목록 탭
         <>
-          <div className="table-container">
-            <table className="admin-table">
-              <thead className="admin-table-head">
-                <tr>
-                  <th>ID</th>
-                  <th>사용자</th>
-                  <th>배송일</th>
-                  <th>상품</th>
-                  <th className="hide-xs">연락처</th>
-                  <th className="hide-sm">주소</th>
-                  <th style={{ textAlign: 'center' }}>상태</th>
-                  <th style={{ textAlign: 'center' }}>잔여</th>
-                  <th style={{ textAlign: 'center' }}>액션</th>
-                </tr>
-              </thead>
-              <tbody className="admin-table-body">
-                {deliveries.map((delivery) => {
-                  const statusInfo = getStatusInfo(delivery.status);
-                  return (
-                    <tr key={delivery.id}>
-                      <td>{delivery.id}</td>
-                      <td>{delivery.user_name || delivery.user_id}</td>
-                      <td>{new Date(delivery.date).toLocaleDateString()}</td>
-                      <td>{delivery.product_name}</td>
-                      <td className="hide-xs">{delivery.phone_number}</td>
-                      <td className="hide-sm">{delivery.address}</td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span className={`status-chip ${statusInfo.className}`}>
-                          {statusInfo.label}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        {delivery.remaining_count_for_product !== undefined ? (
-                          <span className="remaining-count-badge">
-                            {delivery.remaining_count_for_product}
-                          </span>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        {delivery.status === 'pending' && (
-                          <div>
-                            <button
-                              className="action-button success-button"
-                              onClick={() =>
-                                handleOpenStatusDialog(delivery, 'complete')
-                              }
-                            >
-                              완료
-                            </button>
-                            <button
-                              className="action-button error-button"
-                              onClick={() =>
-                                handleOpenStatusDialog(delivery, 'cancel')
-                              }
-                            >
-                              취소
-                            </button>
-                          </div>
-                        )}
-                      </td>
+          {/* 필터 및 검색 */}
+          <div className="filter-paper">
+            <div className="filter-grid">
+              <div className="form-control">
+                <label htmlFor="status-filter">배송 상태</label>
+                <select
+                  id="status-filter"
+                  value={filterStatus}
+                  onChange={(e) => {
+                    setFilterStatus(e.target.value);
+                    setPage(0);
+                  }}
+                >
+                  <option value="all">전체</option>
+                  <option value="pending">배송 대기</option>
+                  <option value="complete">배송 완료</option>
+                  <option value="cancel">배송 취소</option>
+                </select>
+              </div>
+
+              <div className="form-control">
+                <label htmlFor="date-filter">배송일</label>
+                <input
+                  id="date-filter"
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                />
+              </div>
+
+              <div className="form-control">
+                <label htmlFor="search-term">검색</label>
+                <input
+                  id="search-term"
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  placeholder="이름, 주소 또는 연락처 검색"
+                />
+              </div>
+
+              <div className="form-control">
+                <label htmlFor="search-button">&nbsp;</label>
+                <button
+                  id="search-button"
+                  className="filter-button"
+                  onClick={handleSearch}
+                >
+                  검색
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <div>데이터를 불러오는 중...</div>
+            </div>
+          ) : error ? (
+            <div className="alert alert-error">{error}</div>
+          ) : deliveries.length === 0 ? (
+            <div className="alert alert-info">배송 내역이 없습니다.</div>
+          ) : (
+            <>
+              <div className="table-container">
+                <table className="admin-table">
+                  <thead className="admin-table-head">
+                    <tr>
+                      <th>ID</th>
+                      <th>사용자</th>
+                      <th>배송일</th>
+                      <th>상품</th>
+                      <th className="hide-xs">연락처</th>
+                      <th className="hide-sm">주소</th>
+                      <th style={{ textAlign: 'center' }}>상태</th>
+                      <th style={{ textAlign: 'center' }}>액션</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody className="admin-table-body">
+                    {deliveries.map((delivery) => {
+                      const statusInfo = getStatusInfo(delivery.status);
+                      return (
+                        <tr key={delivery.id}>
+                          <td>{delivery.id}</td>
+                          <td>{delivery.user_name || delivery.user_id}</td>
+                          <td>
+                            {new Date(delivery.date).toLocaleDateString()}
+                          </td>
+                          <td>{delivery.product_name}</td>
+                          <td className="hide-xs">{delivery.phone_number}</td>
+                          <td className="hide-sm">{delivery.address}</td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span
+                              className={`status-chip ${statusInfo.className}`}
+                            >
+                              {statusInfo.label}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            {delivery.status === 'pending' && (
+                              <div className="action-buttons">
+                                <button
+                                  className="action-button success-button"
+                                  onClick={() =>
+                                    handleOpenStatusDialog(delivery, 'complete')
+                                  }
+                                >
+                                  완료
+                                </button>
+                                <button
+                                  className="action-button error-button"
+                                  onClick={() =>
+                                    handleOpenStatusDialog(delivery, 'cancel')
+                                  }
+                                >
+                                  취소
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
 
-          <div className="pagination-container">
-            <div className="rows-per-page">
-              <span>페이지당 행 수:</span>
-              <select value={rowsPerPage} onChange={handleChangeRowsPerPage}>
-                {[10, 25, 50].map((num) => (
-                  <option key={num} value={num}>
-                    {num}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div className="pagination-container">
+                <div className="rows-per-page">
+                  <span>페이지당 행 수:</span>
+                  <select
+                    value={rowsPerPage}
+                    onChange={handleChangeRowsPerPage}
+                  >
+                    {[10, 25, 50].map((num) => (
+                      <option key={num} value={num}>
+                        {num}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div className="pagination-info">
-              {page * rowsPerPage + 1}-
-              {Math.min((page + 1) * rowsPerPage, total)} / 전체 {total}
-            </div>
+                <div className="pagination-info">
+                  {page * rowsPerPage + 1}-
+                  {Math.min((page + 1) * rowsPerPage, total)} / 전체 {total}
+                </div>
 
-            <div className="pagination-controls">
-              <button
-                className="pagination-button"
-                onClick={() => handleChangePage(page - 1)}
-                disabled={page === 0}
-              >
-                이전
-              </button>
-              <button
-                className="pagination-button"
-                onClick={() => handleChangePage(page + 1)}
-                disabled={(page + 1) * rowsPerPage >= total}
-              >
-                다음
-              </button>
-            </div>
-          </div>
+                <div className="pagination-controls">
+                  <button
+                    className="pagination-button"
+                    onClick={() => handleChangePage(page - 1)}
+                    disabled={page === 0}
+                  >
+                    이전
+                  </button>
+                  <button
+                    className="pagination-button"
+                    onClick={() => handleChangePage(page + 1)}
+                    disabled={(page + 1) * rowsPerPage >= total}
+                  >
+                    다음
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </>
+      ) : (
+        // 스케줄 관리 탭
+        <div className="schedule-management">
+          {/* 사용자 검색 */}
+          <div className="filter-paper">
+            <h3>사용자 검색</h3>
+            <div className="user-search-container">
+              <input
+                type="text"
+                value={userSearchTerm}
+                onChange={(e) => setUserSearchTerm(e.target.value)}
+                onKeyPress={(e) =>
+                  e.key === 'Enter' && searchUsersForSchedule()
+                }
+                placeholder="이름, 전화번호 또는 ID로 검색"
+                className="user-search-input"
+              />
+              <button
+                className="filter-button"
+                onClick={searchUsersForSchedule}
+                disabled={scheduleLoading}
+              >
+                검색
+              </button>
+            </div>
+
+            {searchUsers.length > 0 && (
+              <div className="user-search-results">
+                <h4>검색 결과</h4>
+                <div className="user-list">
+                  {searchUsers.map((user) => (
+                    <div
+                      key={user.id}
+                      className="user-card"
+                      onClick={() => fetchUserSchedule(user.id)}
+                    >
+                      <div className="user-info">
+                        <strong>{user.name}</strong> ({user.id})
+                        <div className="user-details">
+                          <span>{user.phone_number}</span>
+                          <span>
+                            배송: {user.pending_deliveries}대기 /{' '}
+                            {user.completed_deliveries}완료
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {scheduleError && (
+            <div className="alert alert-error">{scheduleError}</div>
+          )}
+
+          {scheduleLoading && (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <div>처리 중...</div>
+            </div>
+          )}
+
+          {/* 선택된 사용자 스케줄 */}
+          {selectedUser && (
+            <div className="user-schedule-container">
+              <div className="filter-paper">
+                <h3>
+                  {selectedUser.user.name} ({selectedUser.user.id}) 배송 스케줄
+                </h3>
+
+                <div className="user-info-grid">
+                  <div>
+                    <strong>연락처:</strong> {selectedUser.user.phone_number}
+                  </div>
+                  <div>
+                    <strong>주소:</strong> {selectedUser.user.address}
+                  </div>
+                  <div>
+                    <strong>총 잔여 배송:</strong>{' '}
+                    {selectedUser.total_remaining_deliveries}회
+                  </div>
+                </div>
+
+                <div className="schedule-actions">
+                  <button
+                    className="filter-button"
+                    onClick={() => setOpenScheduleDialog(true)}
+                  >
+                    스케줄 수정
+                  </button>
+                </div>
+              </div>
+
+              {/* 상품별 잔여 횟수 */}
+              <div className="filter-paper">
+                <h4>상품별 잔여 배송 횟수</h4>
+                <div className="product-grid">
+                  {selectedUser.user_products.map((product) => (
+                    <div key={product.product_id} className="product-card">
+                      <strong>{product.product_name}</strong>
+                      <span className="remaining-count-badge">
+                        잔여: {product.remaining_count}회
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 예약된 배송 일정 */}
+              <div className="filter-paper">
+                <h4>예약된 배송 일정</h4>
+                {selectedUser.scheduled_deliveries.length === 0 ? (
+                  <p>예약된 배송이 없습니다.</p>
+                ) : (
+                  <div className="schedule-list">
+                    {selectedUser.scheduled_deliveries.map((delivery) => (
+                      <div key={delivery.id} className="schedule-item">
+                        <div className="schedule-info">
+                          <strong>{delivery.date}</strong>
+                          <span>{delivery.product_name}</span>
+                        </div>
+                        <button
+                          className="action-button error-button"
+                          onClick={() => deleteScheduledDelivery(delivery.id)}
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 완료된 배송 */}
+              <div className="filter-paper">
+                <h4>완료된 배송 (최근 5개)</h4>
+                {selectedUser.completed_deliveries.length === 0 ? (
+                  <p>완료된 배송이 없습니다.</p>
+                ) : (
+                  <div className="schedule-list">
+                    {selectedUser.completed_deliveries
+                      .slice(0, 5)
+                      .map((delivery) => (
+                        <div
+                          key={delivery.id}
+                          className="schedule-item completed"
+                        >
+                          <div className="schedule-info">
+                            <strong>{delivery.date}</strong>
+                            <span>{delivery.product_name}</span>
+                          </div>
+                          <span className="status-chip status-success">
+                            완료
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* 상태 변경 확인 다이얼로그 */}
@@ -333,6 +678,76 @@ const Delivery: React.FC = () => {
                 onClick={handleUpdateStatus}
               >
                 변경
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 스케줄 수정 다이얼로그 */}
+      {openScheduleDialog && selectedUser && (
+        <div className="modal-backdrop">
+          <div className="modal-content schedule-dialog">
+            <h2 className="modal-title">배송 스케줄 수정</h2>
+            <div className="modal-body">
+              <div className="form-control">
+                <label>상품 선택</label>
+                <select
+                  value={selectedProductId || ''}
+                  onChange={(e) => setSelectedProductId(Number(e.target.value))}
+                >
+                  <option value="">상품을 선택하세요</option>
+                  {selectedUser.user_products.map((product) => (
+                    <option key={product.product_id} value={product.product_id}>
+                      {product.product_name} (잔여: {product.remaining_count}회)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-control">
+                <label>배송 날짜</label>
+                <div className="schedule-dates">
+                  {newScheduleDates.map((date, index) => (
+                    <div key={index} className="date-input-row">
+                      <input
+                        type="date"
+                        value={date}
+                        onChange={(e) =>
+                          updateScheduleDate(index, e.target.value)
+                        }
+                      />
+                      <button
+                        className="action-button error-button"
+                        onClick={() => removeScheduleDate(index)}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  ))}
+                  <button className="action-button" onClick={addScheduleDate}>
+                    날짜 추가
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button
+                className="cancel-button"
+                onClick={() => {
+                  setOpenScheduleDialog(false);
+                  setNewScheduleDates([]);
+                  setSelectedProductId(null);
+                }}
+              >
+                취소
+              </button>
+              <button
+                className="confirm-button confirm-success"
+                onClick={updateUserSchedule}
+                disabled={!selectedProductId || newScheduleDates.length === 0}
+              >
+                저장
               </button>
             </div>
           </div>

@@ -1,0 +1,431 @@
+/* src/pages/admin/payments.css */
+
+/* 기본 컨테이너 및 공통 스타일은 delivery.css와 동일 */
+.admin-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+.admin-title {
+  color: var(--accent-color);
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: 0.75rem;
+}
+
+.admin-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background-color: var(--primary-color);
+  border-radius: 2px;
+}
+
+/* 요약 카드 스타일 */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid var(--primary-color);
+}
+
+.summary-title {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.summary-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.summary-value.text-success {
+  color: var(--success-color);
+}
+
+.summary-value.text-primary {
+  color: var(--primary-color);
+}
+
+/* 필터 스타일 */
+.filter-paper {
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  background-color: white;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  align-items: center;
+}
+
+.form-control {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-control label {
+  color: var(--accent-color);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.form-control select,
+.form-control input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  transition: border-color 0.3s ease;
+}
+
+.form-control select:focus,
+.form-control input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.filter-button {
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+  font-weight: 600;
+  border-radius: 30px;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  width: 100%;
+}
+
+.filter-button:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+/* 테이블 스타일 */
+.table-container {
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  background-color: white;
+  margin-bottom: 1rem;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table-head {
+  background-color: var(--background-color);
+}
+
+.admin-table-head th {
+  font-weight: 700;
+  color: var(--accent-color);
+  border-bottom: 2px solid var(--primary-color);
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.admin-table-body tr {
+  transition: background-color 0.2s ease;
+}
+
+.admin-table-body tr:hover {
+  background-color: rgba(164, 226, 46, 0.1);
+}
+
+.admin-table-body td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--background-dark);
+  vertical-align: top;
+}
+
+/* 셀 내용 스타일 */
+.order-id-cell {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+}
+
+.transaction-id {
+  color: var(--text-light);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.user-info-cell strong {
+  color: var(--accent-color);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.user-id {
+  color: var(--text-light);
+  font-size: 0.8rem;
+}
+
+.product-info-cell {
+  max-width: 200px;
+}
+
+.product-count {
+  color: var(--text-light);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.amount-text {
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  white-space: nowrap;
+}
+
+.date-cell {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.text-muted {
+  color: var(--text-light);
+}
+
+/* 상태 칩 스타일 */
+.status-chip {
+  display: inline-block;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.status-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: var(--success-color);
+  border: 1px solid var(--success-color);
+}
+
+.status-warning {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+  border: 1px solid #ffc107;
+}
+
+.status-error {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
+}
+
+.status-info {
+  background-color: rgba(13, 202, 240, 0.1);
+  color: #0dcaf0;
+  border: 1px solid #0dcaf0;
+}
+
+.status-default {
+  background-color: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+  border: 1px solid #6c757d;
+}
+
+/* 페이지네이션 스타일 */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.rows-per-page {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rows-per-page select {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.25rem;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pagination-button {
+  background: none;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.pagination-button:disabled {
+  color: #ccc;
+  border-color: #ccc;
+  cursor: not-allowed;
+}
+
+.page-indicator {
+  color: var(--accent-color);
+  font-weight: 600;
+  padding: 0.5rem;
+}
+
+.pagination-info {
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+/* 로딩 및 알림 스타일 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(164, 226, 46, 0.3);
+  border-radius: 50%;
+  border-top: 4px solid var(--primary-color);
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.alert {
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.alert-info {
+  background-color: rgba(13, 202, 240, 0.1);
+  color: #0dcaf0;
+  border: 1px solid #0dcaf0;
+}
+
+.alert-error {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .admin-table th,
+  .admin-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+
+  .hide-sm {
+    display: none;
+  }
+
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pagination-container {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .order-id-cell {
+    font-size: 0.75rem;
+  }
+
+  .amount-text {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-title {
+    font-size: 1.8rem;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.8rem;
+  }
+
+  .hide-xs {
+    display: none;
+  }
+
+  .summary-card {
+    padding: 1rem;
+  }
+
+  .summary-value {
+    font-size: 1.25rem;
+  }
+
+  .product-info-cell {
+    max-width: 120px;
+  }
+
+  .order-id-cell {
+    font-size: 0.7rem;
+  }
+}
