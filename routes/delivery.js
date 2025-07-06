@@ -183,35 +183,13 @@ router.get('/available-dates', authMiddleware, async (req, res) => {
     // required_count가 있으면 이를 기준으로 최대 선택 가능 날짜 계산
     const requiredCount = required_count ? parseInt(required_count) : 0;
 
-    // 사용자의 총 배송 잔여 횟수 조회
-    const userProducts =
-      await deliveryManager.getUserProductDeliveries(user_id);
-    const totalRemainingDeliveries = userProducts.reduce(
-      (sum, product) => sum + product.remaining_count,
-      0
-    );
-
-    if (totalRemainingDeliveries <= 0) {
-      return res.json({
-        available_dates: [],
-        remaining_deliveries: 0,
-        message: '남은 배송 횟수가 없습니다.',
-      });
-    }
-
     // 이미 예약된 배송 일정 조회
     const scheduledDeliveries =
       await deliveryManager.getScheduledDeliveries(user_id);
 
     // 최대 선택 가능 날짜 계산
     let maxSelectableDays;
-    if (requiredCount > 0) {
-      // requiredCount가 있으면 그것의 2배까지만 선택 가능
-      maxSelectableDays = Math.min(requiredCount * 2, 30);
-    } else {
-      // 기존 방식: 남은 배송 횟수 × 2일, 최대 한달
-      maxSelectableDays = Math.min(totalRemainingDeliveries * 2, 30);
-    }
+    maxSelectableDays = Math.min(requiredCount * 2, 30);
 
     // 환경변수에서 배송 가능 요일 가져오기
     const deliveryDays = getDeliveryDays();
