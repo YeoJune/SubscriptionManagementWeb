@@ -1,5 +1,3 @@
-/* src/components/header.css */
-
 /* Header container */
 .sal-header {
   position: sticky;
@@ -23,12 +21,14 @@
   justify-content: space-between;
   padding: 0.8rem 0;
   flex-wrap: nowrap;
+  position: relative; /* 추가: 절대 위치 기준점 설정 */
 }
 
 /* Logo/title section */
 .sal-logo-section {
   display: flex;
   align-items: center;
+  flex: 1; /* 추가: 좌측 공간 확보 */
 }
 
 .sal-logo-link {
@@ -92,12 +92,17 @@
   bottom: -8px;
 }
 
-/* Navigation section */
+/* Navigation section - 절대 중앙 정렬 */
 .sal-nav-section {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 0.75rem;
+  position: absolute; /* 추가: 절대 위치 지정 */
+  left: 50%; /* 추가: 좌측에서 50% 지점 */
+  transform: translateX(-50%); /* 추가: 자신의 너비의 50%만큼 왼쪽으로 이동 */
+  top: 50%; /* 추가: 수직 중앙 정렬 */
+  transform: translate(-50%, -50%); /* 수정: 수평/수직 모두 중앙 정렬 */
 }
 
 .sal-nav-button {
@@ -108,6 +113,7 @@
   transition: all 0.3s ease;
   text-decoration: none;
   text-align: center;
+  white-space: nowrap; /* 추가: 텍스트 줄바꿈 방지 */
 }
 
 .sal-nav-button:hover {
@@ -144,6 +150,7 @@
   transition: all 0.3s ease;
   text-decoration: none;
   box-shadow: 0 4px 8px rgba(255, 140, 66, 0.3);
+  white-space: nowrap; /* 추가: 텍스트 줄바꿈 방지 */
 }
 
 .sal-admin-button:hover {
@@ -165,6 +172,7 @@
   gap: 1rem;
   align-items: center;
   flex-wrap: nowrap;
+  flex: 1; /* 추가: 우측 공간 확보 */
 }
 
 .sal-auth-button {
