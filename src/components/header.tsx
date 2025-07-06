@@ -52,7 +52,11 @@ const Header: React.FC = () => {
       <div className="container">
         <div className="sal-toolbar">
           {/* 왼쪽 영역: 로고(또는 앱 타이틀) */}
-          <div className="sal-logo-section"></div>
+          <div className="sal-logo-section">
+            <Link to="/" className="sal-logo-link">
+              <span className="sal-logo-text"></span>
+            </Link>
+          </div>
 
           {/* 모바일 메뉴 토글 버튼 */}
           <button className="sal-mobile-menu-toggle" onClick={toggleMobileMenu}>
