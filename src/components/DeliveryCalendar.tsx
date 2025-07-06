@@ -1,4 +1,4 @@
-// src/components/DeliveryCalendar.tsx
+// src/components/DeliveryCalendar.tsx - requiredCount 2배 제한
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './DeliveryCalendar.css';
@@ -20,14 +20,15 @@ const DeliveryCalendar: React.FC<DeliveryCalendarProps> = ({
 
   useEffect(() => {
     fetchAvailableDates();
-  }, [currentMonth]);
+  }, [currentMonth, requiredCount]);
 
   const fetchAvailableDates = async () => {
     setLoading(true);
     try {
       const monthStr = currentMonth.toISOString().slice(0, 7);
+      // requiredCount 파라미터를 전달하여 API에서 2배까지만 날짜 제한
       const response = await axios.get(
-        `/api/delivery/available-dates?month=${monthStr}`
+        `/api/delivery/available-dates?month=${monthStr}&required_count=${requiredCount}`
       );
       setAvailableDates(response.data.available_dates || []);
     } catch (error) {

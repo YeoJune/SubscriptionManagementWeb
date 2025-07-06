@@ -1,4 +1,4 @@
-// routes/delivery.js
+// routes/delivery.js - 최종 완성본
 const express = require('express');
 const router = express.Router();
 const checkAdmin = require('../lib/checkAdmin');
@@ -11,27 +11,6 @@ const getDeliveryDays = () => {
   const deliveryDaysEnv = process.env.DELIVERY_DAYS || '1,3,5'; // 기본값: 월,수,금
   return deliveryDaysEnv.split(',').map((day) => parseInt(day.trim()));
 };
-
-/*
--- 배달 목록 테이블 (delivery_list)
-CREATE TABLE IF NOT EXISTS delivery_list (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id TEXT NOT NULL,
-  status TEXT CHECK(status IN ('pending', 'complete', 'cancel')) NOT NULL,
-  date TEXT NOT NULL,
-  product_id INTEGER NOT NULL
-);
-
--- 사용자별 상품 배송 횟수 테이블 (user_product_delivery)
-CREATE TABLE IF NOT EXISTS user_product_delivery (
-  user_id TEXT NOT NULL,
-  product_id INTEGER NOT NULL,
-  remaining_count INTEGER DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (user_id, product_id)
-);
-*/
 
 // GET /api/delivery (admin) - 배송 목록 조회 (관리자용)
 router.get('/', checkAdmin, async (req, res) => {
@@ -192,16 +171,19 @@ router.get('/my', authMiddleware, async (req, res) => {
   }
 });
 
-// GET /api/delivery/available-dates - 배송 가능 날짜 조회 (사용자별 제한 적용)
+// GET /api/delivery/available-dates - requiredCount 기반 날짜 제한
 router.get('/available-dates', authMiddleware, async (req, res) => {
   try {
     const user_id = req.session.user.id;
-    const { month } = req.query; // YYYY-MM 형식
+    const { month, required_count } = req.query;
 
     // month가 없으면 현재 월 사용
     const targetMonth = month || new Date().toISOString().slice(0, 7);
 
-    // 1. 사용자의 총 배송 잔여 횟수 조회
+    // required_count가 있으면 이를 기준으로 최대 선택 가능 날짜 계산
+    const requiredCount = required_count ? parseInt(required_count) : 0;
+
+    // 사용자의 총 배송 잔여 횟수 조회
     const userProducts =
       await deliveryManager.getUserProductDeliveries(user_id);
     const totalRemainingDeliveries = userProducts.reduce(
@@ -217,17 +199,24 @@ router.get('/available-dates', authMiddleware, async (req, res) => {
       });
     }
 
-    // 2. 이미 예약된 배송 일정 조회
+    // 이미 예약된 배송 일정 조회
     const scheduledDeliveries =
       await deliveryManager.getScheduledDeliveries(user_id);
 
-    // 3. 최대 선택 가능 날짜 계산 (남은 배송 횟수 × 2일, 최대 한달)
-    const maxSelectableDays = Math.min(totalRemainingDeliveries * 2, 30);
+    // 최대 선택 가능 날짜 계산
+    let maxSelectableDays;
+    if (requiredCount > 0) {
+      // requiredCount가 있으면 그것의 2배까지만 선택 가능
+      maxSelectableDays = Math.min(requiredCount * 2, 30);
+    } else {
+      // 기존 방식: 남은 배송 횟수 × 2일, 최대 한달
+      maxSelectableDays = Math.min(totalRemainingDeliveries * 2, 30);
+    }
 
-    // 4. 환경변수에서 배송 가능 요일 가져오기
+    // 환경변수에서 배송 가능 요일 가져오기
     const deliveryDays = getDeliveryDays();
 
-    // 5. 날짜 필터링 로직
+    // 날짜 필터링 로직
     const availableDates = [];
     const today = new Date();
     const maxDate = new Date(today);
@@ -267,6 +256,7 @@ router.get('/available-dates', authMiddleware, async (req, res) => {
       remaining_deliveries: totalRemainingDeliveries,
       max_selectable_days: maxSelectableDays,
       scheduled_deliveries: scheduledDeliveries.length,
+      required_count: requiredCount,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -318,7 +308,7 @@ router.get('/config', (req, res) => {
 // GET /api/delivery/users/search (admin) - 사용자 검색 (스케줄 관리용)
 router.get('/users/search', checkAdmin, async (req, res) => {
   try {
-    const { q } = req.query; // 검색 쿼리
+    const { q } = req.query;
 
     if (!q) {
       return res.status(400).json({ error: '검색어가 필요합니다.' });
@@ -383,7 +373,7 @@ router.get('/users/:userId/schedule', checkAdmin, async (req, res) => {
 router.put('/users/:userId/schedule', checkAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
-    const { delivery_dates, product_id } = req.body; // 배송 날짜 배열과 상품 ID
+    const { delivery_dates, product_id } = req.body;
 
     if (!delivery_dates || !Array.isArray(delivery_dates)) {
       return res.status(400).json({ error: '배송 날짜 배열이 필요합니다.' });
