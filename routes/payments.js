@@ -6,7 +6,7 @@ const { authMiddleware } = require('../lib/auth');
 const deliveryManager = require('../lib/deliveryManager');
 const axios = require('axios');
 const crypto = require('crypto');
-const { checkAdmin } = require('../lib/adminAuth');
+const checkAdmin = require('../lib/checkAdmin');
 
 // 나이스페이 설정
 const NICEPAY_CLIENT_KEY = process.env.NICEPAY_CLIENT_KEY;
