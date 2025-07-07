@@ -617,22 +617,3 @@
     padding: 1.2rem;
   }
 }
-
-/* 매우 작은 화면 (360px 이하)에서 1개씩 표시 */
-@media (max-width: 360px) {
-  .quick-order-menu {
-    grid-template-columns: 1fr;
-  }
-
-  .menu-item {
-    padding: 1.5rem;
-  }
-
-  .account-info .account-text {
-    font-size: 0.9rem;
-  }
-
-  .account-info .account-number {
-    font-size: 1rem;
-  }
-}
