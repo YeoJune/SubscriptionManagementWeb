@@ -13,21 +13,33 @@ interface ProductDelivery {
 interface Delivery {
   id: number;
   date: string;
-  status: 'pending' | 'completed' | 'cancelled';
+  status: 'pending' | 'complete' | 'cancel';
   product_name: string;
+  user_name?: string;
+  phone_number?: string;
+  address?: string;
 }
 
 interface UserDetail {
-  id: string; // API에서 TEXT로 반환
+  id: string;
   name?: string;
   phone_number: string;
   email?: string;
   address?: string;
   total_delivery_count: number;
-  product_deliveries: ProductDelivery[]; // API 응답 필드명과 일치
+  product_deliveries: ProductDelivery[];
   created_at: string;
   last_login?: string;
-  deliveries?: Delivery[]; // 배송 이력은 별도 API가 필요할 수 있음
+}
+
+interface DeliveryResponse {
+  deliveries: Delivery[];
+  pagination: {
+    total: number;
+    currentPage: number;
+    totalPages: number;
+    limit: number;
+  };
 }
 
 const AdminUserDetail: React.FC = () => {
@@ -36,7 +48,9 @@ const AdminUserDetail: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
 
   const [userDetail, setUserDetail] = useState<UserDetail | null>(null);
+  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [deliveryLoading, setDeliveryLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,6 +61,7 @@ const AdminUserDetail: React.FC = () => {
 
     if (id) {
       fetchUserDetail(id);
+      fetchUserDeliveries(id);
     }
   }, [id, isAuthenticated, user, navigate]);
 
@@ -64,7 +79,7 @@ const AdminUserDetail: React.FC = () => {
       }
 
       const data = await response.json();
-      setUserDetail(data); // API 응답 구조에 맞춤
+      setUserDetail(data);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -72,11 +87,34 @@ const AdminUserDetail: React.FC = () => {
     }
   };
 
+  const fetchUserDeliveries = async (userId: string) => {
+    setDeliveryLoading(true);
+    try {
+      // 관리자용 배송 목록 API 사용 (사용자 ID로 검색)
+      const response = await fetch(`/api/delivery?search=${userId}&limit=50`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        console.error('배송 이력을 불러오는데 실패했습니다.');
+        return;
+      }
+
+      const data: DeliveryResponse = await response.json();
+      setDeliveries(data.deliveries || []);
+    } catch (err: any) {
+      console.error('배송 이력 로드 오류:', err);
+    } finally {
+      setDeliveryLoading(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const statusMap = {
       pending: { text: '대기중', class: 'status-pending' },
-      completed: { text: '완료', class: 'status-completed' },
-      cancelled: { text: '취소', class: 'status-cancelled' },
+      complete: { text: '완료', class: 'status-completed' },
+      cancel: { text: '취소', class: 'status-cancelled' },
     };
 
     const statusInfo = statusMap[status as keyof typeof statusMap] || {
@@ -212,7 +250,6 @@ const AdminUserDetail: React.FC = () => {
                       </span>
                     </div>
                   </div>
-                  {/* 진행률 바는 total_count가 없어서 제거하거나 별도 로직 필요 */}
                 </div>
               ))}
             </div>
@@ -221,10 +258,15 @@ const AdminUserDetail: React.FC = () => {
           )}
         </div>
 
-        {/* 배송 이력 - 별도 API 호출이 필요할 수 있음 */}
+        {/* 배송 이력 */}
         <div className="info-card full-width">
-          <h2 className="card-title">배송 이력</h2>
-          {userDetail.deliveries && userDetail.deliveries.length > 0 ? (
+          <h2 className="card-title">
+            배송 이력
+            {deliveryLoading && (
+              <span className="loading-text"> (로딩 중...)</span>
+            )}
+          </h2>
+          {deliveries && deliveries.length > 0 ? (
             <div className="deliveries-table-container">
               <table className="deliveries-table">
                 <thead>
@@ -236,7 +278,7 @@ const AdminUserDetail: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {userDetail.deliveries.map((delivery) => (
+                  {deliveries.map((delivery) => (
                     <tr key={delivery.id}>
                       <td>{delivery.id}</td>
                       <td>{delivery.product_name}</td>
@@ -246,6 +288,11 @@ const AdminUserDetail: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          ) : deliveryLoading ? (
+            <div className="loading-container-small">
+              <div className="loading-spinner-small"></div>
+              <p>배송 이력을 불러오는 중...</p>
             </div>
           ) : (
             <p className="no-data">배송 이력이 없습니다.</p>
