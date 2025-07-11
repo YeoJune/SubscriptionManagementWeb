@@ -8,7 +8,6 @@ interface ProductDelivery {
   product_id: number;
   product_name: string;
   remaining_count: number;
-  total_count: number;
 }
 
 interface Delivery {
@@ -19,12 +18,16 @@ interface Delivery {
 }
 
 interface UserDetail {
-  id: number;
+  id: string; // API에서 TEXT로 반환
+  name?: string;
   phone_number: string;
-  product_delivery: ProductDelivery[];
-  isAdmin: boolean;
+  email?: string;
+  address?: string;
+  total_delivery_count: number;
+  product_deliveries: ProductDelivery[]; // API 응답 필드명과 일치
   created_at: string;
-  deliveries: Delivery[];
+  last_login?: string;
+  deliveries?: Delivery[]; // 배송 이력은 별도 API가 필요할 수 있음
 }
 
 const AdminUserDetail: React.FC = () => {
@@ -61,7 +64,7 @@ const AdminUserDetail: React.FC = () => {
       }
 
       const data = await response.json();
-      setUserDetail(data.user);
+      setUserDetail(data); // API 응답 구조에 맞춤
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -84,14 +87,6 @@ const AdminUserDetail: React.FC = () => {
       <span className={`status-badge ${statusInfo.class}`}>
         {statusInfo.text}
       </span>
-    );
-  };
-
-  const getTotalDeliveryCount = () => {
-    if (!userDetail?.product_delivery) return 0;
-    return userDetail.product_delivery.reduce(
-      (total, product) => total + product.remaining_count,
-      0
     );
   };
 
@@ -159,28 +154,44 @@ const AdminUserDetail: React.FC = () => {
             <label>사용자 ID:</label>
             <span>{userDetail.id}</span>
           </div>
+          {userDetail.name && (
+            <div className="info-item">
+              <label>이름:</label>
+              <span>{userDetail.name}</span>
+            </div>
+          )}
           <div className="info-item">
             <label>전화번호:</label>
             <span>{userDetail.phone_number}</span>
           </div>
+          {userDetail.email && (
+            <div className="info-item">
+              <label>이메일:</label>
+              <span>{userDetail.email}</span>
+            </div>
+          )}
+          {userDetail.address && (
+            <div className="info-item">
+              <label>주소:</label>
+              <span>{userDetail.address}</span>
+            </div>
+          )}
           <div className="info-item">
             <label>가입일:</label>
             <span>{new Date(userDetail.created_at).toLocaleDateString()}</span>
           </div>
-          <div className="info-item">
-            <label>권한:</label>
-            <span>
-              {userDetail.isAdmin ? (
-                <span className="admin-badge">관리자</span>
-              ) : (
-                '일반 회원'
-              )}
-            </span>
-          </div>
+          {userDetail.last_login && (
+            <div className="info-item">
+              <label>최근 로그인:</label>
+              <span>
+                {new Date(userDetail.last_login).toLocaleDateString()}
+              </span>
+            </div>
+          )}
           <div className="info-item">
             <label>총 잔여 배송 횟수:</label>
             <span className="delivery-count-total">
-              {getTotalDeliveryCount()}회
+              {userDetail.total_delivery_count}회
             </span>
           </div>
         </div>
@@ -188,10 +199,10 @@ const AdminUserDetail: React.FC = () => {
         {/* 상품별 배송 정보 */}
         <div className="info-card">
           <h2 className="card-title">상품별 배송 정보</h2>
-          {userDetail.product_delivery &&
-          userDetail.product_delivery.length > 0 ? (
+          {userDetail.product_deliveries &&
+          userDetail.product_deliveries.length > 0 ? (
             <div className="product-delivery-list">
-              {userDetail.product_delivery.map((product) => (
+              {userDetail.product_deliveries.map((product) => (
                 <div key={product.product_id} className="product-delivery-item">
                   <div className="product-info">
                     <h3 className="product-name">{product.product_name}</h3>
@@ -199,19 +210,9 @@ const AdminUserDetail: React.FC = () => {
                       <span className="remaining">
                         잔여: {product.remaining_count}회
                       </span>
-                      <span className="total">
-                        / 총 {product.total_count}회
-                      </span>
                     </div>
                   </div>
-                  <div className="progress-bar">
-                    <div
-                      className="progress-fill"
-                      style={{
-                        width: `${((product.total_count - product.remaining_count) / product.total_count) * 100}%`,
-                      }}
-                    ></div>
-                  </div>
+                  {/* 진행률 바는 total_count가 없어서 제거하거나 별도 로직 필요 */}
                 </div>
               ))}
             </div>
@@ -220,7 +221,7 @@ const AdminUserDetail: React.FC = () => {
           )}
         </div>
 
-        {/* 배송 이력 */}
+        {/* 배송 이력 - 별도 API 호출이 필요할 수 있음 */}
         <div className="info-card full-width">
           <h2 className="card-title">배송 이력</h2>
           {userDetail.deliveries && userDetail.deliveries.length > 0 ? (
