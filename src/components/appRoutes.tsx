@@ -19,10 +19,11 @@ const InquiryDetail = React.lazy(() => import('../pages/inquiryDetail'));
 const AdminIndex = React.lazy(() => import('../pages/admin/adminIndex'));
 const AdminDelivery = React.lazy(() => import('../pages/admin/delivery'));
 const AdminUsers = React.lazy(() => import('../pages/admin/users'));
+const AdminUserDetail = React.lazy(() => import('../pages/admin/userDetail')); // 사용자 상세 페이지 추가
 const AdminInquiry = React.lazy(() => import('../pages/admin/inquiry'));
 const AdminProducts = React.lazy(() => import('../pages/admin/products'));
 const AdminNotices = React.lazy(() => import('../pages/admin/notices'));
-const AdminPayments = React.lazy(() => import('../pages/admin/payments')); // 결제 관리 추가
+const AdminPayments = React.lazy(() => import('../pages/admin/payments'));
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
@@ -150,6 +151,16 @@ const AppRoutes: React.FC = () => {
           }
         />
 
+        {/* 사용자 상세 페이지 라우트 추가 */}
+        <Route
+          path="/admin/users/:id"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminUserDetail />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/admin/inquiry"
           element={
@@ -177,7 +188,7 @@ const AppRoutes: React.FC = () => {
           }
         />
 
-        {/* 결제 관리 라우트 추가 */}
+        {/* 결제 관리 라우트 */}
         <Route
           path="/admin/payments"
           element={
