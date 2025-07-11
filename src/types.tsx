@@ -33,7 +33,7 @@ export interface BoardProps {
   type?: 'normal' | 'faq';
   question?: string;
   answer?: string;
-  image_path?: string;
+  images?: string[];
   createdAt: Date;
   created_at?: string;
 }

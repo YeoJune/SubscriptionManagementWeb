@@ -11,7 +11,7 @@ interface NoticeProps {
   content?: string;
   question?: string;
   answer?: string;
-  image_path?: string;
+  images?: string[];
   created_at: string;
 }
 
@@ -38,15 +38,15 @@ const AdminNotices: React.FC = () => {
   // 이미지 업로드를 위한 ref
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 공지사항 폼 상태
+  // 공지사항 폼 상태 - images를 파일 배열로 변경
   const [noticeForm, setNoticeForm] = useState({
     type: 'normal' as 'normal' | 'faq',
     title: '',
     content: '',
     question: '',
     answer: '',
-    image: null as File | null,
-    removeImage: false,
+    images: [] as File[],
+    removeImages: false,
   });
 
   // 삭제 확인 다이얼로그 상태
@@ -55,8 +55,8 @@ const AdminNotices: React.FC = () => {
     null
   );
 
-  // 이미지 미리보기 URL
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // 이미지 미리보기 URL들
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   useEffect(() => {
     if (isAuthenticated && user?.isAdmin) {
@@ -100,10 +100,10 @@ const AdminNotices: React.FC = () => {
       content: '',
       question: '',
       answer: '',
-      image: null,
-      removeImage: false,
+      images: [],
+      removeImages: false,
     });
-    setImagePreview(null);
+    setImagePreviews([]);
     setOpenDialog(true);
     setDialogError(null);
   };
@@ -117,10 +117,10 @@ const AdminNotices: React.FC = () => {
       content: notice.content || '',
       question: notice.question || '',
       answer: notice.answer || '',
-      image: null,
-      removeImage: false,
+      images: [],
+      removeImages: false,
     });
-    setImagePreview(notice.image_path ? `${notice.image_path}` : null);
+    setImagePreviews(notice.images || []);
     setOpenDialog(true);
     setDialogError(null);
   };
@@ -128,29 +128,33 @@ const AdminNotices: React.FC = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedNotice(null);
-    setImagePreview(null);
+    setImagePreviews([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setNoticeForm({ ...noticeForm, image: file });
+    const files = Array.from(e.target.files || []);
+    setNoticeForm({ ...noticeForm, images: files });
 
     // 이미지 미리보기 생성
-    if (file) {
+    const previews: string[] = [];
+    files.forEach((file) => {
       const reader = new FileReader();
       reader.onload = () => {
-        setImagePreview(reader.result as string);
+        previews.push(reader.result as string);
+        if (previews.length === files.length) {
+          setImagePreviews(previews);
+        }
       };
       reader.readAsDataURL(file);
-    }
+    });
   };
 
-  const handleRemoveImage = () => {
-    setNoticeForm({ ...noticeForm, image: null, removeImage: true });
-    setImagePreview(null);
+  const handleRemoveImages = () => {
+    setNoticeForm({ ...noticeForm, images: [], removeImages: true });
+    setImagePreviews([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -206,7 +210,6 @@ const AdminNotices: React.FC = () => {
     setSubmitting(true);
 
     try {
-      // FormData 객체 생성
       const formData = new FormData();
       formData.append('type', noticeForm.type);
       formData.append('title', noticeForm.title);
@@ -218,27 +221,23 @@ const AdminNotices: React.FC = () => {
         formData.append('answer', noticeForm.answer);
       }
 
-      // 이미지 처리
-      if (noticeForm.image) {
-        formData.append('image', noticeForm.image);
-      }
+      // 이미지들 추가
+      noticeForm.images.forEach((image) => {
+        formData.append('images', image);
+      });
 
       // 이미지 제거 플래그
-      if (noticeForm.removeImage) {
-        formData.append('removeImage', 'true');
+      if (noticeForm.removeImages) {
+        formData.append('removeImages', 'true');
       }
 
       if (dialogMode === 'add') {
         await axios.post('/api/notices', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
       } else {
         await axios.put(`/api/notices/${selectedNotice?.id}`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
 
@@ -268,7 +267,6 @@ const AdminNotices: React.FC = () => {
     setPage(0);
   };
 
-  // 공지 타입에 따른 라벨
   const getTypeLabel = (type: string) => {
     return type === 'normal' ? '일반 공지' : 'FAQ';
   };
@@ -285,7 +283,6 @@ const AdminNotices: React.FC = () => {
     <div className="notices-admin-container">
       <div className="header-box">
         <h1 className="notices-admin-title">공지사항 관리</h1>
-
         <button className="add-button" onClick={handleOpenAddDialog}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path
@@ -300,7 +297,6 @@ const AdminNotices: React.FC = () => {
         </button>
       </div>
 
-      {/* 필터 및 검색 */}
       <div className="filter-box">
         <div className="filter-row">
           <div className="filter-group">
@@ -317,7 +313,6 @@ const AdminNotices: React.FC = () => {
               <option value="faq">FAQ</option>
             </select>
           </div>
-
           <div className="search-field">
             <input
               type="text"
@@ -370,13 +365,18 @@ const AdminNotices: React.FC = () => {
                       {notice.title}
                     </td>
                     <td className="notices-table-cell image-cell">
-                      {notice.image_path ? (
+                      {notice.images && notice.images.length > 0 ? (
                         <div className="image-thumb-container">
                           <img
-                            src={notice.image_path}
+                            src={notice.images[0]}
                             alt="공지 이미지"
                             className="image-thumbnail"
                           />
+                          {notice.images.length > 1 && (
+                            <span className="image-count">
+                              +{notice.images.length - 1}
+                            </span>
+                          )}
                         </div>
                       ) : (
                         <span className="no-image">없음</span>
@@ -580,11 +580,12 @@ const AdminNotices: React.FC = () => {
               )}
 
               <div className="form-field image-field">
-                <label>이미지</label>
+                <label>이미지 (최대 10개)</label>
                 <div className="image-upload-container">
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     ref={fileInputRef}
                     onChange={handleImageChange}
                     style={{ display: 'none' }}
@@ -596,24 +597,33 @@ const AdminNotices: React.FC = () => {
                   >
                     이미지 선택
                   </button>
-                  {imagePreview && (
+                  {imagePreviews.length > 0 && (
                     <button
                       type="button"
                       className="remove-image-button"
-                      onClick={handleRemoveImage}
+                      onClick={handleRemoveImages}
                     >
-                      이미지 제거
+                      모든 이미지 제거
                     </button>
                   )}
                 </div>
 
-                {imagePreview && (
+                {imagePreviews.length > 0 && (
                   <div className="image-preview-container">
-                    <img
-                      src={imagePreview}
-                      alt="이미지 미리보기"
-                      className="image-preview"
-                    />
+                    <div className="images-grid">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="image-item">
+                          <img
+                            src={preview}
+                            alt={`이미지 ${index + 1}`}
+                            className="image-preview"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="image-count-text">
+                      선택된 이미지: {imagePreviews.length}개
+                    </p>
                   </div>
                 )}
               </div>

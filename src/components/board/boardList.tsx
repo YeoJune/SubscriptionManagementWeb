@@ -47,13 +47,18 @@ const BoardList: React.FC<BoardListProps> = ({ boards, onBoardClick }) => {
                     : truncateContent(board.question || '')}
                 </td>
                 <td className="board-image-column">
-                  {board.image_path ? (
+                  {board.images && board.images.length > 0 ? (
                     <div className="board-thumbnail-container">
                       <img
-                        src={board.image_path}
+                        src={board.images[0]}
                         alt="첨부 이미지"
                         className="board-thumbnail"
                       />
+                      {board.images.length > 1 && (
+                        <span className="image-count-badge">
+                          +{board.images.length - 1}
+                        </span>
+                      )}
                     </div>
                   ) : (
                     <span className="no-image">없음</span>

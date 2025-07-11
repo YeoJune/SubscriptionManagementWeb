@@ -62,9 +62,16 @@
   margin-bottom: 1rem;
 }
 
-/* 이미지 스타일링 */
-.board-image {
+/* 다중 이미지 컨테이너 */
+.board-images {
   margin: 1.5rem 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+/* 개별 이미지 스타일링 */
+.board-image {
   border-radius: 8px;
   overflow: hidden;
   max-width: 100%;
@@ -75,6 +82,7 @@
   display: block;
   max-width: 100%;
   height: auto;
+  width: 100%;
 }
 
 /* Divider */
@@ -190,6 +198,10 @@
   .board-title {
     font-size: 1.5rem;
   }
+
+  .board-images {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
@@ -204,5 +216,9 @@
   .board-content,
   .faq-answer {
     font-size: 1rem;
+  }
+
+  .board-images {
+    gap: 0.5rem;
   }
 }

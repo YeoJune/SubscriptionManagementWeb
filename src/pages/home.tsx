@@ -106,6 +106,7 @@ const Home: React.FC = () => {
         content: notice.content || '',
         type: notice.type,
         createdAt: new Date(notice.created_at),
+        images: notice.images || [], // 다중 이미지 배열로 변경
       }));
 
       setNotices(notices);

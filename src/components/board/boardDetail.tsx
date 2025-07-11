@@ -13,7 +13,7 @@ interface BoardDetailProps {
   question?: string;
   answer?: string;
   createdAt: Date;
-  image_path?: string; // 이미지 경로 추가
+  images?: string[]; // 다중 이미지 배열로 변경
 }
 
 const formatNewlines = (text: string = '') => {
@@ -57,7 +57,7 @@ const BoardDetail: React.FC = () => {
         question: boardData.question,
         answer: boardData.answer,
         createdAt: new Date(boardData.created_at),
-        image_path: boardData.image_path, // 이미지 경로 추가
+        images: boardData.images || [], // 다중 이미지 배열
       };
 
       setBoard(transformedBoard);
@@ -107,10 +107,14 @@ const BoardDetail: React.FC = () => {
             {board.createdAt.toLocaleDateString()}
           </div>
 
-          {/* 이미지가 있는 경우 표시 */}
-          {board.image_path && (
-            <div className="board-image">
-              <img src={board.image_path} alt="첨부 이미지" />
+          {/* 다중 이미지가 있는 경우 표시 */}
+          {board.images && board.images.length > 0 && (
+            <div className="board-images">
+              {board.images.map((imagePath, index) => (
+                <div key={index} className="board-image">
+                  <img src={imagePath} alt={`첨부 이미지 ${index + 1}`} />
+                </div>
+              ))}
             </div>
           )}
 

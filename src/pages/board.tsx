@@ -40,7 +40,7 @@ const Board: React.FC = () => {
         question: notice.question || '',
         answer: notice.answer || '',
         createdAt: new Date(notice.created_at),
-        image_path: notice.image_path || '', // 이미지 경로 추가
+        images: notice.images || [], // 다중 이미지 배열로 변경
       }));
 
       setBoards(notices);
