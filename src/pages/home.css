@@ -181,7 +181,7 @@
 .menu-item {
   background-color: white;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 0.5rem;
   text-align: center;
   border: 2px solid var(--border-color);
   transition: all 0.3s ease;
@@ -562,7 +562,7 @@
   }
 
   .menu-item {
-    padding: 1.2rem;
+    padding: 0.3rem;
   }
 
   .menu-item h3 {
