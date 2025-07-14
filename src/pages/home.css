@@ -144,7 +144,7 @@
 .quick-order-section {
   background-color: var(--background-light);
   border-radius: 15px;
-  padding: 0.5rem;
+  padding: 0.2rem;
   margin-bottom: 2rem;
   box-shadow: 0 5px 15px rgba(255, 140, 66, 0.1);
   border: 1px solid var(--border-color);
@@ -175,13 +175,13 @@
 .quick-order-menu {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+  gap: 0.5rem;
 }
 
 .menu-item {
   background-color: white;
   border-radius: 12px;
-  padding: 0.5rem;
+  padding: 0.1rem;
   text-align: center;
   border: 2px solid var(--border-color);
   transition: all 0.3s ease;
@@ -239,22 +239,14 @@
 
 .menu-item h3 {
   color: var(--accent-color);
-  margin-bottom: 0.3rem;
-  font-size: 1.3rem;
-  font-weight: 600;
-}
-
-.menu-item p {
-  color: var(--text-light);
-  margin-bottom: 0.3rem;
   font-size: 0.95rem;
-  line-height: 1.4;
+  font-weight: 600;
 }
 
 .menu-price {
   color: var(--primary-color);
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 0.95rem;
 }
 
 .no-products {
@@ -506,7 +498,7 @@
   /* 태블릿에서 menu-item 크기 조정 */
   .quick-order-menu {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.2rem;
+    gap: 0.3rem;
   }
 
   .service-cards {
@@ -558,7 +550,7 @@
   /* 모바일에서 menu-item을 2개씩 표시 */
   .quick-order-menu {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    gap: 0.2rem;
   }
 
   .menu-item {
