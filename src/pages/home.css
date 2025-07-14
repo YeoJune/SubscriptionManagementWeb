@@ -239,14 +239,14 @@
 
 .menu-item h3 {
   color: var(--accent-color);
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.3rem;
   font-size: 1.3rem;
   font-weight: 600;
 }
 
 .menu-item p {
   color: var(--text-light);
-  margin-bottom: 1rem;
+  margin-bottom: 0.3rem;
   font-size: 0.95rem;
   line-height: 1.4;
 }
@@ -567,12 +567,12 @@
 
   .menu-item h3 {
     font-size: 1.1rem;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.2rem;
   }
 
   .menu-item p {
     font-size: 0.85rem;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.2rem;
   }
 
   .menu-price {
