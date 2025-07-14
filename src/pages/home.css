@@ -223,7 +223,7 @@
 
 /* 상품 이미지 스타일 */
 .menu-image {
-  width: 95%;
+  width: 97%;
   aspect-ratio: 1;
   margin: 0 auto 0.2rem auto;
   border-radius: 12px;
@@ -553,22 +553,12 @@
     gap: 0.2rem;
   }
 
-  .menu-item {
-    padding: 0.3rem;
-  }
-
   .menu-item h3 {
-    font-size: 1.1rem;
-    margin-bottom: 0.2rem;
-  }
-
-  .menu-item p {
-    font-size: 0.85rem;
-    margin-bottom: 0.2rem;
+    font-size: 0.8rem;
   }
 
   .menu-price {
-    font-size: 1.1rem;
+    font-size: 0.8rem;
   }
 
   .menu-icon {
