@@ -1,8 +1,9 @@
-// src/pages/admin/delivery.tsx - 배송 추가 기능 포함
+// src/pages/admin/delivery.tsx - 완전한 배송 추가 기능 (달력 포함)
 import React, { useEffect, useState } from 'react';
 import './delivery.css';
 import { useAuth } from '../../hooks/useAuth';
 import { DeliveryProps } from '../../types';
+import DeliveryCalendar from '../../components/DeliveryCalendar';
 import axios from 'axios';
 
 interface UserScheduleInfo {
@@ -47,6 +48,7 @@ interface Product {
   id: number;
   name: string;
   price: number;
+  delivery_count: number;
 }
 
 const Delivery: React.FC = () => {
@@ -73,7 +75,7 @@ const Delivery: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     'deliveries' | 'schedule' | 'add-delivery'
   >('deliveries');
-  const [searchUsers, setSearchUsers] = useState<SearchUser[]>([]);
+  const [allUsers, setAllUsers] = useState<SearchUser[]>([]);
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserScheduleInfo | null>(
     null
@@ -88,28 +90,41 @@ const Delivery: React.FC = () => {
 
   // 배송 추가 관련 상태
   const [products, setProducts] = useState<Product[]>([]);
-  const [allUsers, setAllUsers] = useState<SearchUser[]>([]);
   const [usersPage, setUsersPage] = useState(1);
   const [usersTotal, setUsersTotal] = useState(0);
   const [usersLoading, setUsersLoading] = useState(false);
   const [selectedUserForDelivery, setSelectedUserForDelivery] =
     useState<string>('');
-  const [deliveryCount, setDeliveryCount] = useState<number>(1);
   const [selectedProductForDelivery, setSelectedProductForDelivery] = useState<
     number | null
   >(null);
-  const [openAddDeliveryDialog, setOpenAddDeliveryDialog] = useState(false);
+  const [selectedDatesForDelivery, setSelectedDatesForDelivery] = useState<
+    string[]
+  >([]);
+  const [deliveryStep, setDeliveryStep] = useState<
+    'select-user' | 'select-product' | 'select-dates' | 'confirm'
+  >('select-user');
 
   useEffect(() => {
     if (isAuthenticated && user?.isAdmin) {
       if (activeTab === 'deliveries') {
         fetchDeliveries();
-      } else if (activeTab === 'add-delivery') {
-        fetchProducts();
+      } else if (activeTab === 'schedule' || activeTab === 'add-delivery') {
         fetchAllUsers();
+        if (activeTab === 'add-delivery') {
+          fetchProducts();
+        }
       }
     }
-  }, [page, rowsPerPage, filterStatus, filterDate, activeTab, usersPage]);
+  }, [
+    page,
+    rowsPerPage,
+    filterStatus,
+    filterDate,
+    activeTab,
+    usersPage,
+    userSearchTerm,
+  ]);
 
   const fetchDeliveries = async () => {
     setLoading(true);
@@ -178,6 +193,11 @@ const Delivery: React.FC = () => {
     fetchDeliveries();
   };
 
+  const handleUserSearch = () => {
+    setUsersPage(1);
+    fetchAllUsers();
+  };
+
   const handleOpenStatusDialog = (
     delivery: DeliveryProps,
     status: 'complete' | 'cancel'
@@ -219,26 +239,6 @@ const Delivery: React.FC = () => {
     setPage(0);
   };
 
-  // 스케줄 관리 함수들
-  const searchUsersForSchedule = async () => {
-    if (!userSearchTerm.trim()) return;
-
-    setScheduleLoading(true);
-    setScheduleError(null);
-
-    try {
-      const response = await axios.get('/api/delivery/users/search', {
-        params: { q: userSearchTerm },
-      });
-      setSearchUsers(response.data.users);
-    } catch (err) {
-      console.error('Failed to search users:', err);
-      setScheduleError('사용자 검색 중 오류가 발생했습니다.');
-    } finally {
-      setScheduleLoading(false);
-    }
-  };
-
   const fetchUserSchedule = async (userId: string) => {
     setScheduleLoading(true);
     setScheduleError(null);
@@ -273,7 +273,6 @@ const Delivery: React.FC = () => {
         product_id: selectedProductId,
       });
 
-      // 스케줄 업데이트 후 다시 조회
       await fetchUserSchedule(selectedUser.user.id);
       setOpenScheduleDialog(false);
       setNewScheduleDates([]);
@@ -310,14 +309,9 @@ const Delivery: React.FC = () => {
     }
   };
 
-  // 배송 추가 함수들
-  const addDeliveryCount = async () => {
-    if (
-      !selectedUserForDelivery ||
-      !selectedProductForDelivery ||
-      deliveryCount < 1
-    ) {
-      setScheduleError('사용자, 상품, 배송 횟수를 모두 선택해주세요.');
+  const addDeliveryForUser = async () => {
+    if (!selectedUserForDelivery || !selectedProductForDelivery) {
+      setScheduleError('사용자와 상품을 모두 선택해주세요.');
       return;
     }
 
@@ -325,54 +319,131 @@ const Delivery: React.FC = () => {
     setScheduleError(null);
 
     try {
-      // 기존 사용자 정보 조회
-      const userResponse = await axios.get(
-        `/api/users/${selectedUserForDelivery}`
+      const selectedProduct = products.find(
+        (p) => p.id === selectedProductForDelivery
       );
-      const userData = userResponse.data;
+      if (!selectedProduct) {
+        throw new Error('선택된 상품을 찾을 수 없습니다.');
+      }
 
-      // 기존 product_deliveries 가져오기
-      const existingDeliveries = userData.product_deliveries || [];
+      // 배송일이 선택되었다면 스케줄도 함께 생성
+      if (selectedDatesForDelivery.length > 0) {
+        // 배송 횟수 추가
+        const userResponse = await axios.get(
+          `/api/users/${selectedUserForDelivery}`
+        );
+        const userData = userResponse.data;
+        const existingDeliveries = userData.product_deliveries || [];
 
-      // 해당 상품의 기존 배송 횟수 찾기
-      const existingProduct = existingDeliveries.find(
-        (pd: any) => pd.product_id === selectedProductForDelivery
-      );
+        const existingProduct = existingDeliveries.find(
+          (pd: any) => pd.product_id === selectedProductForDelivery
+        );
 
-      const newRemainingCount = existingProduct
-        ? existingProduct.remaining_count + deliveryCount
-        : deliveryCount;
+        const newRemainingCount = existingProduct
+          ? existingProduct.remaining_count + selectedProduct.delivery_count
+          : selectedProduct.delivery_count;
 
-      // product_deliveries 배열 업데이트
-      const updatedProductDeliveries = existingDeliveries.filter(
-        (pd: any) => pd.product_id !== selectedProductForDelivery
-      );
+        const updatedProductDeliveries = existingDeliveries.filter(
+          (pd: any) => pd.product_id !== selectedProductForDelivery
+        );
 
-      updatedProductDeliveries.push({
-        product_id: selectedProductForDelivery,
-        remaining_count: newRemainingCount,
-      });
+        updatedProductDeliveries.push({
+          product_id: selectedProductForDelivery,
+          remaining_count: newRemainingCount,
+        });
 
-      // 사용자 정보 업데이트
-      await axios.put(`/api/users/${selectedUserForDelivery}`, {
-        ...userData,
-        product_deliveries: updatedProductDeliveries,
-      });
+        await axios.put(`/api/users/${selectedUserForDelivery}`, {
+          ...userData,
+          product_deliveries: updatedProductDeliveries,
+        });
 
-      setOpenAddDeliveryDialog(false);
-      setSelectedUserForDelivery('');
-      setSelectedProductForDelivery(null);
-      setDeliveryCount(1);
+        // 선택된 날짜만큼 배송 스케줄 생성
+        await axios.put(
+          `/api/delivery/users/${selectedUserForDelivery}/schedule`,
+          {
+            delivery_dates: selectedDatesForDelivery,
+            product_id: selectedProductForDelivery,
+          }
+        );
 
-      alert(`배송 횟수가 성공적으로 추가되었습니다. (${deliveryCount}회 추가)`);
+        alert(
+          `${selectedProduct.name} ${selectedDatesForDelivery.length}회 배송이 추가되고 스케줄이 생성되었습니다.`
+        );
+      } else {
+        // 배송일 선택 없이 배송 횟수만 추가
+        const userResponse = await axios.get(
+          `/api/users/${selectedUserForDelivery}`
+        );
+        const userData = userResponse.data;
+        const existingDeliveries = userData.product_deliveries || [];
+
+        const existingProduct = existingDeliveries.find(
+          (pd: any) => pd.product_id === selectedProductForDelivery
+        );
+
+        const newRemainingCount = existingProduct
+          ? existingProduct.remaining_count + selectedProduct.delivery_count
+          : selectedProduct.delivery_count;
+
+        const updatedProductDeliveries = existingDeliveries.filter(
+          (pd: any) => pd.product_id !== selectedProductForDelivery
+        );
+
+        updatedProductDeliveries.push({
+          product_id: selectedProductForDelivery,
+          remaining_count: newRemainingCount,
+        });
+
+        await axios.put(`/api/users/${selectedUserForDelivery}`, {
+          ...userData,
+          product_deliveries: updatedProductDeliveries,
+        });
+
+        alert(
+          `${selectedProduct.name} ${selectedProduct.delivery_count}회 배송이 추가되었습니다.`
+        );
+      }
+
+      // 초기화
+      resetDeliveryProcess();
     } catch (err: any) {
-      console.error('Failed to add delivery count:', err);
+      console.error('Failed to add delivery:', err);
       setScheduleError(
-        err.response?.data?.error || '배송 횟수 추가 중 오류가 발생했습니다.'
+        err.response?.data?.error || '배송 추가 중 오류가 발생했습니다.'
       );
     } finally {
       setScheduleLoading(false);
     }
+  };
+
+  const handleDeliveryStepNext = () => {
+    if (deliveryStep === 'select-user' && selectedUserForDelivery) {
+      setDeliveryStep('select-product');
+    } else if (
+      deliveryStep === 'select-product' &&
+      selectedProductForDelivery
+    ) {
+      setDeliveryStep('select-dates');
+    } else if (deliveryStep === 'select-dates') {
+      setDeliveryStep('confirm');
+    }
+  };
+
+  const handleDeliveryStepBack = () => {
+    if (deliveryStep === 'confirm') {
+      setDeliveryStep('select-dates');
+    } else if (deliveryStep === 'select-dates') {
+      setDeliveryStep('select-product');
+    } else if (deliveryStep === 'select-product') {
+      setDeliveryStep('select-user');
+    }
+  };
+
+  const resetDeliveryProcess = () => {
+    setSelectedUserForDelivery('');
+    setSelectedProductForDelivery(null);
+    setSelectedDatesForDelivery([]);
+    setDeliveryStep('select-user');
   };
 
   const addScheduleDate = () => {
@@ -439,9 +510,8 @@ const Delivery: React.FC = () => {
       </div>
 
       {activeTab === 'deliveries' ? (
-        // 기존 배송 목록 탭
+        // 배송 목록 탭
         <>
-          {/* 필터 및 검색 */}
           <div className="filter-paper">
             <div className="filter-grid">
               <div className="form-control">
@@ -613,29 +683,20 @@ const Delivery: React.FC = () => {
       ) : activeTab === 'schedule' ? (
         // 스케줄 관리 탭
         <div className="schedule-management">
-          {/* 모든 사용자 목록 */}
           <div className="filter-paper">
-            <h3>전체 사용자 목록</h3>
+            <h3>고객 검색 및 관리</h3>
             <div className="user-search-container">
               <input
                 type="text"
                 value={userSearchTerm}
                 onChange={(e) => setUserSearchTerm(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    setUsersPage(1);
-                    fetchAllUsers();
-                  }
-                }}
-                placeholder="이름, 전화번호 또는 ID로 검색"
+                onKeyPress={(e) => e.key === 'Enter' && handleUserSearch()}
+                placeholder="이름, 전화번호 또는 ID로 검색 (빈 값이면 전체 조회)"
                 className="user-search-input"
               />
               <button
                 className="filter-button"
-                onClick={() => {
-                  setUsersPage(1);
-                  fetchAllUsers();
-                }}
+                onClick={handleUserSearch}
                 disabled={usersLoading}
               >
                 검색
@@ -645,7 +706,7 @@ const Delivery: React.FC = () => {
             {usersLoading ? (
               <div className="loading-container">
                 <div className="loading-spinner"></div>
-                <div>사용자를 불러오는 중...</div>
+                <div>고객을 불러오는 중...</div>
               </div>
             ) : (
               <div className="user-search-results">
@@ -670,10 +731,10 @@ const Delivery: React.FC = () => {
                   ))}
                 </div>
 
-                {/* 사용자 목록 페이지네이션 */}
+                {/* 페이지네이션 */}
                 <div className="pagination-container">
                   <div className="pagination-info">
-                    페이지 {usersPage} / 전체 사용자: {usersTotal}명
+                    페이지 {usersPage} / 전체 고객: {usersTotal}명
                   </div>
                   <div className="pagination-controls">
                     <button
@@ -694,56 +755,6 @@ const Delivery: React.FC = () => {
                 </div>
               </div>
             )}
-
-            {/* 사용자 검색 */}
-            <div style={{ marginTop: '2rem' }}>
-              <h4>특정 사용자 검색</h4>
-              <div className="user-search-container">
-                <input
-                  type="text"
-                  value={userSearchTerm}
-                  onChange={(e) => setUserSearchTerm(e.target.value)}
-                  onKeyPress={(e) =>
-                    e.key === 'Enter' && searchUsersForSchedule()
-                  }
-                  placeholder="이름, 전화번호 또는 ID로 검색"
-                  className="user-search-input"
-                />
-                <button
-                  className="filter-button"
-                  onClick={searchUsersForSchedule}
-                  disabled={scheduleLoading}
-                >
-                  검색
-                </button>
-              </div>
-
-              {searchUsers.length > 0 && (
-                <div className="user-search-results">
-                  <h4>검색 결과</h4>
-                  <div className="user-list">
-                    {searchUsers.map((user) => (
-                      <div
-                        key={user.id}
-                        className="user-card"
-                        onClick={() => fetchUserSchedule(user.id)}
-                      >
-                        <div className="user-info">
-                          <strong>{user.name}</strong> ({user.id})
-                          <div className="user-details">
-                            <span>{user.phone_number}</span>
-                            <span>
-                              배송: {user.pending_deliveries}대기 /{' '}
-                              {user.completed_deliveries}완료
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
 
           {scheduleError && (
@@ -861,147 +872,264 @@ const Delivery: React.FC = () => {
         // 배송 추가 탭
         <div className="add-delivery-management">
           <div className="filter-paper">
-            <h3>계좌이체 고객 배송 횟수 추가</h3>
+            <h3>계좌이체 고객 배송 추가</h3>
             <p className="delivery-add-description">
-              계좌이체로 결제한 고객에게 배송 횟수를 추가할 수 있습니다.
+              계좌이체로 결제한 고객에게 배송을 추가합니다. 배송일을 직접
+              선택하거나 나중에 스케줄링할 수 있습니다.
             </p>
 
-            <div className="delivery-add-form">
-              <div className="form-control">
-                <label>고객 선택</label>
-                <select
-                  value={selectedUserForDelivery}
-                  onChange={(e) => setSelectedUserForDelivery(e.target.value)}
-                >
-                  <option value="">고객을 선택하세요</option>
-                  {allUsers.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name || user.id} ({user.phone_number})
-                    </option>
-                  ))}
-                </select>
+            {/* 단계별 진행 표시 */}
+            <div className="delivery-steps">
+              <div
+                className={`step ${deliveryStep === 'select-user' ? 'active' : ''} ${selectedUserForDelivery ? 'completed' : ''}`}
+              >
+                <span className="step-number">1</span>
+                <span className="step-label">고객 선택</span>
               </div>
-
-              <div className="form-control">
-                <label>상품 선택</label>
-                <select
-                  value={selectedProductForDelivery || ''}
-                  onChange={(e) =>
-                    setSelectedProductForDelivery(Number(e.target.value))
-                  }
-                >
-                  <option value="">상품을 선택하세요</option>
-                  {products.map((product) => (
-                    <option key={product.id} value={product.id}>
-                      {product.name} ({product.price.toLocaleString()}원)
-                    </option>
-                  ))}
-                </select>
+              <div
+                className={`step ${deliveryStep === 'select-product' ? 'active' : ''} ${selectedProductForDelivery ? 'completed' : ''}`}
+              >
+                <span className="step-number">2</span>
+                <span className="step-label">상품 선택</span>
               </div>
-
-              <div className="form-control">
-                <label>추가할 배송 횟수</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="20"
-                  value={deliveryCount}
-                  onChange={(e) => setDeliveryCount(Number(e.target.value))}
-                />
+              <div
+                className={`step ${deliveryStep === 'select-dates' ? 'active' : ''} ${selectedDatesForDelivery.length > 0 ? 'completed' : ''}`}
+              >
+                <span className="step-number">3</span>
+                <span className="step-label">배송일 선택</span>
               </div>
-
-              <div className="form-actions">
-                <button
-                  className="filter-button"
-                  onClick={() => setOpenAddDeliveryDialog(true)}
-                  disabled={
-                    !selectedUserForDelivery ||
-                    !selectedProductForDelivery ||
-                    deliveryCount < 1
-                  }
-                >
-                  배송 횟수 추가
-                </button>
+              <div
+                className={`step ${deliveryStep === 'confirm' ? 'active' : ''}`}
+              >
+                <span className="step-number">4</span>
+                <span className="step-label">확인</span>
               </div>
             </div>
 
-            {/* 고객 목록 */}
-            <div className="users-list-section">
-              <h4>전체 고객 목록</h4>
-              <div className="user-search-container">
-                <input
-                  type="text"
-                  value={userSearchTerm}
-                  onChange={(e) => setUserSearchTerm(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      setUsersPage(1);
-                      fetchAllUsers();
-                    }
-                  }}
-                  placeholder="이름, 전화번호 또는 ID로 검색"
-                  className="user-search-input"
-                />
-                <button
-                  className="filter-button"
-                  onClick={() => {
-                    setUsersPage(1);
-                    fetchAllUsers();
-                  }}
-                  disabled={usersLoading}
-                >
-                  검색
-                </button>
-              </div>
-
-              {usersLoading ? (
-                <div className="loading-container">
-                  <div className="loading-spinner"></div>
-                  <div>고객 목록을 불러오는 중...</div>
+            {deliveryStep === 'select-user' && (
+              <div>
+                <h4>1단계: 고객 선택</h4>
+                {/* 고객 검색 */}
+                <div className="user-search-container">
+                  <input
+                    type="text"
+                    value={userSearchTerm}
+                    onChange={(e) => setUserSearchTerm(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleUserSearch()}
+                    placeholder="이름, 전화번호 또는 ID로 검색 (빈 값이면 전체 조회)"
+                    className="user-search-input"
+                  />
+                  <button
+                    className="filter-button"
+                    onClick={handleUserSearch}
+                    disabled={usersLoading}
+                  >
+                    검색
+                  </button>
                 </div>
-              ) : (
-                <div className="users-grid">
-                  {allUsers.map((user) => (
-                    <div
-                      key={user.id}
-                      className={`user-card ${selectedUserForDelivery === user.id ? 'selected' : ''}`}
-                      onClick={() => setSelectedUserForDelivery(user.id)}
-                    >
-                      <div className="user-info">
-                        <strong>{user.name || user.id}</strong>
-                        <div className="user-id">ID: {user.id}</div>
-                        <div className="user-details">
-                          <span>{user.phone_number}</span>
-                          <span>{user.email}</span>
+
+                {/* 고객 목록 */}
+                {usersLoading ? (
+                  <div className="loading-container">
+                    <div className="loading-spinner"></div>
+                    <div>고객 목록을 불러오는 중...</div>
+                  </div>
+                ) : (
+                  <div className="users-list-section">
+                    <div className="users-grid">
+                      {allUsers.map((user) => (
+                        <div
+                          key={user.id}
+                          className={`user-card ${selectedUserForDelivery === user.id ? 'selected' : ''}`}
+                          onClick={() => setSelectedUserForDelivery(user.id)}
+                        >
+                          <div className="user-info">
+                            <strong>{user.name || user.id}</strong>
+                            <div className="user-id">ID: {user.id}</div>
+                            <div className="user-details">
+                              <span>{user.phone_number}</span>
+                              <span>{user.email}</span>
+                            </div>
+                          </div>
                         </div>
+                      ))}
+                    </div>
+
+                    {/* 페이지네이션 */}
+                    <div className="pagination-container">
+                      <div className="pagination-info">
+                        페이지 {usersPage} / 전체 고객: {usersTotal}명
                       </div>
+                      <div className="pagination-controls">
+                        <button
+                          className="pagination-button"
+                          onClick={() => setUsersPage(usersPage - 1)}
+                          disabled={usersPage === 1}
+                        >
+                          이전
+                        </button>
+                        <button
+                          className="pagination-button"
+                          onClick={() => setUsersPage(usersPage + 1)}
+                          disabled={usersPage * 10 >= usersTotal}
+                        >
+                          다음
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {deliveryStep === 'select-product' && (
+              <div>
+                <h4>2단계: 상품 선택</h4>
+                <p className="selected-user-info">
+                  선택된 고객:{' '}
+                  <strong>
+                    {
+                      allUsers.find((u) => u.id === selectedUserForDelivery)
+                        ?.name
+                    }
+                  </strong>{' '}
+                  ({selectedUserForDelivery})
+                </p>
+                <div className="product-selection">
+                  {products.map((product) => (
+                    <div
+                      key={product.id}
+                      className={`product-card ${selectedProductForDelivery === product.id ? 'selected' : ''}`}
+                      onClick={() => setSelectedProductForDelivery(product.id)}
+                    >
+                      <h5>{product.name}</h5>
+                      <p>가격: {product.price.toLocaleString()}원</p>
+                      <p>배송 횟수: {product.delivery_count}회</p>
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* 페이지네이션 */}
-              <div className="pagination-container">
-                <div className="pagination-info">
-                  페이지 {usersPage} / 전체 고객: {usersTotal}명
-                </div>
-                <div className="pagination-controls">
-                  <button
-                    className="pagination-button"
-                    onClick={() => setUsersPage(usersPage - 1)}
-                    disabled={usersPage === 1}
-                  >
-                    이전
-                  </button>
-                  <button
-                    className="pagination-button"
-                    onClick={() => setUsersPage(usersPage + 1)}
-                    disabled={usersPage * 10 >= usersTotal}
-                  >
-                    다음
-                  </button>
+            {deliveryStep === 'select-dates' && selectedProductForDelivery && (
+              <div>
+                <h4>3단계: 배송일 선택 (선택사항)</h4>
+                <p className="selected-info">
+                  고객:{' '}
+                  <strong>
+                    {
+                      allUsers.find((u) => u.id === selectedUserForDelivery)
+                        ?.name
+                    }
+                  </strong>
+                  <br />
+                  상품:{' '}
+                  <strong>
+                    {
+                      products.find((p) => p.id === selectedProductForDelivery)
+                        ?.name
+                    }
+                  </strong>
+                </p>
+                <p className="date-selection-notice">
+                  배송일을 선택하면 해당 날짜에 배송이 예약됩니다. 선택하지
+                  않으면 배송 횟수만 추가되고 나중에 스케줄링할 수 있습니다.
+                </p>
+                <DeliveryCalendar
+                  requiredCount={
+                    products.find((p) => p.id === selectedProductForDelivery)
+                      ?.delivery_count || 0
+                  }
+                  selectedDates={selectedDatesForDelivery}
+                  onDatesChange={setSelectedDatesForDelivery}
+                />
+              </div>
+            )}
+
+            {deliveryStep === 'confirm' && (
+              <div>
+                <h4>4단계: 최종 확인</h4>
+                <div className="delivery-confirmation">
+                  <div className="confirm-item">
+                    <strong>고객:</strong>{' '}
+                    {
+                      allUsers.find((u) => u.id === selectedUserForDelivery)
+                        ?.name
+                    }{' '}
+                    ({selectedUserForDelivery})
+                  </div>
+                  <div className="confirm-item">
+                    <strong>상품:</strong>{' '}
+                    {
+                      products.find((p) => p.id === selectedProductForDelivery)
+                        ?.name
+                    }
+                  </div>
+                  <div className="confirm-item">
+                    <strong>배송 횟수:</strong>{' '}
+                    {
+                      products.find((p) => p.id === selectedProductForDelivery)
+                        ?.delivery_count
+                    }
+                    회
+                  </div>
+                  {selectedDatesForDelivery.length > 0 ? (
+                    <div className="confirm-item">
+                      <strong>선택된 배송일:</strong>
+                      <div className="selected-dates">
+                        {selectedDatesForDelivery.map((date, index) => (
+                          <span key={date} className="date-tag">
+                            {new Date(date).toLocaleDateString('ko-KR')}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="confirm-item">
+                      <strong>배송일:</strong> 나중에 스케줄링 (배송 횟수만
+                      추가)
+                    </div>
+                  )}
                 </div>
               </div>
+            )}
+
+            {/* 네비게이션 버튼 */}
+            <div className="delivery-navigation">
+              <button
+                className="back-button"
+                onClick={handleDeliveryStepBack}
+                disabled={deliveryStep === 'select-user'}
+              >
+                이전
+              </button>
+
+              <button className="reset-button" onClick={resetDeliveryProcess}>
+                처음부터
+              </button>
+
+              {deliveryStep === 'confirm' ? (
+                <button
+                  className="confirm-delivery-button"
+                  onClick={addDeliveryForUser}
+                  disabled={scheduleLoading}
+                >
+                  {scheduleLoading ? '처리중...' : '배송 추가'}
+                </button>
+              ) : (
+                <button
+                  className="next-button"
+                  onClick={handleDeliveryStepNext}
+                  disabled={
+                    (deliveryStep === 'select-user' &&
+                      !selectedUserForDelivery) ||
+                    (deliveryStep === 'select-product' &&
+                      !selectedProductForDelivery)
+                  }
+                >
+                  다음
+                </button>
+              )}
             </div>
           </div>
 
@@ -1107,48 +1235,6 @@ const Delivery: React.FC = () => {
                 disabled={!selectedProductId || newScheduleDates.length === 0}
               >
                 저장
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 배송 추가 확인 다이얼로그 */}
-      {openAddDeliveryDialog && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
-            <h2 className="modal-title">배송 횟수 추가 확인</h2>
-            <div className="modal-body">
-              <p>
-                <strong>고객:</strong>{' '}
-                {allUsers.find((u) => u.id === selectedUserForDelivery)?.name} (
-                {selectedUserForDelivery})
-              </p>
-              <p>
-                <strong>상품:</strong>{' '}
-                {
-                  products.find((p) => p.id === selectedProductForDelivery)
-                    ?.name
-                }
-              </p>
-              <p>
-                <strong>추가할 배송 횟수:</strong> {deliveryCount}회
-              </p>
-              <br />
-              <p>위 정보로 배송 횟수를 추가하시겠습니까?</p>
-            </div>
-            <div className="modal-actions">
-              <button
-                className="cancel-button"
-                onClick={() => setOpenAddDeliveryDialog(false)}
-              >
-                취소
-              </button>
-              <button
-                className="confirm-button confirm-success"
-                onClick={addDeliveryCount}
-              >
-                추가
               </button>
             </div>
           </div>
