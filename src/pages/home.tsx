@@ -177,7 +177,6 @@ const Home: React.FC = () => {
                     <div className="menu-icon">🍱</div>
                   )}
                   <h3>{product.name}</h3>
-                  <p>{product.description}</p>
                   <div className="menu-price">
                     {product.price.toLocaleString()}원
                   </div>
