@@ -223,8 +223,8 @@
 
 /* 상품 이미지 스타일 */
 .menu-image {
-  width: 200px;
-  height: 200px;
+  width: 70%;
+  aspect-ratio: 1;
   margin: 0 auto 1rem auto;
   border-radius: 12px;
   overflow: hidden;
@@ -581,13 +581,6 @@
 
   .menu-icon {
     font-size: 2rem;
-    margin-bottom: 0.8rem;
-  }
-
-  /* 모바일에서 이미지 크기 조정 */
-  .menu-image {
-    width: 160px;
-    height: 160px;
     margin-bottom: 0.8rem;
   }
 
