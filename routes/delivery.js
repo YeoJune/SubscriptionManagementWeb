@@ -30,7 +30,7 @@ router.get('/', checkAdmin, async (req, res) => {
     // 쿼리 구성
     let query = `
       SELECT d.id, d.user_id, u.name AS user_name, d.status, d.date, d.product_id, 
-             p.name AS product_name, u.phone_number, u.address
+             p.name AS product_name, u.phone_number, u.address, d.special_request
       FROM delivery_list d
       JOIN product p ON d.product_id = p.id
       JOIN users u ON d.user_id = u.id

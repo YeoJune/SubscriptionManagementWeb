@@ -587,6 +587,7 @@ const Delivery: React.FC = () => {
                       <th>상품</th>
                       <th className="hide-xs">연락처</th>
                       <th className="hide-sm">주소</th>
+                      <th className="hide-md">요청사항</th>
                       <th style={{ textAlign: 'center' }}>상태</th>
                       <th style={{ textAlign: 'center' }}>액션</th>
                     </tr>
@@ -604,6 +605,20 @@ const Delivery: React.FC = () => {
                           <td>{delivery.product_name}</td>
                           <td className="hide-xs">{delivery.phone_number}</td>
                           <td className="hide-sm">{delivery.address}</td>
+                          <td className="hide-md">
+                            {delivery.special_request ? (
+                              <div
+                                className="request-preview"
+                                title={delivery.special_request}
+                              >
+                                {delivery.special_request.length > 15
+                                  ? `${delivery.special_request.substring(0, 15)}...`
+                                  : delivery.special_request}
+                              </div>
+                            ) : (
+                              <span className="no-request">없음</span>
+                            )}
+                          </td>
                           <td style={{ textAlign: 'center' }}>
                             <span
                               className={`status-chip ${statusInfo.className}`}

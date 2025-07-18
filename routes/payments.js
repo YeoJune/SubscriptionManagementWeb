@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS payments (
 // 결제 준비 - POST /api/payments/prepare
 router.post('/prepare', authMiddleware, (req, res) => {
   try {
-    const { product_id } = req.body;
+    const { product_id, special_request } = req.body;
     const user_id = req.session.user.id;
 
     // 유효성 검사
@@ -106,6 +106,11 @@ router.post('/prepare', authMiddleware, (req, res) => {
             }
 
             const paymentId = this.lastID;
+
+            // 요청사항을 세션에 저장 (배송 생성 시 사용)
+            if (special_request) {
+              req.session.special_request = special_request;
+            }
 
             // 나이스페이 SDK 파라미터 생성
             const paramsForNicePaySDK = {
@@ -276,17 +281,24 @@ router.post('/approve', authMiddleware, (req, res) => {
                             }
 
                             // 배송 일정 생성 (트랜잭션 외부에서)
+                            const specialRequest =
+                              req.session.special_request || null;
                             const deliveryPromise = req.body.selected_dates
                               ? deliveryManager.createCustomDeliverySchedule(
                                   user_id,
                                   payment.product_id,
-                                  req.body.selected_dates
+                                  req.body.selected_dates,
+                                  specialRequest
                                 )
                               : deliveryManager.createDeliverySchedule(
                                   user_id,
                                   payment.product_id,
-                                  product.delivery_count
+                                  product.delivery_count,
+                                  specialRequest
                                 );
+
+                            // 세션에서 요청사항 제거
+                            delete req.session.special_request;
 
                             deliveryPromise
                               .then((deliveries) => {
@@ -584,7 +596,7 @@ router.get('/', authMiddleware, (req, res) => {
 });
 
 // GET /api/admin/payments - 관리자용 결제 내역 조회
-router.get('/payments', checkAdmin, async (req, res) => {
+router.get('/admin/payments', checkAdmin, async (req, res) => {
   try {
     // 페이지네이션 처리
     const page = parseInt(req.query.page) || 1;
@@ -687,7 +699,7 @@ router.get('/payments', checkAdmin, async (req, res) => {
 });
 
 // GET /api/admin/payments/stats - 결제 통계 조회
-router.get('/payments/stats', checkAdmin, async (req, res) => {
+router.get('/admin/payments/stats', checkAdmin, async (req, res) => {
   try {
     const { date_from, date_to } = req.query;
 
@@ -740,7 +752,7 @@ router.get('/payments/stats', checkAdmin, async (req, res) => {
 });
 
 // GET /api/admin/payments/:id - 특정 결제 상세 조회
-router.get('/payments/:id', checkAdmin, async (req, res) => {
+router.get('/admin/payments/:id', checkAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 

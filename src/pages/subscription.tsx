@@ -43,6 +43,7 @@ const Subscription: React.FC = () => {
   );
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [specialRequest, setSpecialRequest] = useState<string>('');
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -129,14 +130,16 @@ const Subscription: React.FC = () => {
     try {
       const prepareResponse = await axios.post('/api/payments/prepare', {
         product_id: selectedProduct.id,
+        special_request: specialRequest.trim() || null,
       });
 
       if (!prepareResponse.data.success) {
         throw new Error(prepareResponse.data.error || '결제 준비 실패');
       }
 
-      // 선택된 날짜를 세션에 저장
+      // 선택된 날짜와 요청사항을 세션에 저장
       sessionStorage.setItem('selectedDates', JSON.stringify(selectedDates));
+      sessionStorage.setItem('specialRequest', specialRequest.trim() || '');
 
       const { paramsForNicePaySDK } = prepareResponse.data;
 
@@ -290,6 +293,21 @@ const Subscription: React.FC = () => {
                 <strong>배송 일정:</strong> 자동 스케줄링 (월/수/금)
               </p>
             )}
+
+            <hr className="divider" />
+
+            <h4>요청사항</h4>
+            <div className="special-request-section">
+              <textarea
+                className="special-request-input"
+                placeholder="배송 시 요청사항이 있으시면 입력해 주세요. (선택사항)"
+                value={specialRequest}
+                onChange={(e) => setSpecialRequest(e.target.value)}
+                maxLength={500}
+                rows={4}
+              />
+              <div className="char-count">{specialRequest.length}/500</div>
+            </div>
 
             <hr className="divider" />
 

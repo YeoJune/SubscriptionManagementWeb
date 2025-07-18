@@ -931,3 +931,24 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* 요청사항 표시 스타일 */
+.request-preview {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-color);
+  font-size: 0.9rem;
+  cursor: help;
+}
+
+.request-preview:hover {
+  color: var(--primary-color);
+}
+
+.no-request {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.85rem;
+}

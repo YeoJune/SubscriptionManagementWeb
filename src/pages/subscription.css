@@ -705,3 +705,50 @@
     padding: 1rem;
   }
 }
+
+/* 요청사항 입력 필드 스타일 */
+.special-request-section {
+  margin: 1rem 0;
+}
+
+.special-request-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+  background-color: var(--background-light);
+}
+
+.special-request-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.1);
+}
+
+.special-request-input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.char-count {
+  text-align: right;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+
+.char-count.near-limit {
+  color: var(--warning-color);
+}
+
+.char-count.at-limit {
+  color: var(--danger-color);
+  font-weight: 600;
+}

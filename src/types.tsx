@@ -81,6 +81,7 @@ export interface DeliveryProps {
   product_name?: string;
   phone_number?: string;
   address?: string;
+  special_request?: string;
   remaining_count_for_product?: number; // 해당 상품의 남은 배송 횟수
 }
 
