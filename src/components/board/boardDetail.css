@@ -62,7 +62,55 @@
   margin-bottom: 1rem;
 }
 
-/* 다중 이미지 컨테이너 */
+/* 다중 이미지 컨테이너 - 슬라이드 방식 */
+.board-images-slider {
+  margin: 1.5rem 0;
+  position: relative;
+}
+
+.board-image-container {
+  border-radius: 8px;
+  overflow: hidden;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.board-image-container img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  width: 100%;
+  transition: opacity 0.5s ease-in-out;
+}
+
+/* 이미지 인디케이터 */
+.image-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  background-color: #ddd;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.indicator.active {
+  background-color: var(--primary-color);
+}
+
+.indicator:hover {
+  background-color: var(--accent-color);
+}
+
+/* 기존 그리드 방식 스타일 (참고용) */
 .board-images {
   margin: 1.5rem 0;
   display: grid;
@@ -202,6 +250,10 @@
   .board-images {
     grid-template-columns: 1fr;
   }
+
+  .board-image-container {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -220,5 +272,10 @@
 
   .board-images {
     gap: 0.5rem;
+  }
+
+  .indicator {
+    width: 10px;
+    height: 10px;
   }
 }

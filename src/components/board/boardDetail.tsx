@@ -32,6 +32,7 @@ const BoardDetail: React.FC = () => {
   const [board, setBoard] = useState<BoardDetailProps | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
 
   // Fetch board data by id
   useEffect(() => {
@@ -42,6 +43,21 @@ const BoardDetail: React.FC = () => {
     }
     fetchBoardById(id);
   }, [id]);
+
+  // 이미지 슬라이드 효과
+  useEffect(() => {
+    if (!board || !board.images || board.images.length <= 1) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex(
+        (prevIndex) => (prevIndex + 1) % board.images!.length
+      );
+    }, 5000); // 5초마다 변경
+
+    return () => clearInterval(interval);
+  }, [board]);
 
   const fetchBoardById = async (id: string) => {
     setLoading(true);
@@ -107,14 +123,26 @@ const BoardDetail: React.FC = () => {
             {board.createdAt.toLocaleDateString()}
           </div>
 
-          {/* 다중 이미지가 있는 경우 표시 */}
+          {/* 다중 이미지가 있는 경우 슬라이드로 표시 */}
           {board.images && board.images.length > 0 && (
-            <div className="board-images">
-              {board.images.map((imagePath, index) => (
-                <div key={index} className="board-image">
-                  <img src={imagePath} alt={`첨부 이미지 ${index + 1}`} />
+            <div className="board-images-slider">
+              <div className="board-image-container">
+                <img
+                  src={board.images[currentImageIndex]}
+                  alt={`첨부 이미지 ${currentImageIndex + 1}`}
+                />
+              </div>
+              {board.images.length > 1 && (
+                <div className="image-indicators">
+                  {board.images.map((_, index) => (
+                    <button
+                      key={index}
+                      className={`indicator ${index === currentImageIndex ? 'active' : ''}`}
+                      onClick={() => setCurrentImageIndex(index)}
+                    />
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           )}
 
