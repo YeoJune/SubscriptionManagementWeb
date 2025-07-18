@@ -136,25 +136,67 @@ const AdminNotices: React.FC = () => {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setNoticeForm({ ...noticeForm, images: files });
 
-    // 이미지 미리보기 생성
-    const previews: string[] = [];
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        previews.push(reader.result as string);
-        if (previews.length === files.length) {
-          setImagePreviews(previews);
-        }
-      };
-      reader.readAsDataURL(file);
+    // 최대 10개 파일 제한
+    if (files.length > 10) {
+      setDialogError('이미지는 최대 10개까지만 업로드할 수 있습니다.');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
+    setNoticeForm({ ...noticeForm, images: files, removeImages: false });
+
+    // 이미지 미리보기 생성 - Promise.all 사용으로 더 안정적으로 처리
+    if (files.length === 0) {
+      setImagePreviews([]);
+      return;
+    }
+
+    const previewPromises = files.map((file) => {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('파일 읽기 실패'));
+        reader.readAsDataURL(file);
+      });
     });
+
+    Promise.all(previewPromises)
+      .then((previews) => {
+        setImagePreviews(previews);
+        setDialogError(null); // 성공 시 에러 메시지 클리어
+      })
+      .catch((error) => {
+        console.error('이미지 미리보기 생성 실패:', error);
+        setDialogError('이미지 미리보기 생성에 실패했습니다.');
+        setImagePreviews([]);
+      });
   };
 
   const handleRemoveImages = () => {
     setNoticeForm({ ...noticeForm, images: [], removeImages: true });
     setImagePreviews([]);
+    setDialogError(null); // 에러 메시지 클리어
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // 개별 이미지 제거 함수 추가
+  const handleRemoveIndividualImage = (indexToRemove: number) => {
+    const newImages = noticeForm.images.filter(
+      (_, index) => index !== indexToRemove
+    );
+    const newPreviews = imagePreviews.filter(
+      (_, index) => index !== indexToRemove
+    );
+
+    setNoticeForm({ ...noticeForm, images: newImages });
+    setImagePreviews(newPreviews);
+
+    // 파일 input 초기화 후 남은 파일들로 다시 설정
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -618,6 +660,14 @@ const AdminNotices: React.FC = () => {
                             alt={`이미지 ${index + 1}`}
                             className="image-preview"
                           />
+                          <button
+                            type="button"
+                            className="remove-individual-image"
+                            onClick={() => handleRemoveIndividualImage(index)}
+                            title="이 이미지 제거"
+                          >
+                            ×
+                          </button>
                         </div>
                       ))}
                     </div>

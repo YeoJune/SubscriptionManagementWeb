@@ -527,6 +527,7 @@
 }
 
 .image-item {
+  position: relative;
   border: 1px solid #ddd;
   border-radius: 4px;
   overflow: hidden;
@@ -537,6 +538,37 @@
   height: 100px;
   object-fit: cover;
   display: block;
+}
+
+.remove-individual-image {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 24px;
+  height: 24px;
+  background-color: rgba(255, 0, 0, 0.8);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+  transition: all 0.2s ease;
+  opacity: 0.8;
+}
+
+.remove-individual-image:hover {
+  background-color: rgba(255, 0, 0, 1);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.image-item:hover .remove-individual-image {
+  opacity: 1;
 }
 
 .image-count-text {
