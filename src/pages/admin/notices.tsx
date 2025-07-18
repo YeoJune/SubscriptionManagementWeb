@@ -137,23 +137,29 @@ const AdminNotices: React.FC = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
 
-    // 최대 10개 파일 제한
-    if (files.length > 10) {
-      setDialogError('이미지는 최대 10개까지만 업로드할 수 있습니다.');
+    if (files.length === 0) return;
+
+    // 기존 이미지와 새로 선택한 이미지 합쳐서 최대 10개 제한 확인
+    const totalImages = noticeForm.images.length + files.length;
+    if (totalImages > 10) {
+      setDialogError(
+        `이미지는 최대 10개까지만 업로드할 수 있습니다. (현재: ${noticeForm.images.length}개, 추가하려는: ${files.length}개)`
+      );
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
       return;
     }
 
-    setNoticeForm({ ...noticeForm, images: files, removeImages: false });
+    // 기존 이미지에 새 이미지들 추가
+    const updatedImages = [...noticeForm.images, ...files];
+    setNoticeForm({
+      ...noticeForm,
+      images: updatedImages,
+      removeImages: false,
+    });
 
-    // 이미지 미리보기 생성 - Promise.all 사용으로 더 안정적으로 처리
-    if (files.length === 0) {
-      setImagePreviews([]);
-      return;
-    }
-
+    // 새로 추가되는 이미지들의 미리보기만 생성
     const previewPromises = files.map((file) => {
       return new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -164,14 +170,19 @@ const AdminNotices: React.FC = () => {
     });
 
     Promise.all(previewPromises)
-      .then((previews) => {
-        setImagePreviews(previews);
+      .then((newPreviews) => {
+        // 기존 미리보기에 새 미리보기들 추가
+        setImagePreviews([...imagePreviews, ...newPreviews]);
         setDialogError(null); // 성공 시 에러 메시지 클리어
+
+        // 파일 input 초기화 (같은 파일 재선택 가능하도록)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
       })
       .catch((error) => {
         console.error('이미지 미리보기 생성 실패:', error);
         setDialogError('이미지 미리보기 생성에 실패했습니다.');
-        setImagePreviews([]);
       });
   };
 
@@ -637,7 +648,7 @@ const AdminNotices: React.FC = () => {
                     className="upload-button"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    이미지 선택
+                    {imagePreviews.length > 0 ? '이미지 추가' : '이미지 선택'}
                   </button>
                   {imagePreviews.length > 0 && (
                     <button
