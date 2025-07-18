@@ -27,8 +27,8 @@ router.get('/', authMiddleware, (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
-    // 상태 필터링
-    const { status } = req.query;
+    // 상태 필터링 및 검색
+    const { status, search } = req.query;
     const userId = req.session.user.id;
     const isAdmin = req.session.user.isAdmin;
 
@@ -60,6 +60,14 @@ router.get('/', authMiddleware, (req, res) => {
       conditions.push('i.status = ?');
       params.push(status);
       countParams.push(status);
+    }
+
+    // 검색어가 있는 경우
+    if (search) {
+      conditions.push('(i.title LIKE ? OR i.content LIKE ?)');
+      const searchPattern = `%${search}%`;
+      params.push(searchPattern, searchPattern);
+      countParams.push(searchPattern, searchPattern);
     }
 
     // 조건 추가
@@ -172,8 +180,8 @@ router.post('/', authMiddleware, (req, res) => {
   }
 });
 
-// PUT /api/inquiries/:id - 문의 답변 등록/수정 (관리자 전용)
-router.put('/:id', checkAdmin, (req, res) => {
+// PUT /api/inquiries/:id/answer - 문의 답변 등록/수정 (관리자 전용)
+router.put('/:id/answer', checkAdmin, (req, res) => {
   try {
     const { id } = req.params;
     const { answer } = req.body;
@@ -212,6 +220,104 @@ router.put('/:id', checkAdmin, (req, res) => {
           });
         }
       );
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT /api/inquiries/:id - 문의 수정 (작성자 또는 관리자)
+router.put('/:id', authMiddleware, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content } = req.body;
+    const userId = req.session.user.id;
+    const isAdmin = req.session.user.isAdmin;
+
+    // 유효성 검사
+    if (!title || !content) {
+      return res
+        .status(400)
+        .json({ error: '제목과 내용은 필수 입력 사항입니다.' });
+    }
+
+    // 해당 문의가 존재하는지 확인 및 권한 체크
+    db.get(`SELECT * FROM inquiries WHERE id = ?`, [id], (err, inquiry) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      if (!inquiry) {
+        return res.status(404).json({ error: '문의를 찾을 수 없습니다.' });
+      }
+
+      // 권한 확인: 작성자 본인이거나 관리자만 수정 가능
+      if (!isAdmin && inquiry.user_id !== userId) {
+        return res.status(403).json({ error: '수정 권한이 없습니다.' });
+      }
+
+      // 문의 수정
+      db.run(
+        `UPDATE inquiries SET title = ?, content = ? WHERE id = ?`,
+        [title, content, id],
+        function (err) {
+          if (err) {
+            return res.status(500).json({ error: err.message });
+          }
+
+          if (this.changes === 0) {
+            return res.status(404).json({ error: '문의 수정에 실패했습니다.' });
+          }
+
+          res.json({
+            id: parseInt(id),
+            message: '문의가 수정되었습니다.',
+          });
+        }
+      );
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /api/inquiries/:id - 문의 삭제 (작성자 또는 관리자)
+router.delete('/:id', authMiddleware, (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.session.user.id;
+    const isAdmin = req.session.user.isAdmin;
+
+    // 해당 문의가 존재하는지 확인 및 권한 체크
+    db.get(`SELECT * FROM inquiries WHERE id = ?`, [id], (err, inquiry) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      if (!inquiry) {
+        return res.status(404).json({ error: '문의를 찾을 수 없습니다.' });
+      }
+
+      // 권한 확인: 작성자 본인이거나 관리자만 삭제 가능
+      if (!isAdmin && inquiry.user_id !== userId) {
+        return res.status(403).json({ error: '삭제 권한이 없습니다.' });
+      }
+
+      // 문의 삭제
+      db.run(`DELETE FROM inquiries WHERE id = ?`, [id], function (err) {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+
+        if (this.changes === 0) {
+          return res.status(404).json({ error: '문의 삭제에 실패했습니다.' });
+        }
+
+        res.json({
+          id: parseInt(id),
+          message: '문의가 삭제되었습니다.',
+        });
+      });
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

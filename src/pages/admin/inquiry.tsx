@@ -82,7 +82,7 @@ const AdminInquiry: React.FC = () => {
     setSubmitting(true);
 
     try {
-      await axios.put(`/api/inquiries/${selectedInquiry.id}`, {
+      await axios.put(`/api/inquiries/${selectedInquiry.id}/answer`, {
         answer,
       });
 
@@ -299,7 +299,12 @@ const AdminInquiry: React.FC = () => {
 
               <div className="inquiry-content-box">
                 <div className="inquiry-content-text">
-                  {selectedInquiry.content}
+                  {selectedInquiry.content.split('\n').map((line, index) => (
+                    <span key={index}>
+                      {line}
+                      <br />
+                    </span>
+                  ))}
                 </div>
               </div>
 

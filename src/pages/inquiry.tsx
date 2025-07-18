@@ -114,7 +114,7 @@ const Inquiry: React.FC = () => {
   return (
     <div className="inquiry-container">
       <div className="inquiry-header">
-        <h1 className="inquiry-title">고객의 소리</h1>
+        <h1 className="inquiry-title">불편/건의 사항</h1>
 
         <button className="add-button" onClick={handleOpenDialog}>
           <span className="add-icon">+</span>
