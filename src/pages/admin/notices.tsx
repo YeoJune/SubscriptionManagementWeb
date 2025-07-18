@@ -38,14 +38,15 @@ const AdminNotices: React.FC = () => {
   // 이미지 업로드를 위한 ref
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 공지사항 폼 상태 - images를 파일 배열로 변경
+  // 공지사항 폼 상태 - 기존 이미지와 새 이미지 구분
   const [noticeForm, setNoticeForm] = useState({
     type: 'normal' as 'normal' | 'faq',
     title: '',
     content: '',
     question: '',
     answer: '',
-    images: [] as File[],
+    images: [] as File[], // 새로 업로드할 이미지들
+    existingImages: [] as string[], // 기존 이미지 URL들
     removeImages: false,
   });
 
@@ -101,6 +102,7 @@ const AdminNotices: React.FC = () => {
       question: '',
       answer: '',
       images: [],
+      existingImages: [],
       removeImages: false,
     });
     setImagePreviews([]);
@@ -118,6 +120,7 @@ const AdminNotices: React.FC = () => {
       question: notice.question || '',
       answer: notice.answer || '',
       images: [],
+      existingImages: notice.images || [],
       removeImages: false,
     });
     setImagePreviews(notice.images || []);
@@ -139,11 +142,14 @@ const AdminNotices: React.FC = () => {
 
     if (files.length === 0) return;
 
-    // 기존 이미지와 새로 선택한 이미지 합쳐서 최대 10개 제한 확인
-    const totalImages = noticeForm.images.length + files.length;
-    if (totalImages > 10) {
+    // 전체 이미지 개수 확인 (기존 + 현재 새 이미지 + 추가하려는 이미지)
+    const totalCurrentImages =
+      noticeForm.existingImages.length + noticeForm.images.length;
+    const totalAfterAddition = totalCurrentImages + files.length;
+
+    if (totalAfterAddition > 10) {
       setDialogError(
-        `이미지는 최대 10개까지만 업로드할 수 있습니다. (현재: ${noticeForm.images.length}개, 추가하려는: ${files.length}개)`
+        `이미지는 최대 10개까지만 업로드할 수 있습니다. (현재: ${totalCurrentImages}개, 추가하려는: ${files.length}개)`
       );
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -187,7 +193,12 @@ const AdminNotices: React.FC = () => {
   };
 
   const handleRemoveImages = () => {
-    setNoticeForm({ ...noticeForm, images: [], removeImages: true });
+    setNoticeForm({
+      ...noticeForm,
+      images: [],
+      existingImages: [],
+      removeImages: true,
+    });
     setImagePreviews([]);
     setDialogError(null); // 에러 메시지 클리어
     if (fileInputRef.current) {
@@ -195,19 +206,36 @@ const AdminNotices: React.FC = () => {
     }
   };
 
-  // 개별 이미지 제거 함수 추가
+  // 개별 이미지 제거 함수 - 기존 이미지와 새 이미지 구분해서 처리
   const handleRemoveIndividualImage = (indexToRemove: number) => {
-    const newImages = noticeForm.images.filter(
-      (_, index) => index !== indexToRemove
-    );
-    const newPreviews = imagePreviews.filter(
-      (_, index) => index !== indexToRemove
-    );
+    const totalExistingImages = noticeForm.existingImages.length;
 
-    setNoticeForm({ ...noticeForm, images: newImages });
-    setImagePreviews(newPreviews);
+    if (indexToRemove < totalExistingImages) {
+      // 기존 이미지 제거
+      const newExistingImages = noticeForm.existingImages.filter(
+        (_, index) => index !== indexToRemove
+      );
+      const newPreviews = imagePreviews.filter(
+        (_, index) => index !== indexToRemove
+      );
 
-    // 파일 input 초기화 후 남은 파일들로 다시 설정
+      setNoticeForm({ ...noticeForm, existingImages: newExistingImages });
+      setImagePreviews(newPreviews);
+    } else {
+      // 새 이미지 제거
+      const newImageIndex = indexToRemove - totalExistingImages;
+      const newImages = noticeForm.images.filter(
+        (_, index) => index !== newImageIndex
+      );
+      const newPreviews = imagePreviews.filter(
+        (_, index) => index !== indexToRemove
+      );
+
+      setNoticeForm({ ...noticeForm, images: newImages });
+      setImagePreviews(newPreviews);
+    }
+
+    // 파일 input 초기화
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -274,10 +302,18 @@ const AdminNotices: React.FC = () => {
         formData.append('answer', noticeForm.answer);
       }
 
-      // 이미지들 추가
+      // 새로 업로드할 이미지들 추가
       noticeForm.images.forEach((image) => {
         formData.append('images', image);
       });
+
+      // 수정 모드인 경우 기존 이미지들도 전달
+      if (dialogMode === 'edit' && noticeForm.existingImages.length > 0) {
+        formData.append(
+          'existingImages',
+          JSON.stringify(noticeForm.existingImages)
+        );
+      }
 
       // 이미지 제거 플래그
       if (noticeForm.removeImages) {

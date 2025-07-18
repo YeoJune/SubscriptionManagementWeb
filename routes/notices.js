@@ -148,7 +148,15 @@ router.post('/', checkAdmin, upload.array('images', 10), (req, res) => {
 router.put('/:id', checkAdmin, upload.array('images', 10), (req, res) => {
   try {
     const { id } = req.params;
-    const { type, title, content, question, answer, removeImages } = req.body;
+    const {
+      type,
+      title,
+      content,
+      question,
+      answer,
+      removeImages,
+      existingImages,
+    } = req.body;
 
     const newImagePaths =
       req.files && req.files.length > 0
@@ -207,19 +215,44 @@ router.put('/:id', checkAdmin, upload.array('images', 10), (req, res) => {
         return res.status(404).json({ error: '공지사항을 찾을 수 없습니다.' });
       }
 
-      // 기존 이미지 삭제 (removeImages가 true인 경우)
-      if (removeImages === 'true' && notice.images) {
-        const oldImages = JSON.parse(notice.images);
-        oldImages.forEach((imagePath) => {
-          const fullPath = path.join(__dirname, '../public', imagePath);
-          if (fs.existsSync(fullPath)) {
-            fs.unlinkSync(fullPath);
+      // 기존 이미지 처리
+      let existingImagesList = [];
+      if (removeImages !== 'true') {
+        // removeImages가 true가 아닌 경우 기존 이미지 처리
+        if (existingImages) {
+          // 프론트엔드에서 전달받은 기존 이미지 사용
+          try {
+            existingImagesList = JSON.parse(existingImages);
+          } catch (parseError) {
+            console.error('전달받은 기존 이미지 파싱 오류:', parseError);
+            existingImagesList = [];
           }
-        });
+        } else if (notice.images) {
+          // 전달받은 기존 이미지가 없으면 DB에서 가져온 이미지 사용
+          try {
+            existingImagesList = JSON.parse(notice.images);
+          } catch (parseError) {
+            console.error('DB 기존 이미지 파싱 오류:', parseError);
+            existingImagesList = [];
+          }
+        }
+      } else if (removeImages === 'true' && notice.images) {
+        // removeImages가 true인 경우 기존 이미지 파일들 삭제
+        try {
+          const oldImages = JSON.parse(notice.images);
+          oldImages.forEach((imagePath) => {
+            const fullPath = path.join(__dirname, '../public', imagePath);
+            if (fs.existsSync(fullPath)) {
+              fs.unlinkSync(fullPath);
+            }
+          });
+        } catch (parseError) {
+          console.error('기존 이미지 파싱 오류:', parseError);
+        }
       }
 
-      // 새 이미지만 저장 (기존 이미지 유지 기능 제거)
-      const finalImages = newImagePaths;
+      // 기존 이미지와 새 이미지 결합
+      const finalImages = [...existingImagesList, ...newImagePaths];
       const imagesJson =
         finalImages.length > 0 ? JSON.stringify(finalImages) : null;
 
