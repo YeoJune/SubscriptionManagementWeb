@@ -51,7 +51,7 @@ const AdminIndex: React.FC = () => {
         paymentsStatsResponse, // 결제 통계 추가
       ] = await Promise.all([
         axios.get('/api/admin/users?limit=1'),
-        axios.get('/api/delivery/today'),
+        axios.get('/api/delivery/today'), // 원래대로 복원
         axios.get('/api/admin/inquiries?status=unanswered&limit=1'),
         axios.get('/api/admin/products?limit=1'),
         axios.get('/api/admin/notices?limit=1'),

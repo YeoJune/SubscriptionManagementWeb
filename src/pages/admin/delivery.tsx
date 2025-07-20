@@ -62,7 +62,7 @@ const Delivery: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterDate, setFilterDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
+    new Date().toLocaleDateString('sv-SE') // 'sv-SE' 로케일은 YYYY-MM-DD 형식으로 반환
   );
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedDelivery, setSelectedDelivery] =
@@ -401,7 +401,7 @@ const Delivery: React.FC = () => {
   };
 
   const addScheduleDate = () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('sv-SE'); // 'sv-SE' 로케일은 YYYY-MM-DD 형식으로 반환
     setNewScheduleDates([...newScheduleDates, today]);
   };
 
