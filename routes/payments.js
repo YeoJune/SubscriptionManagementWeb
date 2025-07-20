@@ -249,96 +249,81 @@ router.post('/approve', authMiddleware, (req, res) => {
                         });
                       }
 
-                      // 사용자별 상품 배송 잔여 횟수 업데이트
-                      db.run(
-                        `INSERT INTO user_product_delivery (user_id, product_id, remaining_count)
-                         VALUES (?, ?, ?)
-                         ON CONFLICT(user_id, product_id) 
-                         DO UPDATE SET remaining_count = remaining_count + ?, updated_at = CURRENT_TIMESTAMP`,
-                        [
-                          user_id,
-                          payment.product_id,
-                          product.delivery_count,
-                          product.delivery_count,
-                        ],
-                        function (err) {
-                          if (err) {
-                            db.run('ROLLBACK');
-                            return res.status(500).json({
-                              success: false,
-                              error: err.message,
-                            });
-                          }
-
-                          // 트랜잭션 커밋
-                          db.run('COMMIT', (err) => {
-                            if (err) {
-                              db.run('ROLLBACK');
-                              return res.status(500).json({
-                                success: false,
-                                error: err.message,
-                              });
-                            }
-
-                            // 배송 일정 생성 (트랜잭션 외부에서)
-                            const specialRequest =
-                              req.session.special_request || null;
-                            const deliveryPromise = req.body.selected_dates
-                              ? deliveryManager.createCustomDeliverySchedule(
-                                  user_id,
-                                  payment.product_id,
-                                  req.body.selected_dates,
-                                  specialRequest
-                                )
-                              : deliveryManager.createDeliverySchedule(
-                                  user_id,
-                                  payment.product_id,
-                                  product.delivery_count,
-                                  specialRequest
-                                );
-
-                            // 세션에서 요청사항 제거
-                            delete req.session.special_request;
-
-                            deliveryPromise
-                              .then((deliveries) => {
-                                res.json({
-                                  success: true,
-                                  message: '결제가 성공적으로 처리되었습니다.',
-                                  payment: {
-                                    id: payment.id,
-                                    order_id: payment.order_id,
-                                    status: 'completed',
-                                    amount: payment.amount,
-                                    paid_at: new Date(),
-                                    receipt_url:
-                                      response.data.receiptUrl || null,
-                                  },
-                                  delivery_count: product.delivery_count,
-                                  deliveries,
-                                });
-                              })
-                              .catch((error) => {
-                                // 배송 일정 생성 실패해도 결제는 성공으로 처리
-                                console.error('배송 일정 생성 실패:', error);
-                                res.json({
-                                  success: true,
-                                  message:
-                                    '결제가 완료되었으나 배송 일정 생성 중 오류가 발생했습니다.',
-                                  payment: {
-                                    id: payment.id,
-                                    order_id: payment.order_id,
-                                    status: 'completed',
-                                    amount: payment.amount,
-                                    paid_at: new Date(),
-                                    receipt_url:
-                                      response.data.receiptUrl || null,
-                                  },
-                                });
-                              });
+                      // 트랜잭션 커밋 (결제 완료)
+                      db.run('COMMIT', (err) => {
+                        if (err) {
+                          db.run('ROLLBACK');
+                          return res.status(500).json({
+                            success: false,
+                            error: err.message,
                           });
                         }
-                      );
+
+                        // 배송 처리 (트랜잭션 외부에서)
+                        const specialRequest =
+                          req.session.special_request || null;
+                        const selectedDates = req.body.selected_dates;
+
+                        // 세션에서 요청사항 제거
+                        delete req.session.special_request;
+
+                        // deliveryManager의 일관된 인터페이스 사용
+                        let deliveryPromise;
+                        if (selectedDates && selectedDates.length > 0) {
+                          // 선택된 날짜가 있으면 스케줄과 함께 생성 (specialRequest 포함)
+                          deliveryPromise =
+                            deliveryManager.bulkAddDeliveryWithSchedule(
+                              user_id,
+                              payment.product_id,
+                              selectedDates,
+                              specialRequest
+                            );
+                        } else {
+                          // 날짜 선택 없으면 횟수만 추가 (나중에 사용자가 스케줄 선택)
+                          deliveryPromise = deliveryManager.addDeliveryCount(
+                            user_id,
+                            payment.product_id,
+                            product.delivery_count
+                          );
+                        }
+
+                        deliveryPromise
+                          .then((result) => {
+                            res.json({
+                              success: true,
+                              message: '결제가 성공적으로 처리되었습니다.',
+                              payment: {
+                                id: payment.id,
+                                order_id: payment.order_id,
+                                status: 'completed',
+                                amount: payment.amount,
+                                paid_at: new Date(),
+                                receipt_url: response.data.receiptUrl || null,
+                              },
+                              delivery_count: product.delivery_count,
+                              delivery_result: result,
+                              deliveries: result.schedule || null,
+                            });
+                          })
+                          .catch((error) => {
+                            // 배송 처리 실패해도 결제는 성공으로 처리
+                            console.error('배송 처리 실패:', error);
+                            res.json({
+                              success: true,
+                              message:
+                                '결제가 완료되었으나 배송 처리 중 오류가 발생했습니다.',
+                              payment: {
+                                id: payment.id,
+                                order_id: payment.order_id,
+                                status: 'completed',
+                                amount: payment.amount,
+                                paid_at: new Date(),
+                                receipt_url: response.data.receiptUrl || null,
+                              },
+                              error_detail: error.message,
+                            });
+                          });
+                      });
                     }
                   );
                 }

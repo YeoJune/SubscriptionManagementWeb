@@ -99,12 +99,18 @@ const Subscription: React.FC = () => {
       return;
     }
 
-    if (
-      activeStep === 1 &&
-      selectedDates.length !== selectedProduct?.delivery_count
-    ) {
-      setError(`${selectedProduct?.delivery_count}개의 배송일을 선택해주세요.`);
-      return;
+    // 배송일 선택은 선택사항으로 변경 (전체 개수를 선택하지 않아도 진행 가능)
+    if (activeStep === 1) {
+      // 선택한 날짜가 있다면, 상품의 배송 횟수와 동일해야 함
+      if (
+        selectedDates.length > 0 &&
+        selectedDates.length !== selectedProduct?.delivery_count
+      ) {
+        setError(
+          `배송일을 선택하려면 ${selectedProduct?.delivery_count}개의 날짜를 모두 선택해주세요. (또는 건너뛰기)`
+        );
+        return;
+      }
     }
 
     setError(null);
@@ -233,12 +239,37 @@ const Subscription: React.FC = () => {
             총 <strong>{selectedProduct.delivery_count}회</strong> 배송이
             예정됩니다.
           </p>
+          <div className="delivery-option-notice">
+            <p>
+              💡 <strong>배송일 선택 방법:</strong>
+            </p>
+            <ul>
+              <li>
+                <strong>직접 선택:</strong> 원하는 날짜{' '}
+                {selectedProduct.delivery_count}개를 모두 선택
+              </li>
+              <li>
+                <strong>자동 스케줄링:</strong> 건너뛰고 나중에 마이페이지에서
+                선택
+              </li>
+            </ul>
+          </div>
         </div>
         <DeliveryCalendar
           requiredCount={selectedProduct.delivery_count}
           selectedDates={selectedDates}
           onDatesChange={setSelectedDates}
         />
+        {selectedDates.length > 0 &&
+          selectedDates.length < selectedProduct.delivery_count && (
+            <div className="partial-selection-notice">
+              <p>
+                현재 {selectedDates.length}/{selectedProduct.delivery_count}개
+                선택됨
+              </p>
+              <p>모든 날짜를 선택하거나 건너뛰어 나중에 선택할 수 있습니다.</p>
+            </div>
+          )}
       </div>
     );
   };
@@ -281,7 +312,7 @@ const Subscription: React.FC = () => {
               <div className="selected-dates-summary">
                 <strong>선택한 배송일:</strong>
                 <div className="dates-list">
-                  {selectedDates.map((date, index) => (
+                  {selectedDates.map((date) => (
                     <span key={date} className="date-item">
                       {new Date(date).toLocaleDateString('ko-KR')}
                     </span>

@@ -367,10 +367,95 @@
 
 .user-details {
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.5rem;
   margin-top: 0.5rem;
   color: var(--text-light);
   font-size: 0.9rem;
+}
+
+.delivery-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.remaining-count {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.schedule-info {
+  color: var(--text-light);
+}
+
+/* Special request styling */
+.special-request-section {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.special-request-section h5 {
+  margin: 0 0 0.5rem 0;
+  color: var(--accent-color);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.special-request-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+}
+
+.special-request-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(164, 226, 46, 0.2);
+}
+
+.special-request-display {
+  background-color: #f8f9fa;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-top: 0.25rem;
+  font-style: italic;
+  color: var(--text-light);
+}
+
+/* Request preview styling */
+.request-preview {
+  background-color: #e3f2fd;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #1976d2;
+  cursor: help;
+  max-width: 150px;
+  word-wrap: break-word;
+}
+
+.request-preview:hover {
+  background-color: #bbdefb;
+}
+
+.no-request {
+  color: var(--text-light);
+  font-style: italic;
+  font-size: 0.8rem;
 }
 
 .user-schedule-container {

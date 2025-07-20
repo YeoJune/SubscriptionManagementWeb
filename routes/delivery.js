@@ -501,4 +501,88 @@ router.post('/users/:userId/schedule', checkAdmin, async (req, res) => {
   }
 });
 
+// 중복 API 제거됨 - /admin/add-delivery API로 통합
+
+// POST /api/delivery/admin/add-delivery (admin) - 관리자용 배송 횟수/스케줄 추가 (통합 API)
+router.post('/admin/add-delivery', checkAdmin, async (req, res) => {
+  try {
+    const { userId, productId, deliveryCount, deliveryDates, specialRequest } =
+      req.body;
+
+    // 필수 파라미터 검증
+    if (!userId || !productId) {
+      return res.status(400).json({
+        error: '사용자 ID와 상품 ID는 필수입니다.',
+      });
+    }
+
+    // 사용자 정보 확인
+    const user = await deliveryManager.getUserInfo(userId);
+    if (!user) {
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 상품 정보 확인
+    const product = await new Promise((resolve, reject) => {
+      db.get(
+        'SELECT * FROM product WHERE id = ?',
+        [productId],
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        }
+      );
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: '상품을 찾을 수 없습니다.' });
+    }
+
+    // 배송 날짜가 있는 경우 날짜 형식 검증
+    if (
+      deliveryDates &&
+      Array.isArray(deliveryDates) &&
+      deliveryDates.length > 0
+    ) {
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      for (const date of deliveryDates) {
+        if (!dateRegex.test(date)) {
+          return res.status(400).json({
+            error: `잘못된 날짜 형식입니다: ${date}. YYYY-MM-DD 형식을 사용해주세요.`,
+          });
+        }
+      }
+    }
+
+    // deliveryManager의 일관된 인터페이스 사용
+    const result = await deliveryManager.adminAddDelivery(
+      userId,
+      productId,
+      deliveryCount || 0,
+      deliveryDates && deliveryDates.length > 0 ? deliveryDates : null,
+      specialRequest || null
+    );
+
+    res.json({
+      success: true,
+      message:
+        deliveryDates && deliveryDates.length > 0
+          ? `${deliveryDates.length}회 배송이 추가되고 스케줄이 생성되었습니다.`
+          : `${deliveryCount || 0}회 배송이 추가되었습니다. 나중에 스케줄을 설정하실 수 있습니다.`,
+      result: result,
+      user: {
+        id: user.id,
+        name: user.name,
+      },
+      product: {
+        id: product.id,
+        name: product.name,
+      },
+    });
+  } catch (error) {
+    console.error('관리자 배송 추가 오류:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

@@ -433,7 +433,49 @@
   text-align: center;
 }
 
-/* 계좌번호 정보 스타일 - 심플 버전 */
+/* 배송 옵션 안내 */
+.delivery-option-notice {
+  background: #f8f9fa;
+  border: 1px solid #e3f2fd;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.delivery-option-notice p {
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+  color: #1976d2;
+}
+
+.delivery-option-notice ul {
+  margin: 0.5rem 0 0 0;
+  padding-left: 1.5rem;
+  list-style-type: disc;
+}
+
+.delivery-option-notice li {
+  margin: 0.3rem 0;
+  color: #333;
+}
+
+/* 부분 선택 안내 */
+.partial-selection-notice {
+  background: #fff3e0;
+  border: 1px solid #ffb74d;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.partial-selection-notice p {
+  margin: 0.3rem 0;
+  color: #e65100;
+  font-weight: 500;
+}
+
+/* 계좌번호 정보 스타일링 개선 */
 .account-info {
   background-color: #f8fafc;
   border: 1px solid var(--border-color);

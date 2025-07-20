@@ -39,7 +39,7 @@ interface SearchUser {
   phone_number: string;
   address: string;
   email: string;
-  total_deliveries: number;
+  total_remaining_deliveries: number;
   pending_deliveries: number;
   completed_deliveries: number;
 }
@@ -101,6 +101,8 @@ const Delivery: React.FC = () => {
   const [selectedDatesForDelivery, setSelectedDatesForDelivery] = useState<
     string[]
   >([]);
+  const [specialRequestForDelivery, setSpecialRequestForDelivery] =
+    useState<string>('');
   const [deliveryStep, setDeliveryStep] = useState<
     'select-user' | 'select-product' | 'select-dates' | 'confirm'
   >('select-user');
@@ -326,86 +328,37 @@ const Delivery: React.FC = () => {
         throw new Error('선택된 상품을 찾을 수 없습니다.');
       }
 
-      // 배송일이 선택되었다면 스케줄도 함께 생성
-      if (selectedDatesForDelivery.length > 0) {
-        // 배송 횟수 추가
-        const userResponse = await axios.get(
-          `/api/users/${selectedUserForDelivery}`
-        );
-        const userData = userResponse.data;
-        const existingDeliveries = userData.product_deliveries || [];
+      // 새로운 깔끔한 API 사용
+      const response = await axios.post('/api/delivery/admin/add-delivery', {
+        userId: selectedUserForDelivery,
+        productId: selectedProductForDelivery,
+        deliveryCount: selectedProduct.delivery_count,
+        deliveryDates:
+          selectedDatesForDelivery.length > 0 ? selectedDatesForDelivery : null,
+        specialRequest: specialRequestForDelivery.trim() || null,
+      });
 
-        const existingProduct = existingDeliveries.find(
-          (pd: any) => pd.product_id === selectedProductForDelivery
-        );
-
-        const newRemainingCount = existingProduct
-          ? existingProduct.remaining_count + selectedProduct.delivery_count
-          : selectedProduct.delivery_count;
-
-        const updatedProductDeliveries = existingDeliveries.filter(
-          (pd: any) => pd.product_id !== selectedProductForDelivery
-        );
-
-        updatedProductDeliveries.push({
-          product_id: selectedProductForDelivery,
-          remaining_count: newRemainingCount,
-        });
-
-        await axios.put(`/api/users/${selectedUserForDelivery}`, {
-          ...userData,
-          product_deliveries: updatedProductDeliveries,
-        });
-
-        // 선택된 날짜만큼 배송 스케줄 생성
-        await axios.put(
-          `/api/delivery/users/${selectedUserForDelivery}/schedule`,
-          {
-            delivery_dates: selectedDatesForDelivery,
-            product_id: selectedProductForDelivery,
-          }
-        );
+      if (response.data.success) {
+        const result = response.data.result;
+        const hasSchedule = result.schedule && result.schedule.length > 0;
 
         alert(
-          `${selectedProduct.name} ${selectedDatesForDelivery.length}회 배송이 추가되고 스케줄이 생성되었습니다.`
-        );
-      } else {
-        // 배송일 선택 없이 배송 횟수만 추가
-        const userResponse = await axios.get(
-          `/api/users/${selectedUserForDelivery}`
-        );
-        const userData = userResponse.data;
-        const existingDeliveries = userData.product_deliveries || [];
-
-        const existingProduct = existingDeliveries.find(
-          (pd: any) => pd.product_id === selectedProductForDelivery
+          hasSchedule
+            ? `${selectedProduct.name} ${result.added_count}회 배송이 추가되고 ${result.schedule.length}개의 스케줄이 생성되었습니다.`
+            : `${selectedProduct.name} ${result.added_count}회 배송이 추가되었습니다. (스케줄은 사용자가 직접 선택)`
         );
 
-        const newRemainingCount = existingProduct
-          ? existingProduct.remaining_count + selectedProduct.delivery_count
-          : selectedProduct.delivery_count;
+        // 배송 추가 후 선택된 사용자의 정보를 실시간 업데이트
+        if (selectedUserForDelivery) {
+          await fetchUserSchedule(selectedUserForDelivery);
+        }
 
-        const updatedProductDeliveries = existingDeliveries.filter(
-          (pd: any) => pd.product_id !== selectedProductForDelivery
-        );
+        // 사용자 목록도 업데이트 (배송 횟수 카운트 반영)
+        await fetchAllUsers();
 
-        updatedProductDeliveries.push({
-          product_id: selectedProductForDelivery,
-          remaining_count: newRemainingCount,
-        });
-
-        await axios.put(`/api/users/${selectedUserForDelivery}`, {
-          ...userData,
-          product_deliveries: updatedProductDeliveries,
-        });
-
-        alert(
-          `${selectedProduct.name} ${selectedProduct.delivery_count}회 배송이 추가되었습니다.`
-        );
+        // 초기화
+        resetDeliveryProcess();
       }
-
-      // 초기화
-      resetDeliveryProcess();
     } catch (err: any) {
       console.error('Failed to add delivery:', err);
       setScheduleError(
@@ -443,6 +396,7 @@ const Delivery: React.FC = () => {
     setSelectedUserForDelivery('');
     setSelectedProductForDelivery(null);
     setSelectedDatesForDelivery([]);
+    setSpecialRequestForDelivery('');
     setDeliveryStep('select-user');
   };
 
@@ -736,9 +690,15 @@ const Delivery: React.FC = () => {
                         <strong>{user.name || user.id}</strong> ({user.id})
                         <div className="user-details">
                           <span>{user.phone_number}</span>
-                          <span>
-                            배송: {user.pending_deliveries || 0}대기 /{' '}
-                            {user.completed_deliveries || 0}완료
+                          <span className="delivery-summary">
+                            <span className="remaining-count">
+                              잔여: {user.total_remaining_deliveries || 0}회
+                            </span>
+                            |
+                            <span className="schedule-info">
+                              대기: {user.pending_deliveries || 0}개 / 완료:{' '}
+                              {user.completed_deliveries || 0}개
+                            </span>
                           </span>
                         </div>
                       </div>
@@ -1058,6 +1018,20 @@ const Delivery: React.FC = () => {
                   selectedDates={selectedDatesForDelivery}
                   onDatesChange={setSelectedDatesForDelivery}
                 />
+
+                {/* 특별 요청사항 입력 */}
+                <div className="special-request-section">
+                  <h5>특별 요청사항 (선택사항)</h5>
+                  <textarea
+                    value={specialRequestForDelivery}
+                    onChange={(e) =>
+                      setSpecialRequestForDelivery(e.target.value)
+                    }
+                    placeholder="배송 시 특별한 요청사항이 있다면 입력해주세요..."
+                    className="special-request-input"
+                    rows={3}
+                  />
+                </div>
               </div>
             )}
 
@@ -1092,7 +1066,7 @@ const Delivery: React.FC = () => {
                     <div className="confirm-item">
                       <strong>선택된 배송일:</strong>
                       <div className="selected-dates">
-                        {selectedDatesForDelivery.map((date, index) => (
+                        {selectedDatesForDelivery.map((date) => (
                           <span key={date} className="date-tag">
                             {new Date(date).toLocaleDateString('ko-KR')}
                           </span>
@@ -1103,6 +1077,14 @@ const Delivery: React.FC = () => {
                     <div className="confirm-item">
                       <strong>배송일:</strong> 나중에 스케줄링 (배송 횟수만
                       추가)
+                    </div>
+                  )}
+                  {specialRequestForDelivery.trim() && (
+                    <div className="confirm-item">
+                      <strong>특별 요청사항:</strong>
+                      <div className="special-request-display">
+                        {specialRequestForDelivery}
+                      </div>
                     </div>
                   )}
                 </div>

@@ -49,14 +49,24 @@ router.get('/', checkAdmin, (req, res) => {
 
     const order = req.query.order === 'desc' ? 'DESC' : 'ASC';
 
-    let query = `SELECT id, name, phone_number, email, address, total_delivery_count, created_at, last_login FROM users`;
-    let countQuery = `SELECT COUNT(*) as total FROM users`;
+    let query = `
+      SELECT 
+        u.id, u.name, u.phone_number, u.email, u.address, u.total_delivery_count, u.created_at, u.last_login,
+        COALESCE(SUM(upd.remaining_count), 0) as total_remaining_deliveries,
+        COALESCE(COUNT(CASE WHEN dl.status = 'pending' THEN 1 END), 0) as pending_deliveries,
+        COALESCE(COUNT(CASE WHEN dl.status = 'complete' THEN 1 END), 0) as completed_deliveries
+      FROM users u
+      LEFT JOIN user_product_delivery upd ON u.id = upd.user_id
+      LEFT JOIN delivery_list dl ON u.id = dl.user_id
+    `;
+
+    let countQuery = `SELECT COUNT(DISTINCT u.id) as total FROM users u`;
 
     const params = [];
     const countParams = [];
 
     if (searchTerm) {
-      const searchCondition = ` WHERE phone_number LIKE ? OR id LIKE ? OR name LIKE ? OR email LIKE ?`;
+      const searchCondition = ` WHERE u.phone_number LIKE ? OR u.id LIKE ? OR u.name LIKE ? OR u.email LIKE ?`;
       query += searchCondition;
       countQuery += searchCondition;
 
@@ -70,7 +80,8 @@ router.get('/', checkAdmin, (req, res) => {
       );
     }
 
-    query += ` ORDER BY ${sortBy} ${order} LIMIT ? OFFSET ?`;
+    query += ` GROUP BY u.id, u.name, u.phone_number, u.email, u.address, u.total_delivery_count, u.created_at, u.last_login`;
+    query += ` ORDER BY u.${sortBy} ${order} LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
     // 전체 사용자 수 가져오기
