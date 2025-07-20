@@ -237,23 +237,10 @@ const Subscription: React.FC = () => {
           </p>
           <p>
             총 <strong>{selectedProduct.delivery_count}회</strong> 배송이
-            예정됩니다.
+            시작됩니다. 원하시는 배송일을 선택해주세요. 총{' '}
+            {selectedProduct.delivery_count}회 이내에서 60일이내
+            자유선택하실수있습니다.
           </p>
-          <div className="delivery-option-notice">
-            <p>
-              💡 <strong>배송일 선택 방법:</strong>
-            </p>
-            <ul>
-              <li>
-                <strong>직접 선택:</strong> 원하는 날짜{' '}
-                {selectedProduct.delivery_count}개를 모두 선택
-              </li>
-              <li>
-                <strong>자동 스케줄링:</strong> 건너뛰고 나중에 마이페이지에서
-                선택
-              </li>
-            </ul>
-          </div>
         </div>
         <DeliveryCalendar
           requiredCount={selectedProduct.delivery_count}
@@ -267,7 +254,6 @@ const Subscription: React.FC = () => {
                 현재 {selectedDates.length}/{selectedProduct.delivery_count}개
                 선택됨
               </p>
-              <p>모든 날짜를 선택하거나 건너뛰어 나중에 선택할 수 있습니다.</p>
             </div>
           )}
       </div>
