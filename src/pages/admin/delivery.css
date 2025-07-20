@@ -382,16 +382,16 @@
 }
 
 .remaining-count {
+  color: var(--text-light);
+}
+
+.schedule-info {
   background-color: var(--primary-color);
   color: white;
   padding: 0.2rem 0.5rem;
   border-radius: 12px;
   font-weight: 600;
   font-size: 0.8rem;
-}
-
-.schedule-info {
-  color: var(--text-light);
 }
 
 /* Special request styling */
