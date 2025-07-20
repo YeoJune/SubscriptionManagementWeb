@@ -692,13 +692,14 @@ const Delivery: React.FC = () => {
                           <span>{user.phone_number}</span>
                           <span className="delivery-summary">
                             <span className="schedule-info">
-                              대기: {user.pending_deliveries || 0}개 / 완료:{' '}
-                              {user.completed_deliveries || 0}개
-                            </span>
-                            <span className="remaining-count">
-                              잔여: {user.total_remaining_deliveries || 0}회
+                              배송 대기: {user.pending_deliveries || 0}개 / 배송
+                              완료: {user.completed_deliveries || 0}개
                             </span>
                             |
+                            <span className="remaining-count">
+                              잔여 스케쥴:{' '}
+                              {user.total_remaining_deliveries || 0}회
+                            </span>
                           </span>
                         </div>
                       </div>
