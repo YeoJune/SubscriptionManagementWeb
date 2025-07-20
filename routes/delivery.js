@@ -191,7 +191,7 @@ router.get('/available-dates', authMiddleware, async (req, res) => {
     const deliveryDays = getDeliveryDays();
 
     // 배송 가능한 날짜를 기준으로 최대 선택 가능 개수 계산
-    const maxSelectableCount = requiredCount * 2;
+    const maxSelectableCount = requiredCount * 2 * 100; // 임시 (60일 제한만 적용)
 
     // 날짜 필터링 로직 - 가능한 날짜부터 세기
     const availableDates = [];
@@ -199,8 +199,8 @@ router.get('/available-dates', authMiddleware, async (req, res) => {
     let currentDate = new Date(today);
     let foundDates = 0;
 
-    // 충분한 날짜를 찾을 때까지 앞으로 진행 (최대 90일)
-    const maxDaysToCheck = 90;
+    // 충분한 날짜를 찾을 때까지 앞으로 진행 (최대 60일)
+    const maxDaysToCheck = 60;
     let daysChecked = 0;
 
     while (foundDates < maxSelectableCount && daysChecked < maxDaysToCheck) {
