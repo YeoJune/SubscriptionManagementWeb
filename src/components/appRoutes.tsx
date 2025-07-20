@@ -101,7 +101,14 @@ const AppRoutes: React.FC = () => {
           }
         />
 
-        <Route path="/subscription" element={<Subscription />} />
+        <Route
+          path="/subscription"
+          element={
+            <ProtectedRoute>
+              <Subscription />
+            </ProtectedRoute>
+          }
+        />
 
         {/* 결제 결과 페이지 - 인증 필요 */}
         <Route
