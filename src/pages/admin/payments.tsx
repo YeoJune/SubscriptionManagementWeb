@@ -89,7 +89,7 @@ const AdminPayments: React.FC = () => {
         params.date_to = dateTo;
       }
 
-      const response = await axios.get('/api/admin/payments', { params });
+      const response = await axios.get('/api/payments/admin', { params });
 
       setPayments(response.data.payments || []);
       setPagination(
@@ -115,8 +115,8 @@ const AdminPayments: React.FC = () => {
   const fetchUsersAndProducts = async () => {
     try {
       const [usersRes, productsRes] = await Promise.all([
-        axios.get('/api/admin/users?limit=1000'),
-        axios.get('/api/admin/products?limit=1000'),
+        axios.get('/api/users?limit=1000'),
+        axios.get('/api/products?limit=1000'),
       ]);
       setUsers(usersRes.data.users || []);
       setProducts(productsRes.data.products || []);
@@ -137,7 +137,7 @@ const AdminPayments: React.FC = () => {
       return;
     }
     try {
-      await axios.post('/api/admin/payments', {
+      await axios.post('/api/payments/admin', {
         user_id: cashPaymentForm.user_id,
         product_id: parseInt(cashPaymentForm.product_id),
         amount: parseFloat(cashPaymentForm.amount),

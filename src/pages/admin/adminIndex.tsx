@@ -47,7 +47,7 @@ const AdminIndex: React.FC = () => {
     setLoading(true);
     try {
       // 결제 통계 API 파라미터 구성
-      let paymentsStatsUrl = '/api/admin/payments/stats';
+      let paymentsStatsUrl = '/api/payments/admin/stats';
       if (selectedMonth !== 'all') {
         const month =
           selectedMonth === 'current'
@@ -65,10 +65,10 @@ const AdminIndex: React.FC = () => {
         noticesResponse,
         paymentsStatsResponse,
       ] = await Promise.all([
-        axios.get('/api/admin/users?limit=1'),
+        axios.get('/api/users?limit=1'),
         axios.get('/api/delivery/today'),
         axios.get('/api/admin/inquiries?status=unanswered&limit=1'),
-        axios.get('/api/admin/products?limit=1'),
+        axios.get('/api/products?limit=1'),
         axios.get('/api/admin/notices?limit=1'),
         axios.get(paymentsStatsUrl),
       ]);
