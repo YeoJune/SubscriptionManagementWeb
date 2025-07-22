@@ -262,13 +262,16 @@ const AdminPayments: React.FC = () => {
       <div className="filter-paper">
         <div className="filter-grid">
           {/* 월별 필터 */}
-          <div className="form-control">
-            <label htmlFor="month-filter">월별</label>
+          <div className="form-control month-filter-container">
+            <label htmlFor="month-filter" className="month-filter-label">
+              월별
+            </label>
             <input
               id="month-filter"
               type="month"
               value={filterMonth}
               onChange={(e) => setFilterMonth(e.target.value)}
+              className="month-filter-input"
             />
           </div>
           {/* 현금 결제 추가 버튼 */}

@@ -1,3 +1,50 @@
+/* 월별 필터 영역 */
+.month-filter-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.month-filter-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+  margin-right: 0.5rem;
+}
+
+.month-filter-input {
+  font-size: 1rem;
+  padding: 0.35em 0.8em;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fafbfc;
+  color: #222;
+  transition:
+    border 0.2s,
+    box-shadow 0.2s;
+  outline: none;
+}
+.month-filter-input:focus {
+  border-color: #4f8cff;
+  box-shadow: 0 0 0 2px #e3f0ff;
+}
+
+@media (max-width: 600px) {
+  .month-filter-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  .month-filter-label {
+    margin-right: 0;
+    margin-bottom: 0.25rem;
+  }
+  .month-filter-input {
+    width: 100%;
+    font-size: 0.98rem;
+  }
+}
 /* src/pages/admin/adminIndex.css */
 
 .admin-dashboard-container {
