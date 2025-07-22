@@ -35,4 +35,17 @@ CREATE TABLE IF NOT EXISTS notice (
   answer TEXT
 );
 
+-- 고객의 소리 테이블 (inquiries)
+CREATE TABLE IF NOT EXISTS inquiries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  answer TEXT,
+  category TEXT CHECK(category IN ('general', 'catering')) NOT NULL DEFAULT 'general',
+  status TEXT CHECK(status IN ('answered', 'unanswered')) NOT NULL DEFAULT 'unanswered',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  answered_at TIMESTAMP
+);
+
 */

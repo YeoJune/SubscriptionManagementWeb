@@ -14,6 +14,7 @@ const Register = React.lazy(() => import('../pages/register'));
 const Profile = React.lazy(() => import('../pages/profile'));
 const Inquiry = React.lazy(() => import('../pages/inquiry'));
 const InquiryDetail = React.lazy(() => import('../pages/inquiryDetail'));
+const Catering = React.lazy(() => import('../pages/catering'));
 
 // 관리자 페이지들
 const AdminIndex = React.lazy(() => import('../pages/admin/adminIndex'));
@@ -21,6 +22,9 @@ const AdminDelivery = React.lazy(() => import('../pages/admin/delivery'));
 const AdminUsers = React.lazy(() => import('../pages/admin/users'));
 const AdminUserDetail = React.lazy(() => import('../pages/admin/userDetail')); // 사용자 상세 페이지 추가
 const AdminInquiry = React.lazy(() => import('../pages/admin/inquiry'));
+const AdminCateringInquiry = React.lazy(
+  () => import('../pages/admin/cateringInquiry')
+);
 const AdminProducts = React.lazy(() => import('../pages/admin/products'));
 const AdminNotices = React.lazy(() => import('../pages/admin/notices'));
 const AdminPayments = React.lazy(() => import('../pages/admin/payments'));
@@ -122,6 +126,7 @@ const AppRoutes: React.FC = () => {
 
         <Route path="/inquiry" element={<Inquiry />} />
         <Route path="/inquiry/:id" element={<InquiryDetail />} />
+        <Route path="/catering" element={<Catering />} />
 
         {/* 관리자 라우트 */}
         <Route
@@ -166,6 +171,15 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute adminOnly>
               <AdminInquiry />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/catering"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminCateringInquiry />
             </ProtectedRoute>
           }
         />

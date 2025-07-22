@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS inquiries (
   title TEXT NOT NULL,
   content TEXT NOT NULL,
   answer TEXT,
+  category TEXT CHECK(category IN ('general', 'catering')) NOT NULL DEFAULT 'general',
   status TEXT CHECK(status IN ('answered', 'unanswered')) NOT NULL DEFAULT 'unanswered',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   answered_at TIMESTAMP
@@ -27,8 +28,8 @@ router.get('/', authMiddleware, (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
-    // 상태 필터링 및 검색
-    const { status, search } = req.query;
+    // 상태 필터링, 카테고리 필터링 및 검색
+    const { status, search, category } = req.query;
     const userId = req.session.user.id;
     const isAdmin = req.session.user.isAdmin;
 
@@ -60,6 +61,13 @@ router.get('/', authMiddleware, (req, res) => {
       conditions.push('i.status = ?');
       params.push(status);
       countParams.push(status);
+    }
+
+    // 카테고리 필터링이 있는 경우
+    if (category && (category === 'general' || category === 'catering')) {
+      conditions.push('i.category = ?');
+      params.push(category);
+      countParams.push(category);
     }
 
     // 검색어가 있는 경우
@@ -150,7 +158,7 @@ router.get('/:id', authMiddleware, (req, res) => {
 // POST /api/inquiries - 문의 등록
 router.post('/', authMiddleware, (req, res) => {
   try {
-    const { title, content } = req.body;
+    const { title, content, category } = req.body;
     const userId = req.session.user.id;
 
     // 유효성 검사
@@ -160,10 +168,13 @@ router.post('/', authMiddleware, (req, res) => {
         .json({ error: '제목과 내용은 필수 입력 사항입니다.' });
     }
 
+    // 카테고리 유효성 검사
+    const validCategory = category === 'catering' ? 'catering' : 'general';
+
     // 데이터베이스에 저장
     db.run(
-      `INSERT INTO inquiries (user_id, title, content, status) VALUES (?, ?, ?, 'unanswered')`,
-      [userId, title, content],
+      `INSERT INTO inquiries (user_id, title, content, category, status) VALUES (?, ?, ?, ?, 'unanswered')`,
+      [userId, title, content, validCategory],
       function (err) {
         if (err) {
           return res.status(500).json({ error: err.message });
