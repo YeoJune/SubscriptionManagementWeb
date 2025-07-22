@@ -437,45 +437,6 @@ router.get('/', authMiddleware, (req, res) => {
   }
 });
 
-// GET /api/payments/:orderId (특정 결제 조회)
-router.get('/:orderId', authMiddleware, (req, res) => {
-  try {
-    const orderId = req.params.orderId;
-    const user_id = req.session.user.id;
-
-    db.get(
-      'SELECT * FROM payments WHERE order_id = ? AND user_id = ?',
-      [orderId, user_id],
-      (err, payment) => {
-        if (err) {
-          return res.status(500).json({ success: false, error: err.message });
-        }
-
-        if (!payment) {
-          return res.status(404).json({
-            success: false,
-            error: '해당 결제 정보를 찾을 수 없습니다.',
-          });
-        }
-
-        if (payment.raw_response_data) {
-          try {
-            payment.raw_response_data = JSON.parse(payment.raw_response_data);
-          } catch (error) {
-            console.error('결제 응답 데이터 파싱 오류:', error);
-          }
-        }
-
-        res.json({ success: true, payment: payment });
-      }
-    );
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// === 관리자 결제 관리 API ===
-
 // GET /api/payments/admin/stats
 router.get('/admin/stats', checkAdmin, (req, res) => {
   try {
@@ -752,6 +713,43 @@ router.get('/admin/:id', checkAdmin, (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/payments/:orderId (특정 결제 조회)
+router.get('/:orderId', authMiddleware, (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    const user_id = req.session.user.id;
+
+    db.get(
+      'SELECT * FROM payments WHERE order_id = ? AND user_id = ?',
+      [orderId, user_id],
+      (err, payment) => {
+        if (err) {
+          return res.status(500).json({ success: false, error: err.message });
+        }
+
+        if (!payment) {
+          return res.status(404).json({
+            success: false,
+            error: '해당 결제 정보를 찾을 수 없습니다.',
+          });
+        }
+
+        if (payment.raw_response_data) {
+          try {
+            payment.raw_response_data = JSON.parse(payment.raw_response_data);
+          } catch (error) {
+            console.error('결제 응답 데이터 파싱 오류:', error);
+          }
+        }
+
+        res.json({ success: true, payment: payment });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
