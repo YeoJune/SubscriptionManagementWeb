@@ -1,3 +1,40 @@
+// 관리자 현금 결제 수동 입력 API
+router.post('/admin/payments/cash', checkAdmin, (req, res) => {
+  try {
+    const { amount, date, customerName, memo } = req.body;
+    if (!amount || !date) {
+      return res.status(400).json({ error: '금액과 결제일은 필수입니다.' });
+    }
+    // KST 변환 (date는 YYYY-MM-DD)
+    const kstDate = new Date(date + 'T00:00:00+09:00');
+    const now = new Date();
+    db.run(
+      `INSERT INTO payments (
+        user_id, product_id, count, amount, order_id, status, payment_method, paid_at, created_at, raw_response_data
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        'admin-cash',
+        0,
+        1,
+        amount,
+        'CASH_' + now.getTime(),
+        'completed',
+        'CASH',
+        kstDate.toISOString(),
+        kstDate.toISOString(),
+        JSON.stringify({ customerName, memo }),
+      ],
+      function (err) {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ success: true, id: this.lastID });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 // routes/payments.js (나이스페이 통합 버전)
 const express = require('express');
 const router = express.Router();

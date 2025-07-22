@@ -1,5 +1,79 @@
 // src/pages/admin/payments.tsx
 import React, { useEffect, useState } from 'react';
+// 현금 결제 입력 모달 컴포넌트
+const CashPaymentModal = ({ open, onClose, onSubmit }: any) => {
+  const [amount, setAmount] = useState('');
+  const [date, setDate] = useState(() =>
+    new Date().toLocaleDateString('sv-SE')
+  );
+  const [customerName, setCustomerName] = useState('');
+  const [memo, setMemo] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amount || !date) return;
+    onSubmit({
+      amount: Number(amount),
+      date,
+      customerName,
+      memo,
+    });
+  };
+
+  if (!open) return null;
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h2>현금 결제 추가</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-control">
+            <label>결제일</label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-control">
+            <label>금액</label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              required
+              min="1"
+            />
+          </div>
+          <div className="form-control">
+            <label>고객명(선택)</label>
+            <input
+              type="text"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+            />
+          </div>
+          <div className="form-control">
+            <label>비고</label>
+            <input
+              type="text"
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+            />
+          </div>
+          <div className="modal-actions">
+            <button type="submit" className="primary">
+              추가
+            </button>
+            <button type="button" onClick={onClose}>
+              취소
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 import './payments.css';
 import { useAuth } from '../../hooks/useAuth';
 import axios from 'axios';
@@ -45,41 +119,34 @@ const AdminPayments: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
+  // 월별 필터 추가 (YYYY-MM)
+  const [filterMonth, setFilterMonth] = useState<string>(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
+  // 현금 결제 모달 상태
+  const [openCashModal, setOpenCashModal] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && user?.isAdmin) {
       fetchPayments();
     }
-  }, [page, rowsPerPage, filterStatus, dateFrom, dateTo]);
+  }, [page, rowsPerPage, filterStatus, dateFrom, dateTo, filterMonth]);
 
   const fetchPayments = async () => {
     setLoading(true);
     setError(null);
-
     try {
       const params: any = {
         page: page + 1,
         limit: rowsPerPage,
       };
-
-      if (filterStatus !== 'all') {
-        params.status = filterStatus;
-      }
-
-      if (searchTerm) {
-        params.search = searchTerm;
-      }
-
-      if (dateFrom) {
-        params.date_from = dateFrom;
-      }
-
-      if (dateTo) {
-        params.date_to = dateTo;
-      }
-
+      if (filterStatus !== 'all') params.status = filterStatus;
+      if (searchTerm) params.search = searchTerm;
+      if (dateFrom) params.date_from = dateFrom;
+      if (dateTo) params.date_to = dateTo;
+      if (filterMonth) params.month = filterMonth; // 월별 필터 적용
       const response = await axios.get('/api/admin/payments', { params });
-
       setPayments(response.data.payments || []);
       setPagination(
         response.data.pagination || {
@@ -97,6 +164,16 @@ const AdminPayments: React.FC = () => {
       );
     } finally {
       setLoading(false);
+    }
+  };
+  // 현금 결제 추가 핸들러
+  const handleAddCashPayment = async (data: any) => {
+    try {
+      await axios.post('/api/admin/payments/cash', data);
+      setOpenCashModal(false);
+      fetchPayments();
+    } catch (err) {
+      alert('현금 결제 추가에 실패했습니다.');
     }
   };
 
@@ -184,6 +261,27 @@ const AdminPayments: React.FC = () => {
       {/* 필터 및 검색 */}
       <div className="filter-paper">
         <div className="filter-grid">
+          {/* 월별 필터 */}
+          <div className="form-control">
+            <label htmlFor="month-filter">월별</label>
+            <input
+              id="month-filter"
+              type="month"
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+            />
+          </div>
+          {/* 현금 결제 추가 버튼 */}
+          <div style={{ margin: '1rem 0' }}>
+            <button className="primary" onClick={() => setOpenCashModal(true)}>
+              현금 결제 추가
+            </button>
+          </div>
+          <CashPaymentModal
+            open={openCashModal}
+            onClose={() => setOpenCashModal(false)}
+            onSubmit={handleAddCashPayment}
+          />
           <div className="form-control">
             <label htmlFor="status-filter">결제 상태</label>
             <select

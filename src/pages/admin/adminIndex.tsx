@@ -1,5 +1,10 @@
 // src/pages/admin/adminIndex.tsx
 import React, { useState, useEffect } from 'react';
+// 월별 필터 추가 (YYYY-MM)
+const [filterMonth, setFilterMonth] = useState<string>(() => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+});
 import './adminIndex.css';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -36,28 +41,29 @@ const AdminIndex: React.FC = () => {
     if (isAuthenticated && user?.isAdmin) {
       fetchDashboardData();
     }
-  }, [isAuthenticated, user]);
+    // eslint-disable-next-line
+  }, [isAuthenticated, user, filterMonth]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // 여러 API 요청을 병렬로 처리
       const [
         usersResponse,
         deliveriesResponse,
         inquiriesResponse,
         productsResponse,
         noticesResponse,
-        paymentsStatsResponse, // 결제 통계 추가
+        paymentsStatsResponse,
       ] = await Promise.all([
         axios.get('/api/admin/users?limit=1'),
-        axios.get('/api/delivery/today'), // 원래대로 복원
+        axios.get('/api/delivery/today'),
         axios.get('/api/admin/inquiries?status=unanswered&limit=1'),
         axios.get('/api/admin/products?limit=1'),
         axios.get('/api/admin/notices?limit=1'),
-        axios.get('/api/admin/payments/stats'), // 결제 통계 API
+        axios.get('/api/admin/payments/stats', {
+          params: filterMonth ? { month: filterMonth } : {},
+        }),
       ]);
-
       setDashboardData({
         totalUsers: usersResponse.data.pagination?.total || 0,
         todayDeliveries: deliveriesResponse.data.deliveries?.length || 0,
@@ -69,7 +75,6 @@ const AdminIndex: React.FC = () => {
           paymentsStatsResponse.data.stats?.completed_payments || 0,
         totalAmount: paymentsStatsResponse.data.stats?.total_amount || 0,
       });
-
       setLoading(false);
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
@@ -113,6 +118,19 @@ const AdminIndex: React.FC = () => {
       ) : (
         <>
           {/* 요약 데이터 카드 */}
+          {/* 월별 필터 */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label htmlFor="month-filter" style={{ marginRight: 8 }}>
+              월별
+            </label>
+            <input
+              id="month-filter"
+              type="month"
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+              style={{ fontSize: 16 }}
+            />
+          </div>
           <div
             className="summary-grid"
             style={{
@@ -194,7 +212,7 @@ const AdminIndex: React.FC = () => {
 
             {/* 결제 통계 카드 추가 */}
             <div className="summary-card payments-card">
-              <div className="summary-title">총 결제액</div>
+              <div className="summary-title">{filterMonth} 총 결제액</div>
               <div className="summary-value payments-value">
                 {formatCurrency(dashboardData.totalAmount)}
                 <svg
