@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import axios from 'axios';
 
-
 interface DashboardData {
   totalUsers: number;
   todayDeliveries: number;
@@ -17,7 +16,6 @@ interface DashboardData {
   completedPayments: number;
   totalAmount: number;
 }
-
 
 const AdminIndex: React.FC = () => {
   const navigate = useNavigate();
