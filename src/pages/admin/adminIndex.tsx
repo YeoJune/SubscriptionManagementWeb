@@ -1,14 +1,11 @@
 // src/pages/admin/adminIndex.tsx
+
 import React, { useState, useEffect } from 'react';
-// 월별 필터 추가 (YYYY-MM)
-const [filterMonth, setFilterMonth] = useState<string>(() => {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-});
 import './adminIndex.css';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import axios from 'axios';
+
 
 interface DashboardData {
   totalUsers: number;
@@ -21,9 +18,15 @@ interface DashboardData {
   totalAmount: number;
 }
 
+
 const AdminIndex: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  // 월별 필터 추가 (YYYY-MM) - 반드시 함수 내부에서 선언
+  const [filterMonth, setFilterMonth] = useState<string>(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     totalUsers: 0,
     todayDeliveries: 0,
@@ -119,8 +122,8 @@ const AdminIndex: React.FC = () => {
         <>
           {/* 요약 데이터 카드 */}
           {/* 월별 필터 */}
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="month-filter" style={{ marginRight: 8 }}>
+          <div className="month-filter-container">
+            <label htmlFor="month-filter" className="month-filter-label">
               월별
             </label>
             <input
@@ -128,7 +131,7 @@ const AdminIndex: React.FC = () => {
               type="month"
               value={filterMonth}
               onChange={(e) => setFilterMonth(e.target.value)}
-              style={{ fontSize: 16 }}
+              className="month-filter-input"
             />
           </div>
           <div
