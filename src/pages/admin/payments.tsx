@@ -1,79 +1,5 @@
 // src/pages/admin/payments.tsx
 import React, { useEffect, useState } from 'react';
-// 현금 결제 입력 모달 컴포넌트
-const CashPaymentModal = ({ open, onClose, onSubmit }: any) => {
-  const [amount, setAmount] = useState('');
-  const [date, setDate] = useState(() =>
-    new Date().toLocaleDateString('sv-SE')
-  );
-  const [customerName, setCustomerName] = useState('');
-  const [memo, setMemo] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!amount || !date) return;
-    onSubmit({
-      amount: Number(amount),
-      date,
-      customerName,
-      memo,
-    });
-  };
-
-  if (!open) return null;
-  return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h2>현금 결제 추가</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-control">
-            <label>결제일</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-control">
-            <label>금액</label>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
-              min="1"
-            />
-          </div>
-          <div className="form-control">
-            <label>고객명(선택)</label>
-            <input
-              type="text"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-            />
-          </div>
-          <div className="form-control">
-            <label>비고</label>
-            <input
-              type="text"
-              value={memo}
-              onChange={(e) => setMemo(e.target.value)}
-            />
-          </div>
-          <div className="modal-actions">
-            <button type="submit" className="primary">
-              추가
-            </button>
-            <button type="button" onClick={onClose}>
-              취소
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
 import './payments.css';
 import { useAuth } from '../../hooks/useAuth';
 import axios from 'axios';
@@ -119,34 +45,52 @@ const AdminPayments: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
-  // 월별 필터 추가 (YYYY-MM)
-  const [filterMonth, setFilterMonth] = useState<string>(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  // 현금 결제 모달 및 폼 상태
+  const [showCashModal, setShowCashModal] = useState(false);
+  const [cashPaymentForm, setCashPaymentForm] = useState({
+    user_id: '',
+    product_id: '',
+    amount: '',
+    payment_memo: '',
   });
-  // 현금 결제 모달 상태
-  const [openCashModal, setOpenCashModal] = useState(false);
+  const [users, setUsers] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
     if (isAuthenticated && user?.isAdmin) {
       fetchPayments();
     }
-  }, [page, rowsPerPage, filterStatus, dateFrom, dateTo, filterMonth]);
+  }, [page, rowsPerPage, filterStatus, dateFrom, dateTo]);
 
   const fetchPayments = async () => {
     setLoading(true);
     setError(null);
+
     try {
       const params: any = {
         page: page + 1,
         limit: rowsPerPage,
       };
-      if (filterStatus !== 'all') params.status = filterStatus;
-      if (searchTerm) params.search = searchTerm;
-      if (dateFrom) params.date_from = dateFrom;
-      if (dateTo) params.date_to = dateTo;
-      if (filterMonth) params.month = filterMonth; // 월별 필터 적용
+
+      if (filterStatus !== 'all') {
+        params.status = filterStatus;
+      }
+
+      if (searchTerm) {
+        params.search = searchTerm;
+      }
+
+      if (dateFrom) {
+        params.date_from = dateFrom;
+      }
+
+      if (dateTo) {
+        params.date_to = dateTo;
+      }
+
       const response = await axios.get('/api/admin/payments', { params });
+
       setPayments(response.data.payments || []);
       setPagination(
         response.data.pagination || {
@@ -166,15 +110,57 @@ const AdminPayments: React.FC = () => {
       setLoading(false);
     }
   };
-  // 현금 결제 추가 핸들러
-  const handleAddCashPayment = async (data: any) => {
+
+  // 사용자/상품 목록 불러오기 (현금 결제용)
+  const fetchUsersAndProducts = async () => {
     try {
-      await axios.post('/api/admin/payments/cash', data);
-      setOpenCashModal(false);
-      fetchPayments();
+      const [usersRes, productsRes] = await Promise.all([
+        axios.get('/api/admin/users?limit=1000'),
+        axios.get('/api/admin/products?limit=1000'),
+      ]);
+      setUsers(usersRes.data.users || []);
+      setProducts(productsRes.data.products || []);
     } catch (err) {
-      alert('현금 결제 추가에 실패했습니다.');
+      console.error('사용자/상품 데이터 로드 실패:', err);
     }
+  };
+
+  // 현금 결제 등록 핸들러
+  const handleCashPaymentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (
+      !cashPaymentForm.user_id ||
+      !cashPaymentForm.product_id ||
+      !cashPaymentForm.amount
+    ) {
+      alert('모든 필수 항목을 입력해주세요.');
+      return;
+    }
+    try {
+      await axios.post('/api/admin/payments', {
+        user_id: cashPaymentForm.user_id,
+        product_id: parseInt(cashPaymentForm.product_id),
+        amount: parseFloat(cashPaymentForm.amount),
+        payment_memo: cashPaymentForm.payment_memo,
+      });
+      alert('현금 결제가 등록되었습니다.');
+      setShowCashModal(false);
+      setCashPaymentForm({
+        user_id: '',
+        product_id: '',
+        amount: '',
+        payment_memo: '',
+      });
+      fetchPayments();
+    } catch (err: any) {
+      alert(err.response?.data?.error || '현금 결제 등록 실패');
+    }
+  };
+
+  // 모달 열기
+  const openCashModal = () => {
+    fetchUsersAndProducts();
+    setShowCashModal(true);
   };
 
   const handleSearch = () => {
@@ -241,6 +227,8 @@ const AdminPayments: React.FC = () => {
         return '계좌이체';
       case 'PHONE':
         return '휴대폰';
+      case 'CASH':
+        return '현금';
       default:
         return method || '-';
     }
@@ -261,30 +249,6 @@ const AdminPayments: React.FC = () => {
       {/* 필터 및 검색 */}
       <div className="filter-paper">
         <div className="filter-grid">
-          {/* 월별 필터 */}
-          <div className="form-control month-filter-container">
-            <label htmlFor="month-filter" className="month-filter-label">
-              월별
-            </label>
-            <input
-              id="month-filter"
-              type="month"
-              value={filterMonth}
-              onChange={(e) => setFilterMonth(e.target.value)}
-              className="month-filter-input"
-            />
-          </div>
-          {/* 현금 결제 추가 버튼 */}
-          <div style={{ margin: '1rem 0' }}>
-            <button className="primary" onClick={() => setOpenCashModal(true)}>
-              현금 결제 추가
-            </button>
-          </div>
-          <CashPaymentModal
-            open={openCashModal}
-            onClose={() => setOpenCashModal(false)}
-            onSubmit={handleAddCashPayment}
-          />
           <div className="form-control">
             <label htmlFor="status-filter">결제 상태</label>
             <select
@@ -345,6 +309,18 @@ const AdminPayments: React.FC = () => {
               onClick={handleSearch}
             >
               검색
+            </button>
+          </div>
+
+          {/* 현금 결제 추가 버튼 */}
+          <div className="form-control">
+            <label htmlFor="cash-payment-button">&nbsp;</label>
+            <button
+              id="cash-payment-button"
+              className="cash-payment-button"
+              onClick={openCashModal}
+            >
+              현금 결제 추가
             </button>
           </div>
         </div>
@@ -503,6 +479,112 @@ const AdminPayments: React.FC = () => {
             </div>
           </div>
         </>
+      )}
+      {/* 현금 결제 추가 모달 */}
+      {showCashModal && (
+        <div className="modal-overlay" onClick={() => setShowCashModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>현금 결제 추가</h3>
+              <button
+                className="modal-close"
+                onClick={() => setShowCashModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <form
+              onSubmit={handleCashPaymentSubmit}
+              className="cash-payment-form"
+            >
+              <div className="form-control">
+                <label htmlFor="cash-user">사용자 *</label>
+                <select
+                  id="cash-user"
+                  value={cashPaymentForm.user_id}
+                  onChange={(e) =>
+                    setCashPaymentForm({
+                      ...cashPaymentForm,
+                      user_id: e.target.value,
+                    })
+                  }
+                  required
+                >
+                  <option value="">사용자 선택</option>
+                  {users.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} ({user.id}) - {user.phone_number}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-control">
+                <label htmlFor="cash-product">상품 *</label>
+                <select
+                  id="cash-product"
+                  value={cashPaymentForm.product_id}
+                  onChange={(e) => {
+                    const product = products.find(
+                      (p) => p.id === parseInt(e.target.value)
+                    );
+                    setCashPaymentForm({
+                      ...cashPaymentForm,
+                      product_id: e.target.value,
+                      amount: product ? product.price.toString() : '',
+                    });
+                  }}
+                  required
+                >
+                  <option value="">상품 선택</option>
+                  {products.map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.name} - {formatCurrency(product.price)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-control">
+                <label htmlFor="cash-amount">결제 금액 *</label>
+                <input
+                  id="cash-amount"
+                  type="number"
+                  value={cashPaymentForm.amount}
+                  onChange={(e) =>
+                    setCashPaymentForm({
+                      ...cashPaymentForm,
+                      amount: e.target.value,
+                    })
+                  }
+                  placeholder="결제 금액"
+                  required
+                />
+              </div>
+              <div className="form-control">
+                <label htmlFor="cash-memo">메모</label>
+                <textarea
+                  id="cash-memo"
+                  value={cashPaymentForm.payment_memo}
+                  onChange={(e) =>
+                    setCashPaymentForm({
+                      ...cashPaymentForm,
+                      payment_memo: e.target.value,
+                    })
+                  }
+                  placeholder="결제 관련 메모 (선택사항)"
+                  rows={3}
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="button" onClick={() => setShowCashModal(false)}>
+                  취소
+                </button>
+                <button type="submit" className="primary">
+                  등록
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

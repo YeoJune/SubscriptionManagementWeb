@@ -1,41 +1,4 @@
-// 관리자 현금 결제 수동 입력 API
-router.post('/admin/payments/cash', checkAdmin, (req, res) => {
-  try {
-    const { amount, date, customerName, memo } = req.body;
-    if (!amount || !date) {
-      return res.status(400).json({ error: '금액과 결제일은 필수입니다.' });
-    }
-    // KST 변환 (date는 YYYY-MM-DD)
-    const kstDate = new Date(date + 'T00:00:00+09:00');
-    const now = new Date();
-    db.run(
-      `INSERT INTO payments (
-        user_id, product_id, count, amount, order_id, status, payment_method, paid_at, created_at, raw_response_data
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        'admin-cash',
-        0,
-        1,
-        amount,
-        'CASH_' + now.getTime(),
-        'completed',
-        'CASH',
-        kstDate.toISOString(),
-        kstDate.toISOString(),
-        JSON.stringify({ customerName, memo }),
-      ],
-      function (err) {
-        if (err) {
-          return res.status(500).json({ error: err.message });
-        }
-        res.json({ success: true, id: this.lastID });
-      }
-    );
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-// routes/payments.js (나이스페이 통합 버전)
+// routes/payments.js (정리된 최종 버전)
 const express = require('express');
 const router = express.Router();
 const db = require('../lib/db');
@@ -75,20 +38,24 @@ function generateSignature(orderId, amount, timestamp) {
 /*
 payments 테이블 스키마
 CREATE TABLE IF NOT EXISTS payments (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id TEXT NOT NULL,
-  product_id INTEGER NOT NULL,
-  count INTEGER NOT NULL DEFAULT 1,
-  amount REAL NOT NULL,
-  order_id TEXT UNIQUE,
-  status TEXT NOT NULL DEFAULT 'pending',
-  payment_method TEXT,
-  payment_gateway_transaction_id TEXT,
-  raw_response_data TEXT,
-  paid_at TIMESTAMP,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ user_id TEXT NOT NULL,
+ product_id INTEGER NOT NULL,
+ count INTEGER NOT NULL DEFAULT 1,
+ amount REAL NOT NULL,
+ order_id TEXT UNIQUE,
+ status TEXT NOT NULL DEFAULT 'pending',
+ payment_method TEXT,
+ payment_gateway_transaction_id TEXT,
+ raw_response_data TEXT,
+ paid_at TIMESTAMP,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 */
+
+// ============================================================================
+// 사용자 결제 API
+// ============================================================================
 
 // 결제 준비 - POST /api/payments/prepare
 router.post('/prepare', authMiddleware, (req, res) => {
@@ -131,8 +98,8 @@ router.post('/prepare', authMiddleware, (req, res) => {
         // 결제 정보 DB에 저장 (pending 상태)
         db.run(
           `INSERT INTO payments (
-          user_id, product_id, count, amount, order_id, status
-        ) VALUES (?, ?, ?, ?, ?, ?)`,
+         user_id, product_id, count, amount, order_id, status
+       ) VALUES (?, ?, ?, ?, ?, ?)`,
           [user_id, product_id, 1, amount, orderId, 'pending'],
           function (err) {
             if (err) {
@@ -251,12 +218,12 @@ router.post('/approve', authMiddleware, (req, res) => {
               // 결제 상태 업데이트
               db.run(
                 `UPDATE payments SET 
-                  status = ?, 
-                  payment_method = ?, 
-                  payment_gateway_transaction_id = ?,
-                  raw_response_data = ?,
-                  paid_at = CURRENT_TIMESTAMP 
-                WHERE id = ?`,
+                 status = ?, 
+                 payment_method = ?, 
+                 payment_gateway_transaction_id = ?,
+                 raw_response_data = ?,
+                 paid_at = CURRENT_TIMESTAMP 
+               WHERE id = ?`,
                 [
                   'completed',
                   payMethod,
@@ -482,12 +449,12 @@ router.post('/webhook', (req, res) => {
         // 웹훅 데이터 저장
         db.run(
           `UPDATE payments SET 
-          status = ?, 
-          payment_gateway_transaction_id = ?, 
-          raw_response_data = ?,
-          payment_method = ?,
-          paid_at = ?
-        WHERE id = ?`,
+         status = ?, 
+         payment_gateway_transaction_id = ?, 
+         raw_response_data = ?,
+         payment_method = ?,
+         paid_at = ?
+       WHERE id = ?`,
           [
             newStatus,
             tid,
@@ -561,7 +528,7 @@ router.get('/:orderId', authMiddleware, (req, res) => {
   }
 });
 
-// 기존 결제 내역 조회 API (GET /api/payments)는 그대로 유지
+// 사용자 결제 내역 조회 - GET /api/payments
 router.get('/', authMiddleware, (req, res) => {
   try {
     const user_id = req.session.user.id;
@@ -573,21 +540,21 @@ router.get('/', authMiddleware, (req, res) => {
 
     // 사용자의 결제 내역 조회 (완료된 결제만)
     const query = `
-      SELECT p.id, p.product_id, p.count, p.amount, p.created_at, p.order_id, 
-             p.status, p.payment_method, p.paid_at,
-             pr.name as product_name, pr.delivery_count as product_delivery_count
-      FROM payments p
-      JOIN product pr ON p.product_id = pr.id
-      WHERE p.user_id = ? AND p.status = 'completed'
-      ORDER BY p.created_at DESC
-      LIMIT ? OFFSET ?
-    `;
+     SELECT p.id, p.product_id, p.count, p.amount, p.created_at, p.order_id, 
+            p.status, p.payment_method, p.paid_at,
+            pr.name as product_name, pr.delivery_count as product_delivery_count
+     FROM payments p
+     JOIN product pr ON p.product_id = pr.id
+     WHERE p.user_id = ? AND p.status = 'completed'
+     ORDER BY p.created_at DESC
+     LIMIT ? OFFSET ?
+   `;
 
     const countQuery = `
-      SELECT COUNT(*) as total
-      FROM payments
-      WHERE user_id = ? AND status = 'completed'
-    `;
+     SELECT COUNT(*) as total
+     FROM payments
+     WHERE user_id = ? AND status = 'completed'
+   `;
 
     // 전체 결제 내역 수 조회
     db.get(countQuery, [user_id], (err, countResult) => {
@@ -617,8 +584,169 @@ router.get('/', authMiddleware, (req, res) => {
   }
 });
 
+// ============================================================================
+// 관리자 API
+// ============================================================================
+
+// GET /api/admin/payments/stats - 결제 통계 조회 (월별 필터 지원)
+router.get('/admin/payments/stats', checkAdmin, (req, res) => {
+  try {
+    const { date_from, date_to, month, year } = req.query;
+
+    let whereClause = '';
+    let params = [];
+
+    if (month && year) {
+      // 특정 월 필터
+      whereClause = ` WHERE strftime('%Y-%m', created_at) = ?`;
+      params.push(`${year}-${month.toString().padStart(2, '0')}`);
+    } else if (date_from || date_to) {
+      // 기존 날짜 범위 필터
+      const conditions = [];
+      if (date_from) {
+        conditions.push('DATE(created_at) >= ?');
+        params.push(date_from);
+      }
+      if (date_to) {
+        conditions.push('DATE(created_at) <= ?');
+        params.push(date_to);
+      }
+      whereClause = ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    const statsQuery = `
+     SELECT 
+       COUNT(*) as total_payments,
+       COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_payments,
+       COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_payments,
+       COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_payments,
+       SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) as total_amount,
+       AVG(CASE WHEN status = 'completed' THEN amount ELSE NULL END) as avg_amount,
+       COUNT(CASE WHEN status = 'completed' AND payment_method = 'CASH' THEN 1 END) as cash_payments,
+       SUM(CASE WHEN status = 'completed' AND payment_method = 'CASH' THEN amount ELSE 0 END) as cash_amount
+     FROM payments${whereClause}
+   `;
+
+    db.get(statsQuery, params, (err, stats) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      res.json({
+        stats: {
+          total_payments: stats.total_payments || 0,
+          completed_payments: stats.completed_payments || 0,
+          failed_payments: stats.failed_payments || 0,
+          pending_payments: stats.pending_payments || 0,
+          total_amount: stats.total_amount || 0,
+          avg_amount: stats.avg_amount || 0,
+          cash_payments: stats.cash_payments || 0,
+          cash_amount: stats.cash_amount || 0,
+        },
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/admin/payments - 현금 결제 추가
+router.post('/admin/payments', checkAdmin, (req, res) => {
+  try {
+    const { user_id, product_id, amount, payment_memo } = req.body;
+
+    // 유효성 검사
+    if (!user_id || !product_id || !amount) {
+      return res.status(400).json({
+        success: false,
+        error: '사용자, 상품, 금액은 필수 입력 사항입니다.',
+      });
+    }
+
+    // 사용자 확인
+    db.get('SELECT * FROM users WHERE id = ?', [user_id], (err, user) => {
+      if (err) {
+        return res.status(500).json({ success: false, error: err.message });
+      }
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, error: '사용자를 찾을 수 없습니다.' });
+      }
+
+      // 상품 확인
+      db.get(
+        'SELECT * FROM product WHERE id = ?',
+        [product_id],
+        (err, product) => {
+          if (err) {
+            return res.status(500).json({ success: false, error: err.message });
+          }
+          if (!product) {
+            return res
+              .status(404)
+              .json({ success: false, error: '상품을 찾을 수 없습니다.' });
+          }
+
+          const orderId = generateOrderId();
+
+          // 현금 결제 기록 생성
+          db.run(
+            `INSERT INTO payments (
+           user_id, product_id, count, amount, order_id, status, payment_method, paid_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+            [user_id, product_id, 1, amount, orderId, 'completed', 'CASH'],
+            function (err) {
+              if (err) {
+                return res
+                  .status(500)
+                  .json({ success: false, error: err.message });
+              }
+
+              // 배송 카운트 추가
+              deliveryManager
+                .addDeliveryCount(user_id, product_id, product.delivery_count)
+                .then(() => {
+                  res.json({
+                    success: true,
+                    message: '현금 결제가 성공적으로 등록되었습니다.',
+                    payment: {
+                      id: this.lastID,
+                      order_id: orderId,
+                      status: 'completed',
+                      amount: amount,
+                      payment_method: 'CASH',
+                    },
+                  });
+                })
+                .catch((deliveryError) => {
+                  console.error('배송 처리 실패:', deliveryError);
+                  res.json({
+                    success: true,
+                    message:
+                      '현금 결제는 등록되었으나 배송 처리 중 오류가 발생했습니다.',
+                    payment: {
+                      id: this.lastID,
+                      order_id: orderId,
+                      status: 'completed',
+                      amount: amount,
+                      payment_method: 'CASH',
+                    },
+                    error_detail: deliveryError.message,
+                  });
+                });
+            }
+          );
+        }
+      );
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // GET /api/admin/payments - 관리자용 결제 내역 조회
-router.get('/admin/payments', checkAdmin, async (req, res) => {
+router.get('/admin/payments', checkAdmin, (req, res) => {
   try {
     // 페이지네이션 처리
     const page = parseInt(req.query.page) || 1;
@@ -634,22 +762,22 @@ router.get('/admin/payments', checkAdmin, async (req, res) => {
 
     // 쿼리 구성
     let query = `
-      SELECT p.id, p.user_id, p.product_id, p.count, p.amount, p.order_id, 
-             p.status, p.payment_method, p.payment_gateway_transaction_id,
-             p.paid_at, p.created_at,
-             u.name AS user_name, u.phone_number AS user_phone,
-             pr.name AS product_name
-      FROM payments p
-      JOIN users u ON p.user_id = u.id
-      JOIN product pr ON p.product_id = pr.id
-    `;
+     SELECT p.id, p.user_id, p.product_id, p.count, p.amount, p.order_id, 
+            p.status, p.payment_method, p.payment_gateway_transaction_id,
+            p.paid_at, p.created_at,
+            u.name AS user_name, u.phone_number AS user_phone,
+            pr.name AS product_name
+     FROM payments p
+     JOIN users u ON p.user_id = u.id
+     JOIN product pr ON p.product_id = pr.id
+   `;
 
     let countQuery = `
-      SELECT COUNT(*) as total
-      FROM payments p
-      JOIN users u ON p.user_id = u.id
-      JOIN product pr ON p.product_id = pr.id
-    `;
+     SELECT COUNT(*) as total
+     FROM payments p
+     JOIN users u ON p.user_id = u.id
+     JOIN product pr ON p.product_id = pr.id
+   `;
 
     // 조건 추가
     const conditions = [];
@@ -720,72 +848,19 @@ router.get('/admin/payments', checkAdmin, async (req, res) => {
   }
 });
 
-// GET /api/admin/payments/stats - 결제 통계 조회
-router.get('/admin/payments/stats', checkAdmin, async (req, res) => {
-  try {
-    const { date_from, date_to } = req.query;
-
-    let whereClause = '';
-    let params = [];
-
-    if (date_from || date_to) {
-      const conditions = [];
-      if (date_from) {
-        conditions.push('DATE(created_at) >= ?');
-        params.push(date_from);
-      }
-      if (date_to) {
-        conditions.push('DATE(created_at) <= ?');
-        params.push(date_to);
-      }
-      whereClause = ` WHERE ${conditions.join(' AND ')}`;
-    }
-
-    const statsQuery = `
-      SELECT 
-        COUNT(*) as total_payments,
-        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_payments,
-        COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_payments,
-        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_payments,
-        SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) as total_amount,
-        AVG(CASE WHEN status = 'completed' THEN amount ELSE NULL END) as avg_amount
-      FROM payments${whereClause}
-    `;
-
-    db.get(statsQuery, params, (err, stats) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-
-      res.json({
-        stats: {
-          total_payments: stats.total_payments || 0,
-          completed_payments: stats.completed_payments || 0,
-          failed_payments: stats.failed_payments || 0,
-          pending_payments: stats.pending_payments || 0,
-          total_amount: stats.total_amount || 0,
-          avg_amount: stats.avg_amount || 0,
-        },
-      });
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // GET /api/admin/payments/:id - 특정 결제 상세 조회
-router.get('/admin/payments/:id', checkAdmin, async (req, res) => {
+router.get('/admin/payments/:id', checkAdmin, (req, res) => {
   try {
     const { id } = req.params;
 
     const query = `
-      SELECT p.*, u.name AS user_name, u.phone_number AS user_phone, u.email AS user_email,
-             pr.name AS product_name, pr.price AS product_price
-      FROM payments p
-      JOIN users u ON p.user_id = u.id
-      JOIN product pr ON p.product_id = pr.id
-      WHERE p.id = ?
-    `;
+     SELECT p.*, u.name AS user_name, u.phone_number AS user_phone, u.email AS user_email,
+            pr.name AS product_name, pr.price AS product_price
+     FROM payments p
+     JOIN users u ON p.user_id = u.id
+     JOIN product pr ON p.product_id = pr.id
+     WHERE p.id = ?
+   `;
 
     db.get(query, [id], (err, payment) => {
       if (err) {
@@ -807,6 +882,46 @@ router.get('/admin/payments/:id', checkAdmin, async (req, res) => {
 
       res.json({ payment });
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/admin/users - 사용자 목록 조회 (간단 버전)
+router.get('/admin/users', checkAdmin, (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 50;
+
+    db.all(
+      'SELECT id, name, phone_number FROM users ORDER BY name LIMIT ?',
+      [limit],
+      (err, users) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ users });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/admin/products - 상품 목록 조회 (간단 버전)
+router.get('/admin/products', checkAdmin, (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 50;
+
+    db.all(
+      'SELECT id, name, price, delivery_count FROM product WHERE active = 1 ORDER BY name LIMIT ?',
+      [limit],
+      (err, products) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ products });
+      }
+    );
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

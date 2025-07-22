@@ -1,48 +1,49 @@
-/* 월별 필터 영역 */
+/* 월별 필터 스타일 */
 .month-filter-container {
+  margin-bottom: 2rem;
+}
+
+.month-filter {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid var(--primary-color);
 }
 
-.month-filter-label {
-  font-size: 1rem;
+.month-filter label {
+  color: var(--accent-color);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.month-filter select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  color: var(--accent-color);
   font-weight: 500;
-  color: #333;
-  margin-right: 0.5rem;
 }
 
-.month-filter-input {
-  font-size: 1rem;
-  padding: 0.35em 0.8em;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: #fafbfc;
-  color: #222;
-  transition:
-    border 0.2s,
-    box-shadow 0.2s;
+.month-filter select:focus {
+  border-color: var(--primary-color);
   outline: none;
 }
-.month-filter-input:focus {
-  border-color: #4f8cff;
-  box-shadow: 0 0 0 2px #e3f0ff;
-}
 
-@media (max-width: 600px) {
-  .month-filter-container {
+/* 반응형 조정 */
+@media (max-width: 768px) {
+  .month-filter {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.25rem;
+    gap: 0.75rem;
   }
-  .month-filter-label {
-    margin-right: 0;
-    margin-bottom: 0.25rem;
-  }
-  .month-filter-input {
+
+  .month-filter select {
     width: 100%;
-    font-size: 0.98rem;
   }
 }
 /* src/pages/admin/adminIndex.css */

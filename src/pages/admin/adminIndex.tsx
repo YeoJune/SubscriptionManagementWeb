@@ -1,5 +1,4 @@
 // src/pages/admin/adminIndex.tsx
-
 import React, { useState, useEffect } from 'react';
 import './adminIndex.css';
 import { useNavigate } from 'react-router-dom';
@@ -20,11 +19,6 @@ interface DashboardData {
 const AdminIndex: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  // 월별 필터 추가 (YYYY-MM) - 반드시 함수 내부에서 선언
-  const [filterMonth, setFilterMonth] = useState<string>(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  });
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     totalUsers: 0,
     todayDeliveries: 0,
@@ -37,17 +31,32 @@ const AdminIndex: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // 월별 필터 상태
+  const [selectedMonth, setSelectedMonth] = useState<string>('current');
+  const [selectedYear, setSelectedYear] = useState<number>(
+    new Date().getFullYear()
+  );
 
   useEffect(() => {
     if (isAuthenticated && user?.isAdmin) {
       fetchDashboardData();
     }
-    // eslint-disable-next-line
-  }, [isAuthenticated, user, filterMonth]);
+  }, [isAuthenticated, user, selectedMonth, selectedYear]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
+      // 결제 통계 API 파라미터 구성
+      let paymentsStatsUrl = '/api/admin/payments/stats';
+      if (selectedMonth !== 'all') {
+        const month =
+          selectedMonth === 'current'
+            ? new Date().getMonth() + 1
+            : parseInt(selectedMonth);
+        paymentsStatsUrl += `?month=${month}&year=${selectedYear}`;
+      }
+
+      // 여러 API 요청을 병렬로 처리
       const [
         usersResponse,
         deliveriesResponse,
@@ -61,10 +70,9 @@ const AdminIndex: React.FC = () => {
         axios.get('/api/admin/inquiries?status=unanswered&limit=1'),
         axios.get('/api/admin/products?limit=1'),
         axios.get('/api/admin/notices?limit=1'),
-        axios.get('/api/admin/payments/stats', {
-          params: filterMonth ? { month: filterMonth } : {},
-        }),
+        axios.get(paymentsStatsUrl),
       ]);
+
       setDashboardData({
         totalUsers: usersResponse.data.pagination?.total || 0,
         todayDeliveries: deliveriesResponse.data.deliveries?.length || 0,
@@ -76,6 +84,7 @@ const AdminIndex: React.FC = () => {
           paymentsStatsResponse.data.stats?.completed_payments || 0,
         totalAmount: paymentsStatsResponse.data.stats?.total_amount || 0,
       });
+
       setLoading(false);
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
@@ -109,6 +118,48 @@ const AdminIndex: React.FC = () => {
     <div className="admin-dashboard-container">
       <h1 className="admin-title">관리자 대시보드</h1>
 
+      {/* 월별 필터 */}
+      <div className="month-filter-container">
+        <div className="month-filter">
+          <label htmlFor="month-select">통계 기간:</label>
+          <select
+            id="month-select"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+          >
+            <option value="all">전체 기간</option>
+            <option value="current">이번 달</option>
+            <option value="1">1월</option>
+            <option value="2">2월</option>
+            <option value="3">3월</option>
+            <option value="4">4월</option>
+            <option value="5">5월</option>
+            <option value="6">6월</option>
+            <option value="7">7월</option>
+            <option value="8">8월</option>
+            <option value="9">9월</option>
+            <option value="10">10월</option>
+            <option value="11">11월</option>
+            <option value="12">12월</option>
+          </select>
+          {selectedMonth !== 'all' && selectedMonth !== 'current' && (
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            >
+              {Array.from(
+                { length: 5 },
+                (_, i) => new Date().getFullYear() - i
+              ).map((year) => (
+                <option key={year} value={year}>
+                  {year}년
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      </div>
+
       {loading ? (
         <div className="loading-container">
           <div className="loading-spinner"></div>
@@ -119,19 +170,6 @@ const AdminIndex: React.FC = () => {
       ) : (
         <>
           {/* 요약 데이터 카드 */}
-          {/* 월별 필터 */}
-          <div className="month-filter-container">
-            <label htmlFor="month-filter" className="month-filter-label">
-              월별
-            </label>
-            <input
-              id="month-filter"
-              type="month"
-              value={filterMonth}
-              onChange={(e) => setFilterMonth(e.target.value)}
-              className="month-filter-input"
-            />
-          </div>
           <div
             className="summary-grid"
             style={{
@@ -213,7 +251,13 @@ const AdminIndex: React.FC = () => {
 
             {/* 결제 통계 카드 추가 */}
             <div className="summary-card payments-card">
-              <div className="summary-title">{filterMonth} 총 결제액</div>
+              <div className="summary-title">
+                {selectedMonth === 'all'
+                  ? '총 결제액'
+                  : selectedMonth === 'current'
+                    ? '이번 달 결제액'
+                    : `${selectedYear}년 ${selectedMonth}월 결제액`}
+              </div>
               <div className="summary-value payments-value">
                 {formatCurrency(dashboardData.totalAmount)}
                 <svg

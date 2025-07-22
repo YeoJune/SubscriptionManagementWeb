@@ -1,96 +1,106 @@
-/* 월별 필터 우선순위 강화 */
-.filter-grid .month-filter-container {
+/* 현금 결제 버튼 */
+.cash-payment-button {
+  background-color: var(--success-color);
+  color: white;
+  font-weight: 600;
+  border-radius: 30px;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  width: 100%;
+}
+
+.cash-payment-button:hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+}
+
+/* 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-.filter-grid .month-filter-label {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #333;
-  margin-right: 0.5rem;
-}
-.filter-grid .month-filter-input {
-  font-size: 1rem !important;
-  padding: 0.35em 0.8em !important;
-  border: 1px solid #d1d5db !important;
-  border-radius: 6px !important;
-  background: #fafbfc !important;
-  color: #222 !important;
-  transition:
-    border 0.2s,
-    box-shadow 0.2s !important;
-  outline: none !important;
-  width: auto !important;
-  min-width: 120px;
-}
-.filter-grid .month-filter-input:focus {
-  border-color: #4f8cff !important;
-  box-shadow: 0 0 0 2px #e3f0ff !important;
+  justify-content: center;
+  z-index: 1000;
 }
 
-@media (max-width: 600px) {
-  .filter-grid .month-filter-container {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-  }
-  .filter-grid .month-filter-label {
-    margin-right: 0;
-    margin-bottom: 0.25rem;
-  }
-  .filter-grid .month-filter-input {
-    width: 100% !important;
-    font-size: 0.98rem !important;
-  }
+.modal-content {
+  background: white;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
-/* 월별 필터 영역 (adminIndex와 통일) */
-.month-filter-container {
+
+.modal-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--background-dark);
 }
 
-.month-filter-label {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #333;
-  margin-right: 0.5rem;
+.modal-header h3 {
+  margin: 0;
+  color: var(--accent-color);
 }
 
-.month-filter-input {
-  font-size: 1rem;
-  padding: 0.35em 0.8em;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: #fafbfc;
-  color: #222;
-  transition:
-    border 0.2s,
-    box-shadow 0.2s;
-  outline: none;
-}
-.month-filter-input:focus {
-  border-color: #4f8cff;
-  box-shadow: 0 0 0 2px #e3f0ff;
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-light);
 }
 
-@media (max-width: 600px) {
-  .month-filter-container {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-  }
-  .month-filter-label {
-    margin-right: 0;
-    margin-bottom: 0.25rem;
-  }
-  .month-filter-input {
-    width: 100%;
-    font-size: 0.98rem;
-  }
+.cash-payment-form {
+  padding: 1.5rem;
+}
+
+.cash-payment-form .form-control {
+  margin-bottom: 1rem;
+}
+
+.cash-payment-form textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.modal-actions button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.modal-actions button[type='button'] {
+  background-color: var(--background-dark);
+  color: var(--text-light);
+}
+
+.modal-actions button.primary {
+  background-color: var(--primary-color);
+  color: white;
 }
 /* src/pages/admin/payments.css */
 
@@ -440,120 +450,6 @@
   border-radius: 10px;
   padding: 1rem;
   margin-bottom: 1rem;
-
-  /* ===== 현금 결제 모달 및 버튼 스타일 ===== */
-  .primary {
-    background-color: var(--primary-color);
-    color: #fff;
-    font-weight: 600;
-    border: none;
-    border-radius: 6px;
-    padding: 0.7em 1.5em;
-    font-size: 1rem;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition:
-      background 0.2s,
-      box-shadow 0.2s;
-  }
-  .primary:hover,
-  .primary:focus {
-    background-color: var(--primary-dark);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-  }
-
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.35);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal-content {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-    padding: 2.5rem 2rem 2rem 2rem;
-    min-width: 320px;
-    max-width: 95vw;
-    width: 100%;
-    max-width: 400px;
-    position: relative;
-    animation: modal-fade-in 0.2s;
-  }
-  @keyframes modal-fade-in {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  .modal-content h2 {
-    margin-top: 0;
-    margin-bottom: 1.5rem;
-    font-size: 1.3rem;
-    color: var(--primary-color);
-    font-weight: 700;
-    text-align: center;
-  }
-  .modal-content .form-control {
-    margin-bottom: 1.1rem;
-  }
-  .modal-content label {
-    color: var(--accent-color);
-    font-weight: 600;
-    margin-bottom: 0.4rem;
-    font-size: 0.98rem;
-  }
-  .modal-content input[type='date'],
-  .modal-content input[type='number'],
-  .modal-content input[type='text'] {
-    width: 100%;
-    padding: 0.65em 0.9em;
-    border: 1px solid #d1d5db;
-    border-radius: 5px;
-    font-size: 1rem;
-    background: #fafbfc;
-    color: #222;
-    transition:
-      border 0.2s,
-      box-shadow 0.2s;
-    outline: none;
-  }
-  .modal-content input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px #e3f0ff;
-  }
-  .modal-actions {
-    display: flex;
-    gap: 0.7rem;
-    justify-content: flex-end;
-    margin-top: 1.5rem;
-  }
-  .modal-actions .primary {
-    min-width: 80px;
-  }
-  .modal-actions button[type='button'] {
-    background: #f3f3f3;
-    color: #444;
-    border: none;
-    border-radius: 6px;
-    padding: 0.7em 1.5em;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .modal-actions button[type='button']:hover {
-    background: #e0e0e0;
-  }
 }
 
 .alert-info {
