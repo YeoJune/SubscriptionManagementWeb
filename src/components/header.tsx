@@ -98,6 +98,13 @@ const Header: React.FC = () => {
                 >
                   불편/건의 사항
                 </Link>
+                <Link
+                  to="/catering"
+                  className={`sal-nav-button ${isActive('/catering') ? 'sal-active-nav-button' : ''}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  단체주문 문의
+                </Link>
               </>
             )}
 

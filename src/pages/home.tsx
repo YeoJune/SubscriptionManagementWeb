@@ -261,6 +261,13 @@ const Home: React.FC = () => {
               바로가기
             </Link>
           </div>
+          <div className="service-card">
+            <h3>단체주문/케이터링 문의</h3>
+            <p>기업/행사/대량 주문 및 케이터링 문의</p>
+            <Link to="/catering" className="card-link">
+              바로가기
+            </Link>
+          </div>
         </div>
       </section>
     </div>

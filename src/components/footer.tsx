@@ -32,6 +32,9 @@ const Footer: React.FC = () => {
             <li>
               <Link to="/inquiry">불편/건의 사항</Link>
             </li>
+            <li>
+              <Link to="/catering">단체주문/케이터링 문의</Link>
+            </li>
           </ul>
         </div>
 
