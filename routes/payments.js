@@ -812,10 +812,7 @@ router.post('/payment-result', (req, res) => {
 
         // 결제 상태 업데이트
         let newStatus;
-        if (
-          resultCode === '0000' &&
-          (status === 'paid' || status === 'ready')
-        ) {
+        if (resultCode === '0000') {
           newStatus = status === 'paid' ? 'completed' : 'ready';
         } else {
           newStatus = 'failed';
