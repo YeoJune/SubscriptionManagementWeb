@@ -92,7 +92,7 @@ router.post('/prepare', authMiddleware, (req, res) => {
               orderId: orderId,
               amount: parseInt(amount),
               goodsName: product.name,
-              returnUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-result`,
+              returnUrl: `/payment-result`,
               timestamp: timestamp,
               signature: signature,
             };
