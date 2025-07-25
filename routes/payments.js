@@ -112,7 +112,7 @@ router.post('/prepare', authMiddleware, (req, res) => {
   }
 });
 
-// POST /api/payments/approve (수정된 버전)
+// POST /api/payments/approve (올바른 버전)
 router.post('/approve', authMiddleware, (req, res) => {
   try {
     const { orderId, authToken, amount } = req.body;
@@ -142,7 +142,6 @@ router.post('/approve', authMiddleware, (req, res) => {
 
         // 이미 완료된 결제인지 확인
         if (payment.status === 'completed') {
-          // 이미 완료된 경우 배송 정보만 조회해서 반환
           db.get(
             'SELECT * FROM product WHERE id = ?',
             [payment.product_id],
@@ -182,10 +181,24 @@ router.post('/approve', authMiddleware, (req, res) => {
           });
         }
 
+        // payment_gateway_transaction_id(tid)가 있는지 확인
+        const tid = payment.payment_gateway_transaction_id;
+        if (!tid) {
+          return res.status(400).json({
+            success: false,
+            error: '거래 ID(TID)가 없습니다. 인증이 완료되지 않은 결제입니다.',
+          });
+        }
+
         try {
-          // 나이스페이 승인 API 호출 (authToken을 URL 경로에 포함)
+          console.log(`나이스페이 승인 API 호출: ${NICEPAY_API_URL}/${tid}`);
+          console.log('승인 요청 데이터:', {
+            amount: parseInt(payment.amount),
+          });
+
+          // 나이스페이 승인 API 호출 (tid를 URL 경로에 포함)
           const response = await axios.post(
-            `${NICEPAY_API_URL}/${authToken}`,
+            `${NICEPAY_API_URL}/${tid}`,
             {
               amount: parseInt(payment.amount),
             },
@@ -201,8 +214,7 @@ router.post('/approve', authMiddleware, (req, res) => {
 
           if (response.data.resultCode === '0000') {
             const payMethod = response.data.payMethod || 'CARD';
-            const tid =
-              response.data.tid || payment.payment_gateway_transaction_id;
+            const finalTid = response.data.tid || tid;
 
             db.run('BEGIN TRANSACTION', (err) => {
               if (err) {
@@ -222,7 +234,7 @@ router.post('/approve', authMiddleware, (req, res) => {
                 [
                   'completed',
                   payMethod,
-                  tid,
+                  finalTid,
                   JSON.stringify(response.data),
                   payment.id,
                 ],
@@ -253,7 +265,7 @@ router.post('/approve', authMiddleware, (req, res) => {
                             .json({ success: false, error: err.message });
                         }
 
-                        // 세션에서 특별 요청사항 가져오기 (이미 없을 수도 있음)
+                        // 세션에서 특별 요청사항 가져오기
                         const specialRequest =
                           req.session.special_request || null;
                         const selectedDates = req.body.selected_dates;
@@ -334,6 +346,7 @@ router.post('/approve', authMiddleware, (req, res) => {
           }
         } catch (apiError) {
           console.error('나이스페이 API 호출 중 오류:', apiError);
+          console.error('API 오류 상세:', apiError.response?.data);
 
           // API 호출 실패
           db.run(
