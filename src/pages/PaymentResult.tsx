@@ -1,4 +1,4 @@
-// src/pages/PaymentResult.tsx
+// src/pages/PaymentResult.tsx 수정된 버전
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
@@ -34,12 +34,13 @@ const PaymentResult: React.FC = () => {
   const processPaymentResult = async () => {
     try {
       // URL 파라미터에서 결제 결과 정보 추출
+      const success = searchParams.get('success') === 'true';
       const orderId = searchParams.get('orderId');
-      const authResultCode = searchParams.get('authResultCode');
-      const authResultMsg = searchParams.get('authResultMsg');
       const tid = searchParams.get('tid');
-      const authToken = searchParams.get('authToken');
-      const signature = searchParams.get('signature');
+      const amount = searchParams.get('amount');
+      const resultCode = searchParams.get('resultCode');
+      const resultMsg = searchParams.get('resultMsg');
+      const error = searchParams.get('error');
 
       if (!orderId) {
         setResult({
@@ -50,8 +51,8 @@ const PaymentResult: React.FC = () => {
         return;
       }
 
-      // 결제 인증 성공 (나이스페이에서 리다이렉트됨)
-      if (authResultCode === '0000' && tid && authToken) {
+      // 결제 성공한 경우
+      if (success && resultCode === '0000' && tid) {
         try {
           // 세션에서 선택된 배송일 가져오기
           const selectedDatesStr = sessionStorage.getItem('selectedDates');
@@ -62,9 +63,8 @@ const PaymentResult: React.FC = () => {
           // 승인 요청 API 호출
           const approvalData: any = {
             orderId: orderId,
-            authToken: authToken,
-            tid: tid,
-            signature: signature,
+            authToken: tid, // 나이스페이에서 전달받은 tid를 authToken으로 사용
+            amount: amount,
           };
 
           // 선택된 배송일이 있으면 추가
@@ -79,6 +79,7 @@ const PaymentResult: React.FC = () => {
 
           // 세션에서 배송일 정보 제거
           sessionStorage.removeItem('selectedDates');
+          sessionStorage.removeItem('specialRequest');
 
           setResult(approvalResponse.data);
         } catch (error: any) {
@@ -91,56 +92,30 @@ const PaymentResult: React.FC = () => {
           });
         }
       }
-      // 결제 인증 실패
-      else if (authResultCode && authResultCode !== '0000') {
+      // 결제 실패한 경우
+      else if (!success) {
+        let errorMessage = '결제 처리 중 오류가 발생했습니다.';
+
+        if (error === 'server_error') {
+          errorMessage = '서버 오류가 발생했습니다.';
+        } else if (resultMsg) {
+          errorMessage = decodeURIComponent(resultMsg);
+        } else if (resultCode && resultCode !== '0000') {
+          errorMessage = `결제 실패 (오류 코드: ${resultCode})`;
+        }
+
         setResult({
           success: false,
-          error: authResultMsg || '결제 인증 과정에서 오류가 발생했습니다.',
-          errorCode: authResultCode,
+          error: errorMessage,
+          errorCode: resultCode || undefined,
         });
       }
-      // 결과 파라미터 없는 경우 - 결제 정보 조회
+      // 파라미터가 부족한 경우
       else {
-        try {
-          const paymentInfoResponse = await axios.get(
-            `/api/payments/${orderId}`
-          );
-
-          if (
-            paymentInfoResponse.data.success &&
-            paymentInfoResponse.data.payment
-          ) {
-            const payment = paymentInfoResponse.data.payment;
-
-            if (payment.status === 'completed') {
-              setResult({
-                success: true,
-                message: '결제가 이미 완료되었습니다.',
-                payment: payment,
-              });
-            } else if (payment.status === 'failed') {
-              setResult({
-                success: false,
-                error: '결제 처리 중 오류가 발생했습니다.',
-              });
-            } else {
-              setResult({
-                success: false,
-                error: '결제가 아직 완료되지 않았습니다. 다시 시도해주세요.',
-              });
-            }
-          } else {
-            throw new Error(
-              paymentInfoResponse.data.error || '결제 정보를 찾을 수 없습니다.'
-            );
-          }
-        } catch (error: any) {
-          console.error('결제 정보 조회 오류:', error);
-          setResult({
-            success: false,
-            error: `결제 정보를 확인할 수 없습니다: ${error.response?.data?.error || error.message}`,
-          });
-        }
+        setResult({
+          success: false,
+          error: '결제 결과 정보가 부족합니다.',
+        });
       }
     } catch (error: any) {
       console.error('결제 결과 처리 중 오류:', error);
@@ -158,7 +133,7 @@ const PaymentResult: React.FC = () => {
   };
 
   const handleGoToMyPage = () => {
-    navigate('/mypage'); // 또는 적절한 마이페이지 경로
+    navigate('/profile'); // 또는 적절한 마이페이지 경로
   };
 
   const formatAmount = (amount: number) => {

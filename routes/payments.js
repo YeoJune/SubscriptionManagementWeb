@@ -92,7 +92,7 @@ router.post('/prepare', authMiddleware, (req, res) => {
               orderId: orderId,
               amount: parseInt(amount),
               goodsName: product.name,
-              returnUrl: `/payment-result`,
+              returnUrl: `/api/payments/payment-result`,
               timestamp: timestamp,
               signature: signature,
             };
@@ -750,6 +750,98 @@ router.get('/:orderId', authMiddleware, (req, res) => {
     );
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/payments/payment-result (나이스페이에서 리다이렉트되는 결제 결과 처리)
+router.post('/payment-result', (req, res) => {
+  try {
+    console.log('나이스페이 결제 결과 POST 데이터:', req.body);
+
+    const {
+      resultCode,
+      resultMsg,
+      tid,
+      orderId,
+      ediDate,
+      signature,
+      status,
+      paidAt,
+      payMethod,
+      amount,
+      goodsName,
+      // 기타 나이스페이에서 전송하는 모든 파라미터들
+    } = req.body;
+
+    // 결제 성공 시
+    if (resultCode === '0000' && status === 'paid') {
+      // React 앱으로 리다이렉트 (GET 방식으로)
+      const redirectUrl = `/payment-result?success=true&orderId=${orderId}&tid=${tid}&amount=${amount}&resultCode=${resultCode}`;
+
+      // HTML 리다이렉트 페이지 반환
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>결제 처리 중...</title>
+        </head>
+        <body>
+          <script>
+            // 결제 성공 시 클라이언트 사이드에서 React 라우터로 이동
+            window.location.href = '${redirectUrl}';
+          </script>
+          <div style="text-align: center; padding: 50px;">
+            <h2>결제 처리 중입니다...</h2>
+            <p>잠시만 기다려 주세요.</p>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+    // 결제 실패 시
+    else {
+      const redirectUrl = `/payment-result?success=false&orderId=${orderId}&resultCode=${resultCode}&resultMsg=${encodeURIComponent(resultMsg)}`;
+
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>결제 처리 중...</title>
+        </head>
+        <body>
+          <script>
+            window.location.href = '${redirectUrl}';
+          </script>
+          <div style="text-align: center; padding: 50px;">
+            <h2>결제 처리 중입니다...</h2>
+            <p>잠시만 기다려 주세요.</p>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+  } catch (error) {
+    console.error('결제 결과 처리 중 오류:', error);
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>오류 발생</title>
+      </head>
+      <body>
+        <script>
+          window.location.href = '/payment-result?success=false&error=server_error';
+        </script>
+        <div style="text-align: center; padding: 50px;">
+          <h2>오류가 발생했습니다.</h2>
+          <p>잠시 후 다시 시도해 주세요.</p>
+        </div>
+      </body>
+      </html>
+    `);
   }
 });
 
