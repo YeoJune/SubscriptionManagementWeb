@@ -112,7 +112,7 @@ router.post('/prepare', authMiddleware, (req, res) => {
   }
 });
 
-// POST /api/payments/approve
+// POST /api/payments/approve (수정된 버전)
 router.post('/approve', authMiddleware, (req, res) => {
   try {
     const { orderId, authToken, amount } = req.body;
@@ -140,17 +140,55 @@ router.post('/approve', authMiddleware, (req, res) => {
           });
         }
 
-        if (payment.status !== 'authenticated') {
+        // 이미 완료된 결제인지 확인
+        if (payment.status === 'completed') {
+          // 이미 완료된 경우 배송 정보만 조회해서 반환
+          db.get(
+            'SELECT * FROM product WHERE id = ?',
+            [payment.product_id],
+            (err, product) => {
+              if (err) {
+                return res
+                  .status(500)
+                  .json({ success: false, error: err.message });
+              }
+
+              return res.json({
+                success: true,
+                message: '이미 처리된 결제입니다.',
+                payment: {
+                  id: payment.id,
+                  order_id: payment.order_id,
+                  status: 'completed',
+                  amount: payment.amount,
+                  paid_at: payment.paid_at,
+                  receipt_url: null,
+                },
+                delivery_count: product?.delivery_count || 0,
+              });
+            }
+          );
+          return;
+        }
+
+        // pending 또는 authenticated 상태가 아니면 에러
+        if (
+          payment.status !== 'pending' &&
+          payment.status !== 'authenticated'
+        ) {
           return res.status(400).json({
             success: false,
-            error: '이미 처리된 결제입니다.',
+            error: `현재 결제 상태(${payment.status})에서는 승인할 수 없습니다.`,
           });
         }
 
         try {
+          // 나이스페이 승인 API 호출 (authToken을 URL 경로에 포함)
           const response = await axios.post(
             `${NICEPAY_API_URL}/${authToken}`,
-            { amount: parseInt(payment.amount) },
+            {
+              amount: parseInt(payment.amount),
+            },
             {
               headers: {
                 'Content-Type': 'application/json',
@@ -159,9 +197,12 @@ router.post('/approve', authMiddleware, (req, res) => {
             }
           );
 
+          console.log('나이스페이 승인 API 응답:', response.data);
+
           if (response.data.resultCode === '0000') {
             const payMethod = response.data.payMethod || 'CARD';
-            const tid = response.data.tid || '';
+            const tid =
+              response.data.tid || payment.payment_gateway_transaction_id;
 
             db.run('BEGIN TRANSACTION', (err) => {
               if (err) {
@@ -171,7 +212,13 @@ router.post('/approve', authMiddleware, (req, res) => {
               }
 
               db.run(
-                `UPDATE payments SET status = ?, payment_method = ?, payment_gateway_transaction_id = ?, raw_response_data = ?, paid_at = CURRENT_TIMESTAMP WHERE id = ?`,
+                `UPDATE payments SET 
+                 status = ?, 
+                 payment_method = ?, 
+                 payment_gateway_transaction_id = ?, 
+                 raw_response_data = ?, 
+                 paid_at = CURRENT_TIMESTAMP 
+                 WHERE id = ?`,
                 [
                   'completed',
                   payMethod,
@@ -206,10 +253,13 @@ router.post('/approve', authMiddleware, (req, res) => {
                             .json({ success: false, error: err.message });
                         }
 
+                        // 세션에서 특별 요청사항 가져오기 (이미 없을 수도 있음)
                         const specialRequest =
                           req.session.special_request || null;
                         const selectedDates = req.body.selected_dates;
-                        delete req.session.special_request;
+                        if (req.session.special_request) {
+                          delete req.session.special_request;
+                        }
 
                         let deliveryPromise;
                         if (selectedDates && selectedDates.length > 0) {
@@ -270,6 +320,7 @@ router.post('/approve', authMiddleware, (req, res) => {
               );
             });
           } else {
+            // 승인 실패
             db.run(
               'UPDATE payments SET status = ?, raw_response_data = ? WHERE id = ?',
               ['failed', JSON.stringify(response.data), payment.id]
@@ -284,6 +335,7 @@ router.post('/approve', authMiddleware, (req, res) => {
         } catch (apiError) {
           console.error('나이스페이 API 호출 중 오류:', apiError);
 
+          // API 호출 실패
           db.run(
             'UPDATE payments SET status = ?, raw_response_data = ? WHERE id = ?',
             [
@@ -296,6 +348,7 @@ router.post('/approve', authMiddleware, (req, res) => {
           res.status(500).json({
             success: false,
             error: '결제 승인 API 호출 중 오류가 발생했습니다.',
+            details: apiError.response?.data || apiError.message,
           });
         }
       }

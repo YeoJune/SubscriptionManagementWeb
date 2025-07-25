@@ -36,11 +36,11 @@ const PaymentResult: React.FC = () => {
       // URL 파라미터에서 결제 결과 정보 추출
       const success = searchParams.get('success') === 'true';
       const orderId = searchParams.get('orderId');
+      const authToken = searchParams.get('authToken'); // 나이스페이에서 받은 authToken
       const tid = searchParams.get('tid');
       const amount = searchParams.get('amount');
-      const resultCode = searchParams.get('resultCode');
-      const resultMsg = searchParams.get('resultMsg');
-      const status = searchParams.get('status');
+      const authResultCode = searchParams.get('authResultCode');
+      const authResultMsg = searchParams.get('authResultMsg');
       const error = searchParams.get('error');
 
       if (!orderId) {
@@ -52,75 +52,48 @@ const PaymentResult: React.FC = () => {
         return;
       }
 
-      // 결제 성공한 경우
-      if (success && resultCode === '0000' && tid) {
+      // 결제 인증 성공한 경우
+      if (success && authResultCode === '0000' && authToken) {
         try {
-          // 이미 서버에서 DB 업데이트가 완료되었으므로
-          // 여기서는 최종 결제 정보만 조회하면 됩니다
-
           // 세션에서 선택된 배송일 가져오기
           const selectedDatesStr = sessionStorage.getItem('selectedDates');
           const selectedDates = selectedDatesStr
             ? JSON.parse(selectedDatesStr)
             : null;
 
-          // 결제가 완료된 상태라면 배송 처리를 위해 approve API 호출
-          if (status === 'completed' || !status) {
-            const approvalData: any = {
-              orderId: orderId,
-              authToken: tid,
-              amount: amount,
-            };
+          // 승인 요청 API 호출 (authToken 사용)
+          const approvalData: any = {
+            orderId: orderId,
+            authToken: authToken, // 나이스페이에서 받은 authToken 사용
+            amount: amount,
+          };
 
-            // 선택된 배송일이 있으면 추가
-            if (selectedDates && selectedDates.length > 0) {
-              approvalData.selected_dates = selectedDates;
-            }
-
-            const approvalResponse = await axios.post(
-              '/api/payments/approve',
-              approvalData
-            );
-
-            setResult(approvalResponse.data);
-          } else {
-            // ready 상태인 경우 (가상계좌 등)
-            setResult({
-              success: true,
-              message: '결제 요청이 접수되었습니다.',
-              payment: {
-                id: 0,
-                order_id: orderId,
-                status: status || 'ready',
-                amount: parseInt(amount || '0'),
-                paid_at: new Date().toISOString(),
-              },
-            });
+          // 선택된 배송일이 있으면 추가
+          if (selectedDates && selectedDates.length > 0) {
+            approvalData.selected_dates = selectedDates;
           }
+
+          const approvalResponse = await axios.post(
+            '/api/payments/approve',
+            approvalData
+          );
 
           // 세션에서 배송일 정보 제거
           sessionStorage.removeItem('selectedDates');
           sessionStorage.removeItem('specialRequest');
-        } catch (error: any) {
-          console.error('후속 처리 중 오류:', error);
 
-          // API 호출이 실패해도 결제는 완료된 것으로 처리
+          setResult(approvalResponse.data);
+        } catch (error: any) {
+          console.error('결제 승인 처리 중 오류:', error);
           setResult({
-            success: true,
-            message: '결제는 완료되었습니다.',
-            payment: {
-              id: 0,
-              order_id: orderId,
-              status: 'completed',
-              amount: parseInt(amount || '0'),
-              paid_at: new Date().toISOString(),
-            },
+            success: false,
             error:
-              '일부 후속 처리에서 오류가 발생했을 수 있습니다. 고객센터로 문의해 주세요.',
+              error.response?.data?.error ||
+              '결제 승인 처리 중 오류가 발생했습니다.',
           });
         }
       }
-      // 결제 실패한 경우
+      // 결제 인증 실패한 경우
       else if (!success) {
         let errorMessage = '결제 처리 중 오류가 발생했습니다.';
 
@@ -130,16 +103,18 @@ const PaymentResult: React.FC = () => {
           errorMessage = '결제 정보를 찾을 수 없습니다.';
         } else if (error === 'database_error') {
           errorMessage = '데이터베이스 오류가 발생했습니다.';
-        } else if (resultMsg) {
-          errorMessage = decodeURIComponent(resultMsg);
-        } else if (resultCode && resultCode !== '0000') {
-          errorMessage = `결제 실패 (오류 코드: ${resultCode})`;
+        } else if (error === 'auth_failed') {
+          errorMessage = '결제 인증에 실패했습니다.';
+        } else if (authResultMsg) {
+          errorMessage = decodeURIComponent(authResultMsg);
+        } else if (authResultCode && authResultCode !== '0000') {
+          errorMessage = `결제 인증 실패 (오류 코드: ${authResultCode})`;
         }
 
         setResult({
           success: false,
           error: errorMessage,
-          errorCode: resultCode || undefined,
+          errorCode: authResultCode || undefined,
         });
       }
       // 파라미터가 부족한 경우
