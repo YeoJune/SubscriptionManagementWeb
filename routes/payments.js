@@ -753,46 +753,25 @@ router.get('/:orderId', authMiddleware, (req, res) => {
   }
 });
 
-// POST /api/payments/payment-result (개선된 버전)
+// POST /api/payments/payment-result (나이스페이 실제 데이터 기반)
 router.post('/payment-result', (req, res) => {
   try {
     console.log('나이스페이 결제 결과 POST 데이터:', req.body);
 
     const {
-      resultCode,
-      resultMsg,
+      authResultCode,
+      authResultMsg,
       tid,
+      clientId,
       orderId,
-      ediDate,
-      signature,
-      status,
-      paidAt,
-      payMethod,
       amount,
-      goodsName,
       authToken,
-      // 기타 나이스페이에서 전송하는 모든 파라미터들
+      signature,
     } = req.body;
 
     if (!orderId) {
       console.error('orderId가 없습니다:', req.body);
-      return res.status(400).send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <title>오류 발생</title>
-        </head>
-        <body>
-          <script>
-            window.location.href = '/payment-result?success=false&error=missing_order_id';
-          </script>
-          <div style="text-align: center; padding: 50px;">
-            <h2>주문 정보가 없습니다.</h2>
-          </div>
-        </body>
-        </html>
-      `);
+      return res.status(400).send(createErrorHtml('missing_order_id'));
     }
 
     // DB에서 해당 주문 조회
@@ -810,50 +789,48 @@ router.post('/payment-result', (req, res) => {
           return res.status(404).send(createErrorHtml('payment_not_found'));
         }
 
-        // 결제 상태 업데이트
-        let newStatus;
-        if (resultCode === '0000') {
-          newStatus = status === 'paid' ? 'completed' : 'ready';
-        } else {
-          newStatus = 'failed';
-        }
+        // 인증 성공 시
+        if (authResultCode === '0000' && authToken) {
+          // 인증 단계만 완료된 상태로 DB 업데이트
+          db.run(
+            `UPDATE payments SET 
+             status = 'authenticated',
+             payment_gateway_transaction_id = ?, 
+             raw_response_data = ?
+             WHERE id = ?`,
+            [tid, JSON.stringify(req.body), payment.id],
+            (updateErr) => {
+              if (updateErr) {
+                console.error('DB 업데이트 오류:', updateErr);
+                return res.status(500).send(createErrorHtml('update_failed'));
+              }
 
-        // DB 업데이트
-        db.run(
-          `UPDATE payments SET 
-           status = ?, 
-           payment_gateway_transaction_id = ?, 
-           raw_response_data = ?, 
-           payment_method = ?,
-           paid_at = ?
-           WHERE id = ?`,
-          [
-            newStatus,
-            tid || null,
-            JSON.stringify(req.body),
-            payMethod || 'CARD',
-            paidAt ||
-              (newStatus === 'completed' ? new Date().toISOString() : null),
-            payment.id,
-          ],
-          (updateErr) => {
-            if (updateErr) {
-              console.error('DB 업데이트 오류:', updateErr);
-              return res.status(500).send(createErrorHtml('update_failed'));
-            }
-
-            // 결제 성공 시
-            if (newStatus === 'completed' || newStatus === 'ready') {
-              const redirectUrl = `/payment-result?success=true&orderId=${orderId}&tid=${tid}&amount=${amount}&resultCode=${resultCode}&status=${newStatus}`;
+              // React 앱으로 리다이렉트 (인증 성공)
+              const redirectUrl = `/payment-result?success=true&orderId=${orderId}&authToken=${authToken}&tid=${tid}&amount=${amount}&authResultCode=${authResultCode}`;
               res.send(createSuccessHtml(redirectUrl));
             }
-            // 결제 실패 시
-            else {
-              const redirectUrl = `/payment-result?success=false&orderId=${orderId}&resultCode=${resultCode}&resultMsg=${encodeURIComponent(resultMsg || '결제 실패')}`;
-              res.send(createErrorHtml('payment_failed', redirectUrl));
+          );
+        }
+        // 인증 실패 시
+        else {
+          // 실패 상태로 DB 업데이트
+          db.run(
+            `UPDATE payments SET 
+             status = 'auth_failed',
+             raw_response_data = ?
+             WHERE id = ?`,
+            [JSON.stringify(req.body), payment.id],
+            (updateErr) => {
+              if (updateErr) {
+                console.error('DB 업데이트 오류:', updateErr);
+              }
+
+              // React 앱으로 리다이렉트 (인증 실패)
+              const redirectUrl = `/payment-result?success=false&orderId=${orderId}&authResultCode=${authResultCode}&authResultMsg=${encodeURIComponent(authResultMsg || '인증 실패')}`;
+              res.send(createErrorHtml('auth_failed', redirectUrl));
             }
-          }
-        );
+          );
+        }
       }
     );
   } catch (error) {
