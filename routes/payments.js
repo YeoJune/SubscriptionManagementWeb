@@ -753,7 +753,7 @@ router.get('/:orderId', authMiddleware, (req, res) => {
   }
 });
 
-// POST /api/payments/payment-result (나이스페이에서 리다이렉트되는 결제 결과 처리)
+// POST /api/payments/payment-result (개선된 버전)
 router.post('/payment-result', (req, res) => {
   try {
     console.log('나이스페이 결제 결과 POST 데이터:', req.body);
@@ -770,79 +770,195 @@ router.post('/payment-result', (req, res) => {
       payMethod,
       amount,
       goodsName,
+      authToken,
       // 기타 나이스페이에서 전송하는 모든 파라미터들
     } = req.body;
 
-    // 결제 성공 시
-    if (resultCode === '0000' && status === 'paid') {
-      // React 앱으로 리다이렉트 (GET 방식으로)
-      const redirectUrl = `/payment-result?success=true&orderId=${orderId}&tid=${tid}&amount=${amount}&resultCode=${resultCode}`;
-
-      // HTML 리다이렉트 페이지 반환
-      res.send(`
+    if (!orderId) {
+      console.error('orderId가 없습니다:', req.body);
+      return res.status(400).send(`
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="utf-8">
-          <title>결제 처리 중...</title>
+          <title>오류 발생</title>
         </head>
         <body>
           <script>
-            // 결제 성공 시 클라이언트 사이드에서 React 라우터로 이동
-            window.location.href = '${redirectUrl}';
+            window.location.href = '/payment-result?success=false&error=missing_order_id';
           </script>
           <div style="text-align: center; padding: 50px;">
-            <h2>결제 처리 중입니다...</h2>
-            <p>잠시만 기다려 주세요.</p>
+            <h2>주문 정보가 없습니다.</h2>
           </div>
         </body>
         </html>
       `);
     }
-    // 결제 실패 시
-    else {
-      const redirectUrl = `/payment-result?success=false&orderId=${orderId}&resultCode=${resultCode}&resultMsg=${encodeURIComponent(resultMsg)}`;
 
-      res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <title>결제 처리 중...</title>
-        </head>
-        <body>
-          <script>
-            window.location.href = '${redirectUrl}';
-          </script>
-          <div style="text-align: center; padding: 50px;">
-            <h2>결제 처리 중입니다...</h2>
-            <p>잠시만 기다려 주세요.</p>
-          </div>
-        </body>
-        </html>
-      `);
-    }
+    // DB에서 해당 주문 조회
+    db.get(
+      'SELECT * FROM payments WHERE order_id = ?',
+      [orderId],
+      (err, payment) => {
+        if (err) {
+          console.error('DB 조회 오류:', err);
+          return res.status(500).send(createErrorHtml('database_error'));
+        }
+
+        if (!payment) {
+          console.error('결제 정보를 찾을 수 없음:', orderId);
+          return res.status(404).send(createErrorHtml('payment_not_found'));
+        }
+
+        // 결제 상태 업데이트
+        let newStatus;
+        if (
+          resultCode === '0000' &&
+          (status === 'paid' || status === 'ready')
+        ) {
+          newStatus = status === 'paid' ? 'completed' : 'ready';
+        } else {
+          newStatus = 'failed';
+        }
+
+        // DB 업데이트
+        db.run(
+          `UPDATE payments SET 
+           status = ?, 
+           payment_gateway_transaction_id = ?, 
+           raw_response_data = ?, 
+           payment_method = ?,
+           paid_at = ?
+           WHERE id = ?`,
+          [
+            newStatus,
+            tid || null,
+            JSON.stringify(req.body),
+            payMethod || 'CARD',
+            paidAt ||
+              (newStatus === 'completed' ? new Date().toISOString() : null),
+            payment.id,
+          ],
+          (updateErr) => {
+            if (updateErr) {
+              console.error('DB 업데이트 오류:', updateErr);
+              return res.status(500).send(createErrorHtml('update_failed'));
+            }
+
+            // 결제 성공 시
+            if (newStatus === 'completed' || newStatus === 'ready') {
+              const redirectUrl = `/payment-result?success=true&orderId=${orderId}&tid=${tid}&amount=${amount}&resultCode=${resultCode}&status=${newStatus}`;
+              res.send(createSuccessHtml(redirectUrl));
+            }
+            // 결제 실패 시
+            else {
+              const redirectUrl = `/payment-result?success=false&orderId=${orderId}&resultCode=${resultCode}&resultMsg=${encodeURIComponent(resultMsg || '결제 실패')}`;
+              res.send(createErrorHtml('payment_failed', redirectUrl));
+            }
+          }
+        );
+      }
+    );
   } catch (error) {
     console.error('결제 결과 처리 중 오류:', error);
-    res.status(500).send(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>오류 발생</title>
-      </head>
-      <body>
-        <script>
-          window.location.href = '/payment-result?success=false&error=server_error';
-        </script>
-        <div style="text-align: center; padding: 50px;">
-          <h2>오류가 발생했습니다.</h2>
-          <p>잠시 후 다시 시도해 주세요.</p>
-        </div>
-      </body>
-      </html>
-    `);
+    res.status(500).send(createErrorHtml('server_error'));
   }
 });
+
+// HTML 생성 헬퍼 함수들
+function createSuccessHtml(redirectUrl) {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>결제 처리 중...</title>
+      <style>
+        body { 
+          font-family: Arial, sans-serif; 
+          text-align: center; 
+          padding: 50px;
+          background-color: #f5f5f5;
+        }
+        .container {
+          background: white;
+          padding: 30px;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          max-width: 400px;
+          margin: 0 auto;
+        }
+        .spinner {
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #3498db;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          animation: spin 1s linear infinite;
+          margin: 20px auto;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="spinner"></div>
+        <h2>결제 처리 중입니다...</h2>
+        <p>잠시만 기다려 주세요.</p>
+      </div>
+      <script>
+        setTimeout(function() {
+          window.location.href = '${redirectUrl}';
+        }, 1000);
+      </script>
+    </body>
+    </html>
+  `;
+}
+
+function createErrorHtml(errorType, redirectUrl = null) {
+  const finalRedirectUrl =
+    redirectUrl || `/payment-result?success=false&error=${errorType}`;
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>오류 발생</title>
+      <style>
+        body { 
+          font-family: Arial, sans-serif; 
+          text-align: center; 
+          padding: 50px;
+          background-color: #f5f5f5;
+        }
+        .container {
+          background: white;
+          padding: 30px;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          max-width: 400px;
+          margin: 0 auto;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h2>처리 중...</h2>
+        <p>잠시 후 결과 페이지로 이동합니다.</p>
+      </div>
+      <script>
+        setTimeout(function() {
+          window.location.href = '${finalRedirectUrl}';
+        }, 1000);
+      </script>
+    </body>
+    </html>
+  `;
+}
 
 module.exports = router;
