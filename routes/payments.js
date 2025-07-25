@@ -140,7 +140,7 @@ router.post('/approve', authMiddleware, (req, res) => {
           });
         }
 
-        if (payment.status !== 'pending') {
+        if (payment.status !== 'authenticated') {
           return res.status(400).json({
             success: false,
             error: '이미 처리된 결제입니다.',
