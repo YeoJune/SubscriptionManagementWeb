@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
 */
 
 // GET /api/users (admin) - 사용자 목록 조회
+// GET /api/users (admin) - 사용자 목록 조회 (수정된 버전)
 router.get('/', checkAdmin, (req, res) => {
   try {
     // 페이지네이션 처리
@@ -49,18 +50,32 @@ router.get('/', checkAdmin, (req, res) => {
 
     const order = req.query.order === 'desc' ? 'DESC' : 'ASC';
 
+    // 🔧 수정된 쿼리 - 서브쿼리를 사용하여 정확한 계산
     let query = `
       SELECT 
         u.id, u.name, u.phone_number, u.email, u.address, u.total_delivery_count, u.created_at, u.last_login,
-        COALESCE(SUM(upd.remaining_count), 0) as total_remaining_deliveries,
-        COALESCE(COUNT(CASE WHEN dl.status = 'pending' THEN 1 END), 0) as pending_deliveries,
-        COALESCE(COUNT(CASE WHEN dl.status = 'complete' THEN 1 END), 0) as completed_deliveries
+        COALESCE(remaining_summary.total_remaining_deliveries, 0) as total_remaining_deliveries,
+        COALESCE(delivery_summary.pending_deliveries, 0) as pending_deliveries,
+        COALESCE(delivery_summary.completed_deliveries, 0) as completed_deliveries
       FROM users u
-      LEFT JOIN user_product_delivery upd ON u.id = upd.user_id
-      LEFT JOIN delivery_list dl ON u.id = dl.user_id
+      LEFT JOIN (
+        SELECT 
+          user_id,
+          SUM(remaining_count) as total_remaining_deliveries
+        FROM user_product_delivery 
+        GROUP BY user_id
+      ) remaining_summary ON u.id = remaining_summary.user_id
+      LEFT JOIN (
+        SELECT 
+          user_id,
+          COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_deliveries,
+          COUNT(CASE WHEN status = 'complete' THEN 1 END) as completed_deliveries
+        FROM delivery_list 
+        GROUP BY user_id
+      ) delivery_summary ON u.id = delivery_summary.user_id
     `;
 
-    let countQuery = `SELECT COUNT(DISTINCT u.id) as total FROM users u`;
+    let countQuery = `SELECT COUNT(*) as total FROM users u`;
 
     const params = [];
     const countParams = [];
@@ -80,7 +95,6 @@ router.get('/', checkAdmin, (req, res) => {
       );
     }
 
-    query += ` GROUP BY u.id, u.name, u.phone_number, u.email, u.address, u.total_delivery_count, u.created_at, u.last_login`;
     query += ` ORDER BY u.${sortBy} ${order} LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
