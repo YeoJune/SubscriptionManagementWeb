@@ -45,35 +45,57 @@ const Subscription: React.FC = () => {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [specialRequest, setSpecialRequest] = useState<string>('');
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
+  // 이미지 모달 관련 상태
+  const [selectedImageForView, setSelectedImageForView] = useState<
+    string | null
+  >(null);
+  const [showImageModal, setShowImageModal] = useState(false);
 
+  useEffect(() => {
     fetchProducts();
     loadNicePaySDK();
-  }, [isAuthenticated, navigate]);
+
+    // 빠른 주문 처리 (로그인 여부와 관계없이)
+    const searchParams = new URLSearchParams(location.search);
+    const productId = searchParams.get('productId');
+    if (productId && products.length > 0) {
+      const product = products.find(
+        (p: ProductProps) => p.id === parseInt(productId)
+      );
+      if (product) {
+        setSelectedProduct(product);
+        // 로그인된 사용자만 바로 다음 단계로
+        if (isAuthenticated) {
+          setActiveStep(1);
+        }
+      }
+    }
+  }, [location.search, products.length]);
+
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showImageModal) {
+        handleCloseImageModal();
+      }
+    };
+
+    if (showImageModal) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden'; // 스크롤 방지
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [showImageModal]);
 
   const fetchProducts = async () => {
     try {
       const response = await axios.get('/api/products');
       const productsList = response.data.products || [];
       setProducts(productsList);
-
-      // 빠른 주문 처리
-      const searchParams = new URLSearchParams(location.search);
-      const productId = searchParams.get('productId');
-      if (productId && productsList.length > 0) {
-        const product = productsList.find(
-          (p: ProductProps) => p.id === parseInt(productId)
-        );
-        if (product) {
-          setSelectedProduct(product);
-          setActiveStep(1);
-        }
-      }
-
       setLoading(false);
     } catch (err) {
       console.error('상품 조회 실패:', err);
@@ -93,10 +115,24 @@ const Subscription: React.FC = () => {
     document.head.appendChild(script);
   };
 
+  // 로그인 체크 함수
+  const checkAuthenticationForOrder = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return false;
+    }
+    return true;
+  };
+
   const handleNext = () => {
     if (activeStep === 0 && !selectedProduct) {
       setError('상품을 선택해주세요.');
       return;
+    }
+
+    // 상품 선택에서 배송일 선택으로 넘어갈 때 로그인 체크
+    if (activeStep === 0) {
+      if (!checkAuthenticationForOrder()) return;
     }
 
     // 배송일 선택은 선택사항으로 변경 (전체 개수를 선택하지 않아도 진행 가능)
@@ -125,6 +161,19 @@ const Subscription: React.FC = () => {
     setSelectedProduct(product);
     setSelectedDates([]);
     setError(null);
+  };
+
+  // 이미지 클릭 핸들러
+  const handleImageClick = (imagePath: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // 상품 선택 이벤트와 분리
+    setSelectedImageForView(imagePath);
+    setShowImageModal(true);
+  };
+
+  // 이미지 모달 닫기
+  const handleCloseImageModal = () => {
+    setShowImageModal(false);
+    setSelectedImageForView(null);
   };
 
   const handleSubmitPayment = async () => {
@@ -166,6 +215,31 @@ const Subscription: React.FC = () => {
     }
   };
 
+  // 이미지 모달 렌더링
+  const renderImageModal = () => {
+    if (!showImageModal || !selectedImageForView) return null;
+
+    return (
+      <div className="image-modal-overlay" onClick={handleCloseImageModal}>
+        <div className="image-modal-container">
+          <button
+            className="image-modal-close"
+            onClick={handleCloseImageModal}
+            aria-label="이미지 닫기"
+          >
+            ×
+          </button>
+          <img
+            src={selectedImageForView}
+            alt="식단표 확대 보기"
+            className="image-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      </div>
+    );
+  };
+
   // 상품 선택 렌더링
   const renderProductSelection = () => {
     if (loading) {
@@ -182,45 +256,68 @@ const Subscription: React.FC = () => {
     }
 
     return (
-      <div className="product-grid">
-        {products.map((product) => (
-          <div
-            key={product.id}
-            className={`product-card ${selectedProduct?.id === product.id ? 'selected' : ''}`}
-            onClick={() => handleSelectProduct(product)}
-          >
-            <div className="product-image-container">
-              {product.image_path ? (
-                <img
-                  src={product.image_path}
-                  alt={product.name}
-                  className="product-image"
-                />
-              ) : (
-                <div className="product-image-placeholder">
-                  <span className="placeholder-icon">🍱</span>
+      <div>
+        {!isAuthenticated && (
+          <div className="login-notice">
+            <p>
+              🔍 식단표는 누구나 볼 수 있습니다. 주문하려면 로그인이 필요해요!
+            </p>
+            <button className="login-button" onClick={() => navigate('/login')}>
+              로그인하기
+            </button>
+          </div>
+        )}
+
+        <div className="product-grid">
+          {products.map((product) => (
+            <div
+              key={product.id}
+              className={`product-card ${selectedProduct?.id === product.id ? 'selected' : ''}`}
+              onClick={() => handleSelectProduct(product)}
+            >
+              <div className="product-image-container">
+                {product.image_path ? (
+                  <img
+                    src={product.image_path}
+                    alt={product.name}
+                    className="product-image"
+                    onClick={(e) => handleImageClick(product.image_path, e)}
+                    title="클릭하면 크게 볼 수 있습니다"
+                  />
+                ) : (
+                  <div className="product-image-placeholder">
+                    <span className="placeholder-icon">🍱</span>
+                  </div>
+                )}
+                {product.image_path && (
+                  <div
+                    className="image-zoom-hint"
+                    onClick={(e) => handleImageClick(product.image_path, e)}
+                  >
+                    🔍 크게보기
+                  </div>
+                )}
+              </div>
+              <div className="product-content">
+                <h3 className="product-name">{product.name}</h3>
+                <p className="product-description">{product.description}</p>
+                <p className="product-price">
+                  {product.price.toLocaleString()}원
+                </p>
+                <div className="product-delivery-count">
+                  배송 횟수: {product.delivery_count}회
                 </div>
-              )}
-            </div>
-            <div className="product-content">
-              <h3 className="product-name">{product.name}</h3>
-              <p className="product-description">{product.description}</p>
-              <p className="product-price">
-                {product.price.toLocaleString()}원
-              </p>
-              <div className="product-delivery-count">
-                배송 횟수: {product.delivery_count}회
+              </div>
+              <div className="product-actions">
+                <button
+                  className={`select-button ${selectedProduct?.id === product.id ? 'selected' : ''}`}
+                >
+                  {selectedProduct?.id === product.id ? '선택됨' : '선택하기'}
+                </button>
               </div>
             </div>
-            <div className="product-actions">
-              <button
-                className={`select-button ${selectedProduct?.id === product.id ? 'selected' : ''}`}
-              >
-                {selectedProduct?.id === product.id ? '선택됨' : '선택하기'}
-              </button>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     );
   };
@@ -415,14 +512,6 @@ const Subscription: React.FC = () => {
     );
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="subscription-container">
-        <div className="alert alert-warning">로그인 후 이용 가능합니다.</div>
-      </div>
-    );
-  }
-
   return (
     <div className="subscription-container">
       <h1 className="subscription-title">구독/결제</h1>
@@ -461,6 +550,9 @@ const Subscription: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* 이미지 모달 */}
+      {renderImageModal()}
     </div>
   );
 };
