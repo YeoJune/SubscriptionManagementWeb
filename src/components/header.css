@@ -246,6 +246,21 @@
   margin-right: 0.5rem;
 }
 
+/* 클릭 가능한 배지 스타일 추가 */
+.sal-badge-clickable {
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.sal-badge-clickable:hover {
+  opacity: 0.8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 107, 26, 0.4);
+}
+
 /* Responsive adjustments */
 @media (max-width: 992px) {
   .sal-mobile-menu-toggle {

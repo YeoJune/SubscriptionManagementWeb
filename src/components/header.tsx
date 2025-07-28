@@ -11,6 +11,12 @@ const Header: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // 관리자용 오늘 배송 현황 상태 추가
+  const [todayDeliveryCount, setTodayDeliveryCount] = useState({
+    completed: 0,
+    total: 0,
+  });
+
   // 스크롤 이벤트 핸들링
   useEffect(() => {
     const handleScroll = () => {
@@ -25,6 +31,28 @@ const Header: React.FC = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, [scrolled]);
+
+  // 관리자인 경우에만 오늘 배송 현황 가져오기
+  useEffect(() => {
+    if (isAdmin) {
+      fetchTodayDeliveries();
+    }
+  }, [isAdmin]);
+
+  // 오늘 배송 현황 가져오기 (기존 API 활용)
+  const fetchTodayDeliveries = async () => {
+    try {
+      const response = await fetch('/api/delivery/today');
+      const data = await response.json();
+      const completed = data.deliveries.filter(
+        (d) => d.status === 'complete'
+      ).length;
+      const total = data.deliveries.length;
+      setTodayDeliveryCount({ completed, total });
+    } catch (error) {
+      console.error('오늘 배송 현황 조회 실패:', error);
+    }
+  };
 
   // 현재 active된 링크 확인
   const isActive = (path: string) => {
@@ -138,10 +166,22 @@ const Header: React.FC = () => {
               <>
                 {user?.product_delivery && (
                   <div className="sal-delivery-count">
-                    <span className="sal-badge-label">남은 배송</span>
-                    <span className="sal-badge">
-                      {getTotalRemainingDeliveries()}
+                    <span className="sal-badge-label">
+                      {isAdmin ? '오늘 배송' : '남은 배송'}
                     </span>
+                    {isAdmin ? (
+                      <Link
+                        to="/admin/delivery"
+                        className="sal-badge sal-badge-clickable"
+                      >
+                        {todayDeliveryCount.completed}/
+                        {todayDeliveryCount.total}
+                      </Link>
+                    ) : (
+                      <span className="sal-badge">
+                        {getTotalRemainingDeliveries()}
+                      </span>
+                    )}
                   </div>
                 )}
                 <button
