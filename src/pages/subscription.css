@@ -31,42 +31,6 @@
   border-radius: 2px;
 }
 
-/* 로그인 안내 */
-.login-notice {
-  background: linear-gradient(135deg, #e0f2fe, #f3e5f5);
-  border: 2px solid #4fc3f7;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(79, 195, 247, 0.2);
-}
-
-.login-notice p {
-  margin: 0 0 1rem 0;
-  color: #1565c0;
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-
-.login-button {
-  background: linear-gradient(135deg, #42a5f5, #1e88e5);
-  color: white;
-  border: none;
-  border-radius: 25px;
-  padding: 0.75rem 2rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 1rem;
-}
-
-.login-button:hover {
-  background: linear-gradient(135deg, #1e88e5, #1565c0);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(30, 136, 229, 0.3);
-}
-
 /* Stepper styling */
 .stepper {
   background: linear-gradient(
@@ -228,12 +192,6 @@
   height: auto;
   object-fit: contain;
   display: block;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-}
-
-.product-image:hover {
-  transform: scale(1.02);
 }
 
 .product-image-placeholder {
@@ -248,92 +206,6 @@
 .placeholder-icon {
   font-size: 3rem;
   opacity: 0.7;
-}
-
-/* 이미지 확대 힌트 */
-.image-zoom-hint {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.product-image-container:hover .image-zoom-hint {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* 이미지 모달 */
-.image-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 60px 20px 20px 20px; /* 상단에 닫기 버튼 공간 확보 */
-  cursor: pointer;
-}
-
-.image-modal-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  max-width: 1200px; /* 최대 너비 제한 */
-}
-
-.image-modal-content {
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  cursor: default;
-  /* 이미지가 확실히 컨테이너를 넘지 않도록 */
-  display: block;
-}
-
-.image-modal-close {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  font-size: 24px;
-  font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  color: #333;
-  z-index: 1001;
-}
-
-.image-modal-close:hover {
-  background: white;
-  transform: scale(1.1);
 }
 
 .product-content {
@@ -399,6 +271,227 @@
   background-color: var(--primary-color);
   color: white;
   border-color: var(--primary-color);
+}
+
+/* 상품 상세보기 스타일 */
+.product-detail-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.product-detail-image-section {
+  position: relative;
+}
+
+.product-detail-image-container {
+  position: relative;
+  background: var(--background-color);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid var(--border-color);
+}
+
+.product-detail-image-container:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 8px 20px rgba(255, 140, 66, 0.2);
+}
+
+.product-detail-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  min-height: 300px;
+}
+
+.product-detail-image-placeholder {
+  width: 100%;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-color);
+}
+
+.image-zoom-hint {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  color: white;
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.product-detail-image-container:hover .image-zoom-hint {
+  opacity: 1;
+}
+
+.product-detail-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.product-detail-name {
+  color: var(--accent-color);
+  font-weight: 700;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.product-detail-description {
+  color: var(--text-color);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.product-detail-specs {
+  background: var(--background-color);
+  padding: 1.5rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.spec-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.spec-item:last-child {
+  margin-bottom: 0;
+}
+
+.spec-label {
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.spec-value {
+  color: var(--accent-color);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* 로그인 안내 */
+.login-notice {
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+  border: 2px solid var(--primary-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.login-notice p {
+  color: var(--accent-color);
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+}
+
+.login-prompt-button {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.login-prompt-button:hover {
+  background: linear-gradient(
+    135deg,
+    var(--primary-dark),
+    var(--secondary-dark)
+  );
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(255, 140, 66, 0.3);
+}
+
+/* 이미지 모달 */
+.image-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.image-modal-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.image-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 1001;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-modal-close:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+.image-modal-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  max-height: 85vh;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* 빠른 주문 알림 */
@@ -810,10 +903,13 @@
     max-height: 340px;
   }
 
-  .image-modal-close {
-    width: 36px;
-    height: 36px;
-    font-size: 20px;
+  .product-detail-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .product-detail-name {
+    font-size: 1.5rem;
   }
 }
 
@@ -824,20 +920,6 @@
 
   .subscription-title {
     font-size: 1.8rem;
-  }
-
-  .login-notice {
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .login-notice p {
-    font-size: 1rem;
-  }
-
-  .login-button {
-    padding: 0.6rem 1.5rem;
-    font-size: 0.95rem;
   }
 
   .stepper {
@@ -874,16 +956,8 @@
     font-size: 1.2rem;
   }
 
-  .image-modal-overlay {
-    padding: 50px 10px 10px 10px; /* 모바일에서 더 촘촘하게 */
-  }
-
-  .image-modal-close {
-    width: 32px;
-    height: 32px;
-    font-size: 18px;
-    top: 10px; /* 패딩에 맞춰 조정 */
-    right: 10px;
+  .product-detail-name {
+    font-size: 1.3rem;
   }
 
   .navigation-buttons {
@@ -912,6 +986,16 @@
 
   .account-info .account-text {
     font-size: 0.9rem;
+  }
+
+  .image-modal-overlay {
+    padding: 1rem;
+  }
+
+  .image-modal-close {
+    width: 35px;
+    height: 35px;
+    font-size: 1.2rem;
   }
 }
 
@@ -954,11 +1038,17 @@
     padding: 1rem;
   }
 
-  .image-modal-close {
-    width: 30px;
-    height: 30px;
-    font-size: 16px;
-    top: 15px; /* 480px 이하에서는 더 여유있게 */
-    right: 15px;
+  .product-detail-name {
+    font-size: 1.2rem;
+  }
+
+  .product-detail-description {
+    font-size: 1rem;
+  }
+
+  .spec-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
   }
 }
