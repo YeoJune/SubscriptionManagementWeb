@@ -92,6 +92,7 @@ const AppRoutes: React.FC = () => {
         {/* 공지사항을 홈으로 리다이렉트 */}
         <Route path="/board" element={<Navigate to="/" replace />} />
         <Route path="/board/:id" element={<BoardDetail />} />
+        <Route path="/subscription" element={<Subscription />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
@@ -101,15 +102,6 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute>
               <Profile />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/subscription"
-          element={
-            <ProtectedRoute>
-              <Subscription />
             </ProtectedRoute>
           }
         />
