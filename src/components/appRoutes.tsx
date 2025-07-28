@@ -28,6 +28,7 @@ const AdminCateringInquiry = React.lazy(
 const AdminProducts = React.lazy(() => import('../pages/admin/products'));
 const AdminNotices = React.lazy(() => import('../pages/admin/notices'));
 const AdminPayments = React.lazy(() => import('../pages/admin/payments'));
+const AdminHero = React.lazy(() => import('../pages/admin/hero'));
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
@@ -200,6 +201,16 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute adminOnly>
               <AdminPayments />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 히어로 관리 라우트 */}
+        <Route
+          path="/admin/hero"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminHero />
             </ProtectedRoute>
           }
         />

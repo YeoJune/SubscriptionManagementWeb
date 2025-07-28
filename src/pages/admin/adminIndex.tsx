@@ -11,9 +11,10 @@ interface DashboardData {
   pendingInquiries: number;
   totalProducts: number;
   totalNotices: number;
-  totalPayments: number; // 결제 통계 추가
+  totalPayments: number;
   completedPayments: number;
   totalAmount: number;
+  totalHeroSlides: number; // 히어로 슬라이드 수 추가
 }
 
 const AdminIndex: React.FC = () => {
@@ -28,6 +29,7 @@ const AdminIndex: React.FC = () => {
     totalPayments: 0,
     completedPayments: 0,
     totalAmount: 0,
+    totalHeroSlides: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +66,7 @@ const AdminIndex: React.FC = () => {
         productsResponse,
         noticesResponse,
         paymentsStatsResponse,
+        heroSlidesResponse, // 히어로 슬라이드 추가
       ] = await Promise.all([
         axios.get('/api/users?limit=1'),
         axios.get('/api/delivery/today'),
@@ -71,6 +74,7 @@ const AdminIndex: React.FC = () => {
         axios.get('/api/products?limit=1'),
         axios.get('/api/admin/notices?limit=1'),
         axios.get(paymentsStatsUrl),
+        axios.get('/api/hero/admin'), // 히어로 슬라이드 API 추가
       ]);
 
       setDashboardData({
@@ -83,6 +87,7 @@ const AdminIndex: React.FC = () => {
         completedPayments:
           paymentsStatsResponse.data.stats?.completed_payments || 0,
         totalAmount: paymentsStatsResponse.data.stats?.total_amount || 0,
+        totalHeroSlides: heroSlidesResponse.data.slides?.length || 0, // 히어로 슬라이드 수
       });
 
       setLoading(false);
@@ -249,7 +254,22 @@ const AdminIndex: React.FC = () => {
               </div>
             </div>
 
-            {/* 결제 통계 카드 추가 */}
+            {/* 히어로 슬라이드 카드 추가 */}
+            <div className="summary-card hero-card">
+              <div className="summary-title">히어로 슬라이드</div>
+              <div className="summary-value hero-value">
+                {dashboardData.totalHeroSlides}
+                <svg
+                  className="hero-icon"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zm-10-7l2.5 3.01L17 11l4 5H3l4-5z" />
+                </svg>
+              </div>
+            </div>
+
+            {/* 결제 통계 카드 */}
             <div className="summary-card payments-card">
               <div className="summary-title">
                 {selectedMonth === 'all'
@@ -371,7 +391,26 @@ const AdminIndex: React.FC = () => {
               </div>
             </div>
 
-            {/* 결제 관리 카드 추가 */}
+            {/* 히어로 관리 카드 추가 */}
+            <div className="feature-card hero-feature">
+              <div
+                className="feature-card-action"
+                onClick={() => handleCardClick('/admin/hero')}
+              >
+                <div className="feature-content">
+                  <svg
+                    className="feature-icon"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zm-10-7l2.5 3.01L17 11l4 5H3l4-5z" />
+                  </svg>
+                  <div className="feature-title">히어로 관리</div>
+                </div>
+              </div>
+            </div>
+
+            {/* 결제 관리 카드 */}
             <div className="feature-card payments-feature">
               <div
                 className="feature-card-action"

@@ -17,6 +17,13 @@ interface DeliveryInfo {
   upcomingDeliveries?: Array<{ date: string; status: string }>;
 }
 
+interface HeroSlide {
+  id: number;
+  title: string;
+  subtitle?: string;
+  images: string[];
+}
+
 const Home: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
@@ -26,14 +33,10 @@ const Home: React.FC = () => {
   const [noticesLoading, setNoticesLoading] = useState<boolean>(false);
   const [products, setProducts] = useState<ProductProps[]>([]);
   const [productsLoading, setProductsLoading] = useState<boolean>(false);
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
-
-  const heroImages = [
-    '/public/images/home_hero_0.jpg',
-    '/public/images/home_hero_1.jpg',
-    '/public/images/home_hero_2.jpg',
-    '/public/images/home_hero_3.jpg',
-  ];
+  const [heroLoading, setHeroLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -41,18 +44,41 @@ const Home: React.FC = () => {
     }
     fetchRecentNotices();
     fetchProducts();
+    fetchHeroSlides();
   }, [isAuthenticated]);
 
-  // 이미지 랜덤 변경 효과
+  // 히어로 슬라이드 이미지 변경 효과
   useEffect(() => {
+    if (heroSlides.length === 0) return;
+
+    const currentSlide = heroSlides[currentSlideIndex];
+    if (!currentSlide || currentSlide.images.length === 0) return;
+
     const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) =>
-        Math.floor(Math.random() * heroImages.length)
-      );
+      const currentSlide = heroSlides[currentSlideIndex];
+      if (currentSlide && currentSlide.images.length > 1) {
+        setCurrentImageIndex((prevIndex) =>
+          Math.floor(Math.random() * currentSlide.images.length)
+        );
+      }
     }, 4000); // 4초마다 변경
 
     return () => clearInterval(interval);
-  }, [heroImages.length]);
+  }, [heroSlides, currentSlideIndex]);
+
+  const fetchHeroSlides = async () => {
+    setHeroLoading(true);
+    try {
+      const response = await axios.get('/api/hero');
+      const slides = response.data.slides || [];
+      setHeroSlides(slides);
+    } catch (error) {
+      console.error('Failed to fetch hero slides:', error);
+      setHeroSlides([]);
+    } finally {
+      setHeroLoading(false);
+    }
+  };
 
   const fetchDeliveryInfo = async () => {
     setLoading(true);
@@ -106,7 +132,7 @@ const Home: React.FC = () => {
         content: notice.content || '',
         type: notice.type,
         createdAt: new Date(notice.created_at),
-        images: notice.images || [], // 다중 이미지 배열로 변경
+        images: notice.images || [],
       }));
 
       setNotices(notices);
@@ -133,22 +159,41 @@ const Home: React.FC = () => {
     navigate(`/subscription?productId=${productId}`);
   };
 
+  const currentSlide = heroSlides[currentSlideIndex];
+  const currentImage = currentSlide?.images?.[currentImageIndex];
+
   return (
     <div className="home-container">
       <section className="home-hero">
-        <div className="hero-background">
-          <img
-            src={heroImages[currentImageIndex]}
-            alt="Saluv All Day"
-            className="hero-image"
-          />
-          <div className="hero-overlay"></div>
-        </div>
+        {heroLoading ? (
+          <div className="hero-loading">
+            <div className="loading-spinner"></div>
+            <p>로딩 중...</p>
+          </div>
+        ) : heroSlides.length > 0 && currentSlide ? (
+          <>
+            <div className="hero-background">
+              <img
+                src={currentImage}
+                alt={currentSlide.title}
+                className="hero-image"
+              />
+              <div className="hero-overlay"></div>
+            </div>
 
-        <div className="hero-content">
-          <h1>Saluv All Day</h1>
-          <p>기분이 좋아지는 음식, 건강한 하루를 만들어가세요</p>
-        </div>
+            <div className="hero-content">
+              <h1>{currentSlide.title}</h1>
+              {currentSlide.subtitle && <p>{currentSlide.subtitle}</p>}
+            </div>
+          </>
+        ) : (
+          <div className="hero-fallback">
+            <div className="hero-content">
+              <h1>Saluv All Day</h1>
+              <p>기분이 좋아지는 음식, 건강한 하루를 만들어가세요</p>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* 빠른 구매 섹션 */}

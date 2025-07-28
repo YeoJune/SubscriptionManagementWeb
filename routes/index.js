@@ -13,6 +13,7 @@ const paymentsRoutes = require('./payments');
 const productRoutes = require('./products');
 const userRoutes = require('./users');
 const inquiryRoutes = require('./inquiry');
+const heroRoutes = require('./hero');
 
 // 라우터 등록
 router.use('/auth', authRoutes);
@@ -22,5 +23,6 @@ router.use('/payments', paymentsRoutes);
 router.use('/products', productRoutes);
 router.use('/users', userRoutes);
 router.use('/inquiries', inquiryRoutes);
+router.use('/hero', heroRoutes);
 
 module.exports = router;
