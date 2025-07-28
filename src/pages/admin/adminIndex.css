@@ -1,3 +1,36 @@
+/* src/pages/admin/adminIndex.css */
+
+.admin-dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Page title */
+.admin-title {
+  color: var(--accent-color);
+  font-weight: 700;
+  margin-bottom: 2.5rem;
+  position: relative;
+  padding-bottom: 0.75rem;
+  font-size: 2.2rem;
+}
+
+.admin-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
+  border-radius: 2px;
+}
+
 /* 월별 필터 스타일 */
 .month-filter-container {
   margin-bottom: 2rem;
@@ -32,51 +65,6 @@
 .month-filter select:focus {
   border-color: var(--primary-color);
   outline: none;
-}
-
-/* 반응형 조정 */
-@media (max-width: 768px) {
-  .month-filter {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-
-  .month-filter select {
-    width: 100%;
-  }
-}
-/* src/pages/admin/adminIndex.css */
-
-.admin-dashboard-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-}
-
-/* Page title */
-.admin-title {
-  color: var(--accent-color);
-  font-weight: 700;
-  margin-bottom: 2.5rem;
-  position: relative;
-  padding-bottom: 0.75rem;
-  font-size: 2.2rem;
-}
-
-.admin-title::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 80px;
-  height: 4px;
-  background: linear-gradient(
-    135deg,
-    var(--primary-color),
-    var(--secondary-color)
-  );
-  border-radius: 2px;
 }
 
 /* Summary cards */
@@ -211,7 +199,37 @@
   opacity: 0.8;
 }
 
-/* 결제 카드 스타일 추가 */
+/* 히어로 슬라이드 카드 스타일 */
+.hero-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-bottom: 4px solid #5a67d8;
+}
+
+.hero-card:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.hero-card .summary-title {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.hero-value {
+  color: white;
+}
+
+.hero-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: white;
+  margin-left: auto;
+  opacity: 0.9;
+}
+
+/* 결제 카드 스타일 */
 .payments-card {
   border-bottom-color: #8b5cf6;
 }
@@ -265,6 +283,8 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
 }
 
 .feature-content {
@@ -350,7 +370,39 @@
   transform: scale(1.1);
 }
 
-/* 결제 기능 카드 스타일 추가 */
+/* 히어로 관리 기능 카드 스타일 */
+.hero-feature {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.hero-feature:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.hero-feature .feature-card-action {
+  color: white;
+}
+
+.hero-feature .feature-icon {
+  color: white;
+  opacity: 0.9;
+}
+
+.hero-feature .feature-title {
+  color: white;
+  font-weight: 600;
+}
+
+.hero-feature:hover .feature-icon {
+  transform: scale(1.1);
+}
+
+/* 결제 기능 카드 스타일 */
 .payments-feature .feature-icon {
   color: #8b5cf6;
 }
@@ -360,6 +412,19 @@
 }
 
 .payments-feature:hover .feature-icon {
+  transform: scale(1.1);
+}
+
+/* 케이터링 기능 카드 스타일 */
+.catering-feature .feature-icon {
+  color: #ef4444;
+}
+
+.catering-feature:hover {
+  background: linear-gradient(135deg, white, rgba(239, 68, 68, 0.05));
+}
+
+.catering-feature:hover .feature-icon {
   transform: scale(1.1);
 }
 
@@ -408,6 +473,19 @@
   background-color: rgba(220, 53, 69, 0.1);
   color: var(--error-color);
   border: 1px solid var(--error-color);
+}
+
+/* 반응형 조정 */
+@media (max-width: 768px) {
+  .month-filter {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .month-filter select {
+    width: 100%;
+  }
 }
 
 /* Responsive adjustments */
@@ -516,7 +594,8 @@
   .inquiry-icon,
   .products-icon,
   .notices-icon,
-  .payments-icon {
+  .payments-icon,
+  .hero-icon {
     width: 2rem;
     height: 2rem;
   }

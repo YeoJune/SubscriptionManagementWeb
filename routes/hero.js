@@ -82,10 +82,11 @@ router.get('/admin', checkAdmin, (req, res) => {
         return res.status(500).json({ error: err.message });
       }
 
-      // 이미지 경로 파싱
+      // 이미지 경로 파싱 및 boolean 변환
       const parsedSlides = slides.map((slide) => ({
         ...slide,
         images: slide.images ? JSON.parse(slide.images) : [],
+        is_active: Boolean(slide.is_active),
       }));
 
       res.json({ slides: parsedSlides });
