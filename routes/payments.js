@@ -92,7 +92,7 @@ router.post('/prepare', authMiddleware, (req, res) => {
               orderId: orderId,
               amount: parseInt(amount),
               goodsName: product.name,
-              returnUrl: `/api/payments/payment-result`,
+              returnUrl: `https://saluvallday.com/api/payments/payment-result`,
               timestamp: timestamp,
               signature: signature,
             };
