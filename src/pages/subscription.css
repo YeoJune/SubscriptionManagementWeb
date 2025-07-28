@@ -284,27 +284,31 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: 60px 20px 20px 20px; /* 상단에 닫기 버튼 공간 확보 */
   cursor: pointer;
 }
 
 .image-modal-container {
   position: relative;
-  max-width: 90vw;
-  max-height: 90vh;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  max-width: 1200px; /* 최대 너비 제한 */
 }
 
 .image-modal-content {
-  display: block;
+  width: auto;
+  height: auto;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   cursor: default;
+  /* 이미지가 확실히 컨테이너를 넘지 않도록 */
+  display: block;
 }
 
 .image-modal-close {
@@ -871,15 +875,15 @@
   }
 
   .image-modal-overlay {
-    padding: 10px;
+    padding: 50px 10px 10px 10px; /* 모바일에서 더 촘촘하게 */
   }
 
   .image-modal-close {
     width: 32px;
     height: 32px;
     font-size: 18px;
-    top: -5px;
-    right: -5px;
+    top: 10px; /* 패딩에 맞춰 조정 */
+    right: 10px;
   }
 
   .navigation-buttons {
@@ -954,5 +958,7 @@
     width: 30px;
     height: 30px;
     font-size: 16px;
+    top: 15px; /* 480px 이하에서는 더 여유있게 */
+    right: 15px;
   }
 }
