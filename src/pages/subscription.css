@@ -698,24 +698,32 @@
 
 /* 계좌번호 정보 스타일링 개선 */
 .account-info {
-  background-color: #f8fafc;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 1rem 1.5rem;
-  margin-top: 1.5rem;
+  background: linear-gradient(135deg, #e8f5e8, #f0f9f0);
+  border: 2px solid #4caf50;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin-top: 2rem;
   text-align: center;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
 }
 
 .account-info .account-text {
-  color: var(--text-color);
-  font-size: 1rem;
+  color: #2e7d32;
+  font-size: 1.2rem;
   margin: 0;
   line-height: 1.6;
+  font-weight: 600;
 }
 
 .account-info .account-number {
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #1b5e20;
+  font-size: 1.3rem;
+  background-color: rgba(76, 175, 80, 0.1);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  margin: 0 0.3rem;
 }
 
 /* Alert styling */
