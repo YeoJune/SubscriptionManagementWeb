@@ -201,32 +201,23 @@
 
 /* 히어로 슬라이드 카드 스타일 */
 .hero-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-bottom: 4px solid #5a67d8;
+  border-bottom-color: #667eea;
 }
 
 .hero-card:hover {
-  background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%);
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-}
-
-.hero-card .summary-title {
-  color: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(135deg, white, rgba(102, 126, 234, 0.05));
 }
 
 .hero-value {
-  color: white;
+  color: #667eea;
 }
 
 .hero-icon {
   width: 2.5rem;
   height: 2.5rem;
-  color: white;
+  color: #667eea;
   margin-left: auto;
-  opacity: 0.9;
+  opacity: 0.8;
 }
 
 /* 결제 카드 스타일 */
@@ -371,31 +362,12 @@
 }
 
 /* 히어로 관리 기능 카드 스타일 */
-.hero-feature {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  transition: all 0.3s ease;
+.hero-feature .feature-icon {
+  color: #667eea;
 }
 
 .hero-feature:hover {
-  background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%);
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-}
-
-.hero-feature .feature-card-action {
-  color: white;
-}
-
-.hero-feature .feature-icon {
-  color: white;
-  opacity: 0.9;
-}
-
-.hero-feature .feature-title {
-  color: white;
-  font-weight: 600;
+  background: linear-gradient(135deg, white, rgba(102, 126, 234, 0.05));
 }
 
 .hero-feature:hover .feature-icon {
