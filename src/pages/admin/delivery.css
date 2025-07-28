@@ -1,4 +1,4 @@
-/* src/pages/admin/delivery.css - 완전한 배송 관리 CSS */
+/* src/pages/admin/delivery.css - 완전한 배송 관리 CSS + 개별 날짜 수정 UI */
 
 /* Main container styling */
 .admin-container {
@@ -104,6 +104,14 @@
   border-color: var(--primary-color);
   border-width: 2px;
   outline: none;
+}
+
+/* 🆕 Form hint styling for admin-specific features */
+.form-hint {
+  color: var(--text-light);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  font-style: italic;
 }
 
 /* Search button styling */
@@ -214,11 +222,12 @@
   transition: all 0.3s ease;
   background: none;
   font-size: 0.8rem;
+  border: 1px solid;
 }
 
 .success-button {
   color: var(--success-color);
-  border: 1px solid var(--success-color);
+  border-color: var(--success-color);
 }
 
 .success-button:hover {
@@ -227,11 +236,21 @@
 
 .error-button {
   color: var(--error-color);
-  border: 1px solid var(--error-color);
+  border-color: var(--error-color);
 }
 
 .error-button:hover {
   background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* 🆕 Edit button styling for date modification */
+.edit-button {
+  color: #17a2b8;
+  border-color: #17a2b8;
+}
+
+.edit-button:hover {
+  background-color: rgba(23, 162, 184, 0.1);
 }
 
 /* Remaining count badge */
@@ -540,6 +559,19 @@
   font-size: 0.9rem;
 }
 
+/* 🆕 Schedule actions styling for individual delivery items */
+.schedule-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.schedule-actions .action-button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+  min-width: 60px;
+}
+
 /* Schedule Dialog Styles */
 .schedule-dialog {
   max-width: 600px;
@@ -828,6 +860,12 @@
   border-radius: 20px;
   padding: 0.5rem 1rem;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+  background-color: #f8f9fa;
+  border-color: #ccc;
 }
 
 .confirm-button {
@@ -836,6 +874,7 @@
   font-weight: 600;
   cursor: pointer;
   border: none;
+  transition: all 0.3s ease;
 }
 
 .confirm-success {
@@ -843,9 +882,17 @@
   color: white;
 }
 
+.confirm-success:hover:not(:disabled) {
+  background-color: #218838;
+}
+
 .confirm-error {
   background-color: var(--error-color);
   color: white;
+}
+
+.confirm-error:hover:not(:disabled) {
+  background-color: #c82333;
 }
 
 .confirm-button:disabled {
@@ -941,6 +988,18 @@
     gap: 0.25rem;
   }
 
+  /* 🆕 Schedule actions responsive adjustments */
+  .schedule-actions {
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: stretch;
+  }
+
+  .schedule-actions .action-button {
+    width: 100%;
+    text-align: center;
+  }
+
   .date-input-row {
     flex-direction: column;
     align-items: stretch;
@@ -970,6 +1029,22 @@
 
   .users-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* 🆕 Schedule item responsive layout */
+  .schedule-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .schedule-item .schedule-info {
+    width: 100%;
+  }
+
+  .schedule-item .schedule-actions {
+    width: 100%;
+    justify-content: flex-end;
   }
 }
 
@@ -1006,34 +1081,320 @@
     max-width: none;
   }
 
-  .schedule-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-
   .users-grid {
     grid-template-columns: 1fr;
   }
+
+  /* 🆕 Mobile optimization for schedule actions */
+  .schedule-actions .action-button {
+    padding: 0.5rem;
+    font-size: 0.7rem;
+    min-width: 50px;
+  }
+
+  /* Mobile modal adjustments */
+  .modal-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
 }
 
-/* 요청사항 표시 스타일 */
-.request-preview {
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--text-color);
+/* 🆕 Admin-specific UI enhancements */
+.admin-notice {
+  background-color: rgba(164, 226, 46, 0.1);
+  border: 1px solid var(--primary-color);
+  color: var(--accent-color);
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
   font-size: 0.9rem;
-  cursor: help;
+  font-weight: 500;
 }
 
-.request-preview:hover {
+.admin-notice strong {
   color: var(--primary-color);
 }
 
-.no-request {
-  color: var(--text-muted);
-  font-style: italic;
+/* Enhanced edit dialog styling */
+.edit-date-dialog .form-control input[type='date'] {
+  font-size: 1rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 2px solid #ddd;
+  transition: all 0.3s ease;
+}
+
+.edit-date-dialog .form-control input[type='date']:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(164, 226, 46, 0.2);
+}
+
+/* Enhanced schedule item hover effects */
+.schedule-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  transition: all 0.3s ease;
+}
+
+.schedule-item:hover .schedule-actions .action-button {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.schedule-actions .action-button {
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+/* Date selection enhancements for admin */
+.admin-date-selection {
+  background-color: rgba(23, 162, 184, 0.05);
+  border: 1px solid #17a2b8;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.admin-date-selection h6 {
+  color: #17a2b8;
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.admin-date-selection p {
+  margin: 0;
   font-size: 0.85rem;
+  color: var(--text-light);
+  line-height: 1.4;
+}
+
+/* Status transition animations */
+.status-chip {
+  transition: all 0.3s ease;
+}
+
+.status-chip:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced action button interactions */
+.action-button:active {
+  transform: scale(0.95);
+}
+
+.action-button:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Loading state for schedule actions */
+.schedule-actions .action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.schedule-actions .action-button.loading {
+  position: relative;
+  color: transparent;
+}
+
+.schedule-actions .action-button.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Enhanced modal animations */
+.modal-backdrop {
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Enhanced form validation states */
+.form-control.error input,
+.form-control.error select {
+  border-color: var(--error-color);
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+}
+
+.form-control.success input,
+.form-control.success select {
+  border-color: var(--success-color);
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+}
+
+.form-error-message {
+  color: var(--error-color);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.form-success-message {
+  color: var(--success-color);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Enhanced date picker styling */
+input[type='date'] {
+  position: relative;
+  appearance: none;
+  background-color: white;
+  color: var(--text-color);
+  font-family: inherit;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  background-color: var(--primary-color);
+  border-radius: 3px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Accessibility improvements */
+.action-button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.modal-content:focus {
+  outline: none;
+}
+
+.schedule-item:focus-within {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .modal-backdrop,
+  .action-buttons,
+  .schedule-actions,
+  .delivery-navigation,
+  .tab-container {
+    display: none !important;
+  }
+
+  .admin-table {
+    border-collapse: collapse;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    border: 1px solid #000;
+    padding: 0.5rem;
+  }
+
+  .status-chip {
+    border: 1px solid #000;
+    background: none !important;
+    color: #000 !important;
+  }
+}
+
+/* Dark mode support (if needed in future) */
+@media (prefers-color-scheme: dark) {
+  .filter-paper,
+  .modal-content,
+  .user-card,
+  .schedule-item {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+  }
+
+  .admin-table-head {
+    background-color: #4a5568;
+  }
+
+  .form-control input,
+  .form-control select {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+  }
+}
+
+/* Final responsive touches */
+@media (max-width: 640px) {
+  .schedule-item {
+    padding: 0.75rem;
+  }
+
+  .schedule-info strong {
+    font-size: 0.95rem;
+  }
+
+  .schedule-info span {
+    font-size: 0.8rem;
+  }
+
+  .action-button {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .modal-content {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+
+  .form-control label {
+    font-size: 0.9rem;
+  }
+
+  .form-hint {
+    font-size: 0.75rem;
+  }
 }

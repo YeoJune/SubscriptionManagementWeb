@@ -1,4 +1,4 @@
-// routes/delivery.js - 최종 완성본
+// routes/delivery.js - 최종 완성본 + 개별 배송 날짜 수정 기능
 const express = require('express');
 const router = express.Router();
 const checkAdmin = require('../lib/checkAdmin');
@@ -405,6 +405,50 @@ router.put('/users/:userId/schedule', checkAdmin, async (req, res) => {
   }
 });
 
+// 🆕 PUT /api/delivery/users/:userId/schedule/:deliveryId (admin) - 개별 배송 날짜 수정
+router.put(
+  '/users/:userId/schedule/:deliveryId',
+  checkAdmin,
+  async (req, res) => {
+    try {
+      const { userId, deliveryId } = req.params;
+      const { date } = req.body;
+
+      if (!date) {
+        return res
+          .status(400)
+          .json({ error: '새로운 배송 날짜가 필요합니다.' });
+      }
+
+      // 배송 정보 확인
+      const delivery = await deliveryManager.getDeliveryById(deliveryId);
+      if (!delivery) {
+        return res.status(404).json({ error: '배송 정보를 찾을 수 없습니다.' });
+      }
+
+      if (delivery.user_id !== userId) {
+        return res
+          .status(400)
+          .json({ error: '사용자 ID가 일치하지 않습니다.' });
+      }
+
+      // 관리자는 모든 요일과 당일 선택 가능
+      const result = await deliveryManager.updateDeliveryDate(
+        deliveryId,
+        date,
+        true
+      );
+
+      res.json({
+        message: '배송 날짜가 성공적으로 수정되었습니다.',
+        delivery: result,
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
 // DELETE /api/delivery/users/:userId/schedule/:deliveryId (admin) - 특정 배송 일정 삭제
 router.delete(
   '/users/:userId/schedule/:deliveryId',
@@ -500,8 +544,6 @@ router.post('/users/:userId/schedule', checkAdmin, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// 중복 API 제거됨 - /admin/add-delivery API로 통합
 
 // POST /api/delivery/admin/add-delivery (admin) - 관리자용 배송 횟수/스케줄 추가 (통합 API)
 router.post('/admin/add-delivery', checkAdmin, async (req, res) => {

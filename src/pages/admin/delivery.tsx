@@ -1,4 +1,4 @@
-// src/pages/admin/delivery.tsx - 완전한 배송 추가 기능 (달력 포함)
+// src/pages/admin/delivery.tsx - 완전한 배송 추가 기능 (달력 포함) + 개별 날짜 수정
 import React, { useEffect, useState } from 'react';
 import './delivery.css';
 import { useAuth } from '../../hooks/useAuth';
@@ -87,6 +87,13 @@ const Delivery: React.FC = () => {
     null
   );
   const [openScheduleDialog, setOpenScheduleDialog] = useState(false);
+
+  // 🆕 개별 배송 날짜 수정 관련 상태
+  const [editingDeliveryId, setEditingDeliveryId] = useState<number | null>(
+    null
+  );
+  const [editingDate, setEditingDate] = useState<string>('');
+  const [openEditDialog, setOpenEditDialog] = useState(false);
 
   // 배송 추가 관련 상태
   const [products, setProducts] = useState<Product[]>([]);
@@ -289,6 +296,43 @@ const Delivery: React.FC = () => {
     }
   };
 
+  // 🆕 개별 배송 날짜 수정 함수
+  const handleOpenEditDialog = (deliveryId: number, currentDate: string) => {
+    setEditingDeliveryId(deliveryId);
+    setEditingDate(currentDate);
+    setOpenEditDialog(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    setOpenEditDialog(false);
+    setEditingDeliveryId(null);
+    setEditingDate('');
+  };
+
+  const handleUpdateDeliveryDate = async () => {
+    if (!selectedUser || !editingDeliveryId || !editingDate) return;
+
+    setScheduleLoading(true);
+    setScheduleError(null);
+
+    try {
+      await axios.put(
+        `/api/delivery/users/${selectedUser.user.id}/schedule/${editingDeliveryId}`,
+        { date: editingDate }
+      );
+
+      await fetchUserSchedule(selectedUser.user.id);
+      handleCloseEditDialog();
+    } catch (err: any) {
+      console.error('Failed to update delivery date:', err);
+      setScheduleError(
+        err.response?.data?.error || '배송 날짜 수정 중 오류가 발생했습니다.'
+      );
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
+
   const deleteScheduledDelivery = async (deliveryId: number) => {
     if (!selectedUser || !confirm('정말로 이 배송 일정을 삭제하시겠습니까?'))
       return;
@@ -427,6 +471,21 @@ const Delivery: React.FC = () => {
       default:
         return { className: '', label: status };
     }
+  };
+
+  // 🆕 관리자가 선택할 수 있는 모든 요일 옵션 (당일 포함)
+  const getAdminAvailableDates = () => {
+    const dates = [];
+    const today = new Date();
+
+    // 당일부터 60일까지 모든 날짜 허용
+    for (let i = 0; i < 60; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      dates.push(date.toLocaleDateString('sv-SE'));
+    }
+
+    return dates;
   };
 
   if (!isAuthenticated || !user?.isAdmin) {
@@ -803,12 +862,24 @@ const Delivery: React.FC = () => {
                           <strong>{delivery.date}</strong>
                           <span>{delivery.product_name}</span>
                         </div>
-                        <button
-                          className="action-button error-button"
-                          onClick={() => deleteScheduledDelivery(delivery.id)}
-                        >
-                          삭제
-                        </button>
+                        <div className="schedule-actions">
+                          <button
+                            className="action-button edit-button"
+                            onClick={() =>
+                              handleOpenEditDialog(delivery.id, delivery.date)
+                            }
+                            title="날짜 수정"
+                          >
+                            수정
+                          </button>
+                          <button
+                            className="action-button error-button"
+                            onClick={() => deleteScheduledDelivery(delivery.id)}
+                            title="배송 삭제"
+                          >
+                            삭제
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1010,6 +1081,8 @@ const Delivery: React.FC = () => {
                 <p className="date-selection-notice">
                   배송일을 선택하면 해당 날짜에 배송이 예약됩니다. 선택하지
                   않으면 배송 횟수만 추가되고 나중에 스케줄링할 수 있습니다.
+                  <br />
+                  <strong>관리자는 모든 요일과 당일도 선택 가능합니다.</strong>
                 </p>
                 <DeliveryCalendar
                   requiredCount={
@@ -1018,6 +1091,7 @@ const Delivery: React.FC = () => {
                   }
                   selectedDates={selectedDatesForDelivery}
                   onDatesChange={setSelectedDatesForDelivery}
+                  isAdmin={true}
                 />
 
                 {/* 특별 요청사항 입력 */}
@@ -1169,6 +1243,42 @@ const Delivery: React.FC = () => {
         </div>
       )}
 
+      {/* 🆕 개별 배송 날짜 수정 다이얼로그 */}
+      {openEditDialog && editingDeliveryId && (
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <h2 className="modal-title">배송 날짜 수정</h2>
+            <div className="modal-body">
+              <div className="form-control">
+                <label htmlFor="edit-date">새로운 배송 날짜</label>
+                <input
+                  id="edit-date"
+                  type="date"
+                  value={editingDate}
+                  onChange={(e) => setEditingDate(e.target.value)}
+                  min={new Date().toLocaleDateString('sv-SE')} // 관리자는 당일도 선택 가능
+                />
+                <small className="form-hint">
+                  관리자는 모든 요일과 당일도 선택할 수 있습니다.
+                </small>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button className="cancel-button" onClick={handleCloseEditDialog}>
+                취소
+              </button>
+              <button
+                className="confirm-button confirm-success"
+                onClick={handleUpdateDeliveryDate}
+                disabled={!editingDate || scheduleLoading}
+              >
+                {scheduleLoading ? '처리중...' : '수정'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 스케줄 수정 다이얼로그 */}
       {openScheduleDialog && selectedUser && (
         <div className="modal-backdrop">
@@ -1201,6 +1311,7 @@ const Delivery: React.FC = () => {
                         onChange={(e) =>
                           updateScheduleDate(index, e.target.value)
                         }
+                        min={new Date().toLocaleDateString('sv-SE')} // 관리자는 당일도 선택 가능
                       />
                       <button
                         className="action-button error-button"
@@ -1214,6 +1325,9 @@ const Delivery: React.FC = () => {
                     날짜 추가
                   </button>
                 </div>
+                <small className="form-hint">
+                  관리자는 모든 요일과 당일도 선택할 수 있습니다.
+                </small>
               </div>
             </div>
             <div className="modal-actions">
