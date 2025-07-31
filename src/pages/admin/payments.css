@@ -464,7 +464,7 @@
   border: 1px solid var(--error-color);
 }
 
-.cancel-btn {
+.action-btn {
   background-color: var(--background-dark);
   color: var(--text-light);
   font-weight: 600;
