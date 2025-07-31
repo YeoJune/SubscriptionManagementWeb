@@ -470,7 +470,7 @@ router.get('/', authMiddleware, (req, res) => {
              pr.name as product_name, pr.delivery_count as product_delivery_count
       FROM payments p
       JOIN product pr ON p.product_id = pr.id
-      WHERE p.user_id = ? AND p.status = 'completed'
+      WHERE p.user_id = ? AND p.status IN ('completed', 'cash_pending', 'cancelled')
       ORDER BY p.created_at DESC
       LIMIT ? OFFSET ?
     `;
@@ -664,6 +664,7 @@ router.get('/admin', checkAdmin, (req, res) => {
     let query = `
       SELECT p.id, p.user_id, p.product_id, p.count, p.amount, p.order_id, 
              p.status, p.payment_method, p.payment_gateway_transaction_id,
+             p.depositor_name,
              p.paid_at, p.created_at,
              u.name AS user_name, u.phone_number AS user_phone,
              pr.name AS product_name
@@ -1001,9 +1002,6 @@ function createErrorHtml(errorType, redirectUrl = null) {
   `;
 }
 
-// routes/payments.js 추가사항
-// 파일 끝의 module.exports = router; 위에 다음 API들 추가:
-
 // POST /api/payments/admin/:id/cancel (관리자 결제 취소)
 router.post('/admin/:id/cancel', checkAdmin, async (req, res) => {
   try {
@@ -1040,8 +1038,7 @@ router.post('/admin/:id/cancel', checkAdmin, async (req, res) => {
           });
         }
 
-        const tid = payment.payment_gateway_transaction_id;
-        if (!tid) {
+        if (!payment.payment_gateway_transaction_id) {
           return res.status(400).json({
             success: false,
             error: '거래 ID(TID)가 없어 취소할 수 없습니다.',
@@ -1051,11 +1048,8 @@ router.post('/admin/:id/cancel', checkAdmin, async (req, res) => {
         try {
           // 나이스페이 취소 API 호출
           const cancelResponse = await axios.post(
-            `${NICEPAY_API_URL}/${tid}/cancel`,
-            {
-              reason: reason,
-              orderId: payment.order_id,
-            },
+            `${NICEPAY_API_URL}/${payment.payment_gateway_transaction_id}/cancel`,
+            { reason: reason, orderId: payment.order_id },
             {
               headers: {
                 'Content-Type': 'application/json',
@@ -1064,84 +1058,89 @@ router.post('/admin/:id/cancel', checkAdmin, async (req, res) => {
             }
           );
 
-          if (cancelResponse.data.resultCode === '0000') {
-            // 나이스페이 취소 성공
-            db.run('BEGIN TRANSACTION', (err) => {
-              if (err) {
-                return res
-                  .status(500)
-                  .json({ success: false, error: err.message });
-              }
-
-              // 결제 상태를 cancelled로 변경
-              db.run(
-                `UPDATE payments SET 
-                 status = 'cancelled', 
-                 cancelled_reason = ?,
-                 raw_response_data = ?
-                 WHERE id = ?`,
-                [reason, JSON.stringify(cancelResponse.data), payment.id],
-                async (err) => {
-                  if (err) {
-                    db.run('ROLLBACK');
-                    return res
-                      .status(500)
-                      .json({ success: false, error: err.message });
-                  }
-
-                  try {
-                    // 배송 취소 처리
-                    const deliveryResult =
-                      await deliveryManager.cancelPaymentDeliveries(
-                        payment.user_id,
-                        payment.product_id,
-                        payment.count
-                      );
-
-                    db.run('COMMIT', (err) => {
-                      if (err) {
-                        db.run('ROLLBACK');
-                        return res
-                          .status(500)
-                          .json({ success: false, error: err.message });
-                      }
-
-                      res.json({
-                        success: true,
-                        message: '결제가 성공적으로 취소되었습니다.',
-                        payment: {
-                          id: payment.id,
-                          order_id: payment.order_id,
-                          status: 'cancelled',
-                          cancelled_reason: reason,
-                        },
-                        delivery_info: deliveryResult,
-                        partial_usage_notice:
-                          deliveryResult.deleted_pending_deliveries <
-                          payment.count
-                            ? `주의: ${payment.count}회 중 ${payment.count - deliveryResult.deleted_pending_deliveries}회는 이미 배송되었지만 전액 환불됩니다.`
-                            : null,
-                      });
-                    });
-                  } catch (deliveryError) {
-                    db.run('ROLLBACK');
-                    res.status(500).json({
-                      success: false,
-                      error: '배송 취소 처리 중 오류가 발생했습니다.',
-                      details: deliveryError.message,
-                    });
-                  }
-                }
-              );
-            });
-          } else {
-            // 나이스페이 취소 실패
-            res.status(400).json({
+          if (cancelResponse.data.resultCode !== '0000') {
+            return res.status(400).json({
               success: false,
-              error: `결제 취소 실패: ${cancelResponse.data.resultMsg || '알 수 없는 오류'}`,
+              error: `결제 취소 실패: ${
+                cancelResponse.data.resultMsg || '알 수 없는 오류'
+              }`,
               errorCode: cancelResponse.data.resultCode,
             });
           }
+
+          // 트랜잭션 시작
+          db.run('BEGIN TRANSACTION', (err) => {
+            if (err) {
+              return res
+                .status(500)
+                .json({ success: false, error: err.message });
+            }
+
+            // 결제 상태 업데이트
+            db.run(
+              `UPDATE payments 
+             SET status = 'cancelled',
+                 cancelled_reason = ?,
+                 raw_response_data = ?
+             WHERE id = ?`,
+              [reason, JSON.stringify(cancelResponse.data), payment.id],
+              async (err) => {
+                if (err) {
+                  db.run('ROLLBACK');
+                  return res
+                    .status(500)
+                    .json({ success: false, error: err.message });
+                }
+
+                try {
+                  // 배송 취소 처리
+                  const deliveryResult =
+                    await deliveryManager.cancelPaymentDeliveries(
+                      payment.user_id,
+                      payment.product_id,
+                      payment.count
+                    );
+
+                  // 커밋
+                  db.run('COMMIT', (err) => {
+                    if (err) {
+                      db.run('ROLLBACK');
+                      return res
+                        .status(500)
+                        .json({ success: false, error: err.message });
+                    }
+
+                    res.json({
+                      success: true,
+                      message: '결제가 성공적으로 취소되었습니다.',
+                      payment: {
+                        id: payment.id,
+                        order_id: payment.order_id,
+                        status: 'cancelled',
+                        cancelled_reason: reason,
+                      },
+                      delivery_info: deliveryResult,
+                      partial_usage_notice:
+                        deliveryResult.deleted_pending_deliveries <
+                        payment.count
+                          ? `주의: ${payment.count}회 중 ${
+                              payment.count -
+                              deliveryResult.deleted_pending_deliveries
+                            }회는 이미 배송되었지만 전액 환불됩니다.`
+                          : null,
+                    });
+                  });
+                } catch (deliveryError) {
+                  db.run('ROLLBACK');
+                  res.status(500).json({
+                    success: false,
+                    error: '배송 취소 처리 중 오류가 발생했습니다.',
+                    details: deliveryError.message,
+                  });
+                }
+              }
+            );
+          });
         } catch (apiError) {
           console.error('나이스페이 취소 API 호출 중 오류:', apiError);
           res.status(500).json({
