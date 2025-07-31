@@ -6,10 +6,23 @@ import UserCard from '../components/userCard';
 import axios from 'axios';
 import { DeliveryProps } from '../types';
 
+interface PaymentProps {
+  id: number;
+  order_id: string;
+  product_name: string;
+  amount: number;
+  status: string;
+  depositor_name?: string;
+  created_at: string;
+  paid_at?: string;
+}
+
 const Profile: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const [deliveries, setDeliveries] = useState<DeliveryProps[]>([]);
+  const [payments, setPayments] = useState<PaymentProps[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [paymentLoading, setPaymentLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   console.log(user);
@@ -17,6 +30,7 @@ const Profile: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated) {
       fetchDeliveries();
+      fetchPayments();
     }
   }, [isAuthenticated]);
 
@@ -32,6 +46,18 @@ const Profile: React.FC = () => {
     }
   };
 
+  const fetchPayments = async () => {
+    setPaymentLoading(true);
+    try {
+      const response = await axios.get('/api/payments?limit=10');
+      setPayments(response.data.payments || []);
+    } catch (err) {
+      console.error('Failed to fetch payments:', err);
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
   // 배송 상태별 클래스명 및 라벨
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -44,6 +70,38 @@ const Profile: React.FC = () => {
       default:
         return { className: '', label: status };
     }
+  };
+
+  // 결제 상태별 클래스명 및 라벨
+  const getPaymentStatusInfo = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return { className: 'status-complete', label: '결제완료' };
+      case 'cash_pending':
+        return { className: 'status-pending', label: '입금대기' };
+      case 'pending':
+        return { className: 'status-pending', label: '결제대기' };
+      case 'failed':
+        return { className: 'status-cancel', label: '결제실패' };
+      case 'cancelled':
+        return { className: 'status-cancel', label: '결제취소' };
+      case 'authenticated':
+        return { className: 'status-pending', label: '인증완료' };
+      default:
+        return { className: '', label: status };
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('ko-KR').format(amount) + '원';
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
   };
 
   if (!isAuthenticated || !user) {
@@ -88,6 +146,77 @@ const Profile: React.FC = () => {
 
       <hr className="divider" />
 
+      {/* 결제 내역 섹션 */}
+      <h2 className="payment-history-title">최근 결제 내역</h2>
+
+      {paymentLoading ? (
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+        </div>
+      ) : payments.length === 0 ? (
+        <div className="alert alert-info">결제 내역이 없습니다.</div>
+      ) : (
+        <div className="table-container">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>주문번호</th>
+                <th>상품명</th>
+                <th>금액</th>
+                <th style={{ textAlign: 'center' }}>상태</th>
+                <th>주문일</th>
+              </tr>
+            </thead>
+            <tbody>
+              {payments.map((payment) => {
+                const statusInfo = getPaymentStatusInfo(payment.status);
+                return (
+                  <tr key={payment.id}>
+                    <td>
+                      <div className="order-id-cell">
+                        <span className="order-id">{payment.order_id}</span>
+                        {payment.depositor_name && (
+                          <div className="depositor-info">
+                            입금자: {payment.depositor_name}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td>{payment.product_name}</td>
+                    <td>
+                      <strong>{formatCurrency(payment.amount)}</strong>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className={`status-chip ${statusInfo.className}`}>
+                        {statusInfo.label}
+                      </span>
+                      {payment.status === 'cash_pending' && (
+                        <div className="cash-pending-notice">
+                          관리자 승인 대기 중
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <div className="date-cell">
+                        {formatDate(payment.created_at)}
+                        {payment.paid_at && payment.status === 'completed' && (
+                          <div className="paid-date">
+                            결제: {formatDate(payment.paid_at)}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <hr className="divider" />
+
+      {/* 배송 내역 섹션 */}
       <h2 className="delivery-history-title">배송 내역</h2>
 
       {loading ? (
@@ -113,7 +242,7 @@ const Profile: React.FC = () => {
                 const statusInfo = getStatusInfo(delivery.status);
                 return (
                   <tr key={delivery.id}>
-                    <td>{new Date(delivery.date).toLocaleDateString()}</td>
+                    <td>{formatDate(delivery.date)}</td>
                     <td>{delivery.product_name}</td>
                     <td style={{ textAlign: 'center' }}>
                       <span className={`status-chip ${statusInfo.className}`}>

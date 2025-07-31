@@ -17,6 +17,7 @@ interface PaymentProps {
   status: string;
   payment_method?: string;
   payment_gateway_transaction_id?: string;
+  depositor_name?: string;
   paid_at?: string;
   created_at: string;
 }
@@ -56,6 +57,17 @@ const AdminPayments: React.FC = () => {
   });
   const [users, setUsers] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+
+  // 🆕 결제 취소 모달 상태
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelPaymentId, setCancelPaymentId] = useState<number | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [processingCancel, setProcessingCancel] = useState(false);
+
+  // 🆕 현금 결제 승인/거절 처리 상태
+  const [processingCashAction, setProcessingCashAction] = useState<
+    number | null
+  >(null);
 
   useEffect(() => {
     if (isAuthenticated && user?.isAdmin) {
@@ -157,6 +169,100 @@ const AdminPayments: React.FC = () => {
     }
   };
 
+  // 🆕 결제 취소 모달 열기
+  const openCancelModal = (paymentId: number) => {
+    setCancelPaymentId(paymentId);
+    setCancelReason('');
+    setShowCancelModal(true);
+  };
+
+  // 🆕 결제 취소 처리
+  const handleCancelPayment = async () => {
+    if (!cancelPaymentId || !cancelReason.trim()) {
+      alert('취소 사유를 입력해주세요.');
+      return;
+    }
+
+    setProcessingCancel(true);
+    try {
+      const response = await axios.post(
+        `/api/payments/admin/${cancelPaymentId}/cancel`,
+        {
+          reason: cancelReason.trim(),
+        }
+      );
+
+      if (response.data.success) {
+        alert(
+          response.data.message +
+            (response.data.partial_usage_notice
+              ? '\n\n' + response.data.partial_usage_notice
+              : '')
+        );
+        setShowCancelModal(false);
+        setCancelPaymentId(null);
+        setCancelReason('');
+        fetchPayments();
+      } else {
+        alert(response.data.error || '취소 처리에 실패했습니다.');
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.error || '취소 처리 중 오류가 발생했습니다.');
+    } finally {
+      setProcessingCancel(false);
+    }
+  };
+
+  // 🆕 현금 결제 승인 처리
+  const handleApproveCashPayment = async (paymentId: number) => {
+    if (!confirm('이 현금 결제를 승인하시겠습니까?')) return;
+
+    setProcessingCashAction(paymentId);
+    try {
+      const response = await axios.post(
+        `/api/payments/admin/${paymentId}/approve-cash`
+      );
+
+      if (response.data.success) {
+        alert(response.data.message);
+        fetchPayments();
+      } else {
+        alert(response.data.error || '승인 처리에 실패했습니다.');
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.error || '승인 처리 중 오류가 발생했습니다.');
+    } finally {
+      setProcessingCashAction(null);
+    }
+  };
+
+  // 🆕 현금 결제 거절 처리
+  const handleRejectCashPayment = async (paymentId: number) => {
+    const reason = prompt('거절 사유를 입력해주세요:');
+    if (!reason) return;
+
+    setProcessingCashAction(paymentId);
+    try {
+      const response = await axios.post(
+        `/api/payments/admin/${paymentId}/reject-cash`,
+        {
+          reason: reason.trim(),
+        }
+      );
+
+      if (response.data.success) {
+        alert(response.data.message);
+        fetchPayments();
+      } else {
+        alert(response.data.error || '거절 처리에 실패했습니다.');
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.error || '거절 처리 중 오류가 발생했습니다.');
+    } finally {
+      setProcessingCashAction(null);
+    }
+  };
+
   // 모달 열기
   const openCashModal = () => {
     fetchUsersAndProducts();
@@ -212,6 +318,8 @@ const AdminPayments: React.FC = () => {
         return { className: 'status-info', label: '가상계좌대기' };
       case 'vbank_expired':
         return { className: 'status-error', label: '가상계좌만료' };
+      case 'cash_pending':
+        return { className: 'status-pending', label: '입금대기' };
       default:
         return { className: 'status-default', label: status };
     }
@@ -266,6 +374,7 @@ const AdminPayments: React.FC = () => {
               <option value="cancelled">결제취소</option>
               <option value="ready">결제준비</option>
               <option value="vbank_ready">가상계좌대기</option>
+              <option value="cash_pending">입금대기</option>
             </select>
           </div>
 
@@ -339,6 +448,12 @@ const AdminPayments: React.FC = () => {
           </div>
         </div>
         <div className="summary-card">
+          <div className="summary-title">입금 대기</div>
+          <div className="summary-value text-warning">
+            {payments.filter((p) => p.status === 'cash_pending').length}건
+          </div>
+        </div>
+        <div className="summary-card">
           <div className="summary-title">총 결제 금액</div>
           <div className="summary-value text-primary">
             {formatCurrency(
@@ -374,11 +489,14 @@ const AdminPayments: React.FC = () => {
                   <th className="hide-sm">결제수단</th>
                   <th style={{ textAlign: 'center' }}>상태</th>
                   <th className="hide-sm">결제일시</th>
+                  <th>액션</th>
                 </tr>
               </thead>
               <tbody className="admin-table-body">
                 {payments.map((payment) => {
                   const statusInfo = getStatusInfo(payment.status);
+                  const isProcessing = processingCashAction === payment.id;
+
                   return (
                     <tr key={payment.id}>
                       <td>{payment.id}</td>
@@ -398,6 +516,11 @@ const AdminPayments: React.FC = () => {
                             {payment.user_name || payment.user_id}
                           </strong>
                           <div className="user-id">ID: {payment.user_id}</div>
+                          {payment.depositor_name && (
+                            <div className="depositor-name">
+                              입금자: {payment.depositor_name}
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="hide-xs">{payment.user_phone || '-'}</td>
@@ -432,6 +555,46 @@ const AdminPayments: React.FC = () => {
                             생성: {formatDate(payment.created_at)}
                           </div>
                         )}
+                      </td>
+                      <td>
+                        <div className="action-buttons">
+                          {/* 🆕 결제 취소 버튼 */}
+                          {payment.status === 'completed' && (
+                            <button
+                              className="action-btn cancel-btn"
+                              onClick={() => openCancelModal(payment.id)}
+                              title="결제 취소"
+                            >
+                              취소
+                            </button>
+                          )}
+
+                          {/* 🆕 현금 결제 승인/거절 버튼 */}
+                          {payment.status === 'cash_pending' && (
+                            <>
+                              <button
+                                className="action-btn approve-btn"
+                                onClick={() =>
+                                  handleApproveCashPayment(payment.id)
+                                }
+                                disabled={isProcessing}
+                                title="현금 결제 승인"
+                              >
+                                {isProcessing ? '처리중...' : '승인'}
+                              </button>
+                              <button
+                                className="action-btn reject-btn"
+                                onClick={() =>
+                                  handleRejectCashPayment(payment.id)
+                                }
+                                disabled={isProcessing}
+                                title="현금 결제 거절"
+                              >
+                                거절
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -480,7 +643,69 @@ const AdminPayments: React.FC = () => {
           </div>
         </>
       )}
-      {/* 현금 결제 추가 모달 */}
+
+      {/* 🆕 결제 취소 모달 */}
+      {showCancelModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowCancelModal(false)}
+        >
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>결제 취소</h3>
+              <button
+                className="modal-close"
+                onClick={() => setShowCancelModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="cancel-warning">
+                <p>
+                  ⚠️ <strong>주의사항</strong>
+                </p>
+                <ul>
+                  <li>결제 취소 시 전액 환불 처리됩니다.</li>
+                  <li>이미 배송된 서비스가 있어도 전액 환불됩니다.</li>
+                  <li>예정된 배송은 모두 취소됩니다.</li>
+                  <li>취소 후에는 되돌릴 수 없습니다.</li>
+                </ul>
+              </div>
+              <div className="form-control">
+                <label htmlFor="cancel-reason">취소 사유 *</label>
+                <textarea
+                  id="cancel-reason"
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="취소 사유를 입력해주세요"
+                  rows={3}
+                  required
+                />
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(false)}
+                disabled={processingCancel}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="danger"
+                onClick={handleCancelPayment}
+                disabled={processingCancel || !cancelReason.trim()}
+              >
+                {processingCancel ? '처리중...' : '결제 취소'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 현금 결제 추가 모달 (기존) */}
       {showCashModal && (
         <div className="modal-overlay" onClick={() => setShowCashModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>

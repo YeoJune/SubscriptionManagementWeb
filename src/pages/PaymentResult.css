@@ -334,6 +334,144 @@
   text-decoration: none;
 }
 
+/* 현금 결제 대기 섹션 */
+.cash-pending-section {
+  padding: 2rem 0;
+}
+
+.cash-pending-icon {
+  width: 90px;
+  height: 90px;
+  background: linear-gradient(135deg, #ffc107, #ff8c00);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 2rem;
+  font-size: 3rem;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);
+}
+
+.cash-pending-title {
+  margin: 0 0 1rem;
+  color: #d97706;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.cash-pending-message {
+  color: var(--text-color);
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+/* 현금 결제 정보 */
+.cash-payment-info {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+  text-align: left;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.cash-payment-info h3 {
+  margin: 0 0 1.5rem;
+  color: var(--accent-color);
+  font-size: 1.4rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+.account-details-box {
+  background-color: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 2px 8px rgba(255, 140, 66, 0.1);
+}
+
+.account-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.account-item:last-child {
+  border-bottom: none;
+}
+
+.account-item .label {
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.account-item .value {
+  color: var(--accent-color);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.account-item .account-number {
+  font-family: 'Courier New', monospace;
+  font-size: 1.2rem;
+  color: var(--primary-color);
+  background-color: rgba(255, 140, 66, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.account-item .amount {
+  font-size: 1.3rem;
+  color: var(--primary-color);
+  font-weight: 800;
+}
+
+.account-item .order-id {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  background-color: var(--background-color);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* 현금 대기 유의사항 */
+.cash-pending-notice {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  border: 1px solid #2196f3;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  text-align: left;
+}
+
+.cash-pending-notice h4 {
+  margin: 0 0 1rem;
+  color: #1976d2;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.cash-pending-notice ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  list-style-type: disc;
+}
+
+.cash-pending-notice li {
+  margin: 0.5rem 0;
+  color: #1565c0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .payment-result-container {

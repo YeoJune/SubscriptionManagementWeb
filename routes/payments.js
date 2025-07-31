@@ -1001,4 +1001,434 @@ function createErrorHtml(errorType, redirectUrl = null) {
   `;
 }
 
+// routes/payments.js 추가사항
+// 파일 끝의 module.exports = router; 위에 다음 API들 추가:
+
+// POST /api/payments/admin/:id/cancel (관리자 결제 취소)
+router.post('/admin/:id/cancel', checkAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({
+        success: false,
+        error: '취소 사유는 필수 입력 사항입니다.',
+      });
+    }
+
+    // 결제 정보 조회
+    db.get(
+      'SELECT * FROM payments WHERE id = ?',
+      [id],
+      async (err, payment) => {
+        if (err) {
+          return res.status(500).json({ success: false, error: err.message });
+        }
+
+        if (!payment) {
+          return res.status(404).json({
+            success: false,
+            error: '결제 정보를 찾을 수 없습니다.',
+          });
+        }
+
+        if (payment.status !== 'completed') {
+          return res.status(400).json({
+            success: false,
+            error: '완료된 결제만 취소할 수 있습니다.',
+          });
+        }
+
+        const tid = payment.payment_gateway_transaction_id;
+        if (!tid) {
+          return res.status(400).json({
+            success: false,
+            error: '거래 ID(TID)가 없어 취소할 수 없습니다.',
+          });
+        }
+
+        try {
+          // 나이스페이 취소 API 호출
+          const cancelResponse = await axios.post(
+            `${NICEPAY_API_URL}/${tid}/cancel`,
+            {
+              reason: reason,
+              orderId: payment.order_id,
+            },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: generateBasicAuthHeader(),
+              },
+            }
+          );
+
+          if (cancelResponse.data.resultCode === '0000') {
+            // 나이스페이 취소 성공
+            db.run('BEGIN TRANSACTION', (err) => {
+              if (err) {
+                return res
+                  .status(500)
+                  .json({ success: false, error: err.message });
+              }
+
+              // 결제 상태를 cancelled로 변경
+              db.run(
+                `UPDATE payments SET 
+                 status = 'cancelled', 
+                 cancelled_reason = ?,
+                 raw_response_data = ?
+                 WHERE id = ?`,
+                [reason, JSON.stringify(cancelResponse.data), payment.id],
+                async (err) => {
+                  if (err) {
+                    db.run('ROLLBACK');
+                    return res
+                      .status(500)
+                      .json({ success: false, error: err.message });
+                  }
+
+                  try {
+                    // 배송 취소 처리
+                    const deliveryResult =
+                      await deliveryManager.cancelPaymentDeliveries(
+                        payment.user_id,
+                        payment.product_id,
+                        payment.count
+                      );
+
+                    db.run('COMMIT', (err) => {
+                      if (err) {
+                        db.run('ROLLBACK');
+                        return res
+                          .status(500)
+                          .json({ success: false, error: err.message });
+                      }
+
+                      res.json({
+                        success: true,
+                        message: '결제가 성공적으로 취소되었습니다.',
+                        payment: {
+                          id: payment.id,
+                          order_id: payment.order_id,
+                          status: 'cancelled',
+                          cancelled_reason: reason,
+                        },
+                        delivery_info: deliveryResult,
+                        partial_usage_notice:
+                          deliveryResult.deleted_pending_deliveries <
+                          payment.count
+                            ? `주의: ${payment.count}회 중 ${payment.count - deliveryResult.deleted_pending_deliveries}회는 이미 배송되었지만 전액 환불됩니다.`
+                            : null,
+                      });
+                    });
+                  } catch (deliveryError) {
+                    db.run('ROLLBACK');
+                    res.status(500).json({
+                      success: false,
+                      error: '배송 취소 처리 중 오류가 발생했습니다.',
+                      details: deliveryError.message,
+                    });
+                  }
+                }
+              );
+            });
+          } else {
+            // 나이스페이 취소 실패
+            res.status(400).json({
+              success: false,
+              error: `결제 취소 실패: ${cancelResponse.data.resultMsg || '알 수 없는 오류'}`,
+              errorCode: cancelResponse.data.resultCode,
+            });
+          }
+        } catch (apiError) {
+          console.error('나이스페이 취소 API 호출 중 오류:', apiError);
+          res.status(500).json({
+            success: false,
+            error: '결제 취소 API 호출 중 오류가 발생했습니다.',
+            details: apiError.response?.data || apiError.message,
+          });
+        }
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/payments/cash/prepare (현금 결제 준비)
+router.post('/cash/prepare', authMiddleware, (req, res) => {
+  try {
+    const { product_id, special_request, depositor_name } = req.body;
+    const user_id = req.session.user.id;
+
+    if (!product_id) {
+      return res.status(400).json({
+        success: false,
+        error: '상품은 필수 입력 사항입니다.',
+      });
+    }
+
+    if (!depositor_name) {
+      return res.status(400).json({
+        success: false,
+        error: '입금자명은 필수 입력 사항입니다.',
+      });
+    }
+
+    db.get(
+      `SELECT * FROM product WHERE id = ?`,
+      [product_id],
+      (err, product) => {
+        if (err) {
+          return res.status(500).json({ success: false, error: err.message });
+        }
+
+        if (!product) {
+          return res.status(404).json({
+            success: false,
+            error: '상품을 찾을 수 없습니다.',
+          });
+        }
+
+        const orderId = generateOrderId();
+        const amount = product.price;
+
+        db.run(
+          `INSERT INTO payments (user_id, product_id, count, amount, order_id, status, payment_method, depositor_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            user_id,
+            product_id,
+            1,
+            amount,
+            orderId,
+            'cash_pending',
+            'CASH',
+            depositor_name,
+          ],
+          function (err) {
+            if (err) {
+              return res
+                .status(500)
+                .json({ success: false, error: err.message });
+            }
+
+            const paymentId = this.lastID;
+
+            if (special_request) {
+              req.session.special_request = special_request;
+            }
+
+            res.json({
+              success: true,
+              payment_id: paymentId,
+              order_id: orderId,
+              status: 'cash_pending',
+              message:
+                '현금 결제 요청이 등록되었습니다. 관리자 승인을 기다려주세요.',
+              account_info: {
+                bank: '카카오뱅크',
+                account_number: '3333-30-8265756',
+                account_holder: '김봉준',
+                amount: amount,
+                depositor_name: depositor_name,
+              },
+            });
+          }
+        );
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/payments/admin/:id/approve-cash (현금 결제 승인)
+router.post('/admin/:id/approve-cash', checkAdmin, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { selected_dates } = req.body;
+
+    db.get(
+      'SELECT * FROM payments WHERE id = ?',
+      [id],
+      async (err, payment) => {
+        if (err) {
+          return res.status(500).json({ success: false, error: err.message });
+        }
+
+        if (!payment) {
+          return res.status(404).json({
+            success: false,
+            error: '결제 정보를 찾을 수 없습니다.',
+          });
+        }
+
+        if (payment.status !== 'cash_pending') {
+          return res.status(400).json({
+            success: false,
+            error: '현금 결제 대기 상태가 아닙니다.',
+          });
+        }
+
+        db.run('BEGIN TRANSACTION', (err) => {
+          if (err) {
+            return res.status(500).json({ success: false, error: err.message });
+          }
+
+          // 결제 상태를 completed로 변경
+          db.run(
+            `UPDATE payments SET 
+             status = 'completed', 
+             paid_at = CURRENT_TIMESTAMP 
+             WHERE id = ?`,
+            [payment.id],
+            function (err) {
+              if (err) {
+                db.run('ROLLBACK');
+                return res
+                  .status(500)
+                  .json({ success: false, error: err.message });
+              }
+
+              db.get(
+                'SELECT * FROM product WHERE id = ?',
+                [payment.product_id],
+                (err, product) => {
+                  if (err) {
+                    db.run('ROLLBACK');
+                    return res
+                      .status(500)
+                      .json({ success: false, error: err.message });
+                  }
+
+                  db.run('COMMIT', (err) => {
+                    if (err) {
+                      db.run('ROLLBACK');
+                      return res
+                        .status(500)
+                        .json({ success: false, error: err.message });
+                    }
+
+                    // 배송 처리
+                    let deliveryPromise;
+                    if (selected_dates && selected_dates.length > 0) {
+                      deliveryPromise =
+                        deliveryManager.bulkAddDeliveryWithSchedule(
+                          payment.user_id,
+                          payment.product_id,
+                          selected_dates,
+                          null
+                        );
+                    } else {
+                      deliveryPromise = deliveryManager.addDeliveryCount(
+                        payment.user_id,
+                        payment.product_id,
+                        product.delivery_count
+                      );
+                    }
+
+                    deliveryPromise
+                      .then((result) => {
+                        res.json({
+                          success: true,
+                          message: '현금 결제가 승인되었습니다.',
+                          payment: {
+                            id: payment.id,
+                            order_id: payment.order_id,
+                            status: 'completed',
+                            amount: payment.amount,
+                            depositor_name: payment.depositor_name,
+                            paid_at: new Date(),
+                          },
+                          delivery_count: product.delivery_count,
+                          delivery_result: result,
+                        });
+                      })
+                      .catch((error) => {
+                        console.error('배송 처리 실패:', error);
+                        res.json({
+                          success: true,
+                          message:
+                            '현금 결제는 승인되었으나 배송 처리 중 오류가 발생했습니다.',
+                          payment: {
+                            id: payment.id,
+                            order_id: payment.order_id,
+                            status: 'completed',
+                            amount: payment.amount,
+                            depositor_name: payment.depositor_name,
+                            paid_at: new Date(),
+                          },
+                          error_detail: error.message,
+                        });
+                      });
+                  });
+                }
+              );
+            }
+          );
+        });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/payments/admin/:id/reject-cash (현금 결제 거절)
+router.post('/admin/:id/reject-cash', checkAdmin, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    db.get('SELECT * FROM payments WHERE id = ?', [id], (err, payment) => {
+      if (err) {
+        return res.status(500).json({ success: false, error: err.message });
+      }
+
+      if (!payment) {
+        return res.status(404).json({
+          success: false,
+          error: '결제 정보를 찾을 수 없습니다.',
+        });
+      }
+
+      if (payment.status !== 'cash_pending') {
+        return res.status(400).json({
+          success: false,
+          error: '현금 결제 대기 상태가 아닙니다.',
+        });
+      }
+
+      // 결제 상태를 failed로 변경
+      db.run(
+        `UPDATE payments SET 
+           status = 'failed',
+           cancelled_reason = ?
+           WHERE id = ?`,
+        [reason || '관리자에 의한 거절', payment.id],
+        function (err) {
+          if (err) {
+            return res.status(500).json({ success: false, error: err.message });
+          }
+
+          res.json({
+            success: true,
+            message: '현금 결제가 거절되었습니다.',
+            payment: {
+              id: payment.id,
+              order_id: payment.order_id,
+              status: 'failed',
+              cancelled_reason: reason || '관리자에 의한 거절',
+            },
+          });
+        }
+      );
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;

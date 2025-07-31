@@ -46,6 +46,10 @@ const Subscription: React.FC = () => {
   const [specialRequest, setSpecialRequest] = useState<string>('');
   const [showImageModal, setShowImageModal] = useState(false);
 
+  // 🆕 결제 방법 관련 상태 추가
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash'>('card');
+  const [depositorName, setDepositorName] = useState<string>('');
+
   useEffect(() => {
     fetchProducts();
     loadNicePaySDK();
@@ -119,6 +123,12 @@ const Subscription: React.FC = () => {
       }
     }
 
+    // 🆕 주문 확인 단계에서 현금 결제 시 입금자명 검증
+    if (activeStep === 3 && paymentMethod === 'cash' && !depositorName.trim()) {
+      setError('현금 결제 시 입금자명은 필수입니다.');
+      return;
+    }
+
     setError(null);
     setActiveStep((prev) => prev + 1);
   };
@@ -141,6 +151,7 @@ const Subscription: React.FC = () => {
     setShowImageModal(false);
   };
 
+  // 🆕 결제 처리 함수 수정 (카드/현금 분기)
   const handleSubmitPayment = async () => {
     if (!selectedProduct) return;
 
@@ -148,36 +159,80 @@ const Subscription: React.FC = () => {
     setError(null);
 
     try {
-      const prepareResponse = await axios.post('/api/payments/prepare', {
-        product_id: selectedProduct.id,
-        special_request: specialRequest.trim() || null,
-      });
-
-      if (!prepareResponse.data.success) {
-        throw new Error(prepareResponse.data.error || '결제 준비 실패');
+      if (paymentMethod === 'cash') {
+        // 현금 결제 처리
+        await handleCashPayment();
+      } else {
+        // 카드 결제 처리 (기존 로직)
+        await handleCardPayment();
       }
-
-      // 선택된 날짜와 요청사항을 세션에 저장
-      sessionStorage.setItem('selectedDates', JSON.stringify(selectedDates));
-      sessionStorage.setItem('specialRequest', specialRequest.trim() || '');
-
-      const { paramsForNicePaySDK } = prepareResponse.data;
-
-      if (!window.AUTHNICE) {
-        throw new Error('결제 시스템이 준비되지 않았습니다.');
-      }
-
-      window.AUTHNICE.requestPay({
-        ...paramsForNicePaySDK,
-        fnError: (result) => {
-          setError(`결제 오류: ${result.errorMsg || '알 수 없는 오류'}`);
-          setProcessingPayment(false);
-        },
-      });
     } catch (err: any) {
-      setError(err.message || '결제 준비 중 오류 발생');
+      setError(err.message || '결제 처리 중 오류 발생');
       setProcessingPayment(false);
     }
+  };
+
+  // 🆕 현금 결제 처리
+  const handleCashPayment = async () => {
+    if (!selectedProduct || !depositorName.trim()) {
+      throw new Error('상품 정보 또는 입금자명이 누락되었습니다.');
+    }
+
+    const cashPaymentData = {
+      product_id: selectedProduct.id,
+      special_request: specialRequest.trim() || null,
+      depositor_name: depositorName.trim(),
+    };
+
+    const response = await axios.post(
+      '/api/payments/cash/prepare',
+      cashPaymentData
+    );
+
+    if (!response.data.success) {
+      throw new Error(response.data.error || '현금 결제 요청 실패');
+    }
+
+    // 선택된 날짜 정보를 세션에 저장
+    sessionStorage.setItem('selectedDates', JSON.stringify(selectedDates));
+    sessionStorage.setItem('specialRequest', specialRequest.trim() || '');
+
+    // 현금 결제 결과 페이지로 이동
+    navigate(
+      `/payment-result?success=true&orderId=${response.data.order_id}&paymentMethod=cash&status=cash_pending`
+    );
+  };
+
+  // 기존 카드 결제 처리
+  const handleCardPayment = async () => {
+    if (!selectedProduct) return;
+
+    const prepareResponse = await axios.post('/api/payments/prepare', {
+      product_id: selectedProduct.id,
+      special_request: specialRequest.trim() || null,
+    });
+
+    if (!prepareResponse.data.success) {
+      throw new Error(prepareResponse.data.error || '결제 준비 실패');
+    }
+
+    // 선택된 날짜와 요청사항을 세션에 저장
+    sessionStorage.setItem('selectedDates', JSON.stringify(selectedDates));
+    sessionStorage.setItem('specialRequest', specialRequest.trim() || '');
+
+    const { paramsForNicePaySDK } = prepareResponse.data;
+
+    if (!window.AUTHNICE) {
+      throw new Error('결제 시스템이 준비되지 않았습니다.');
+    }
+
+    window.AUTHNICE.requestPay({
+      ...paramsForNicePaySDK,
+      fnError: (result) => {
+        setError(`결제 오류: ${result.errorMsg || '알 수 없는 오류'}`);
+        setProcessingPayment(false);
+      },
+    });
   };
 
   // 상품 선택 렌더링
@@ -376,6 +431,99 @@ const Subscription: React.FC = () => {
     );
   };
 
+  // 🆕 결제 방법 선택 렌더링
+  const renderPaymentMethodSelection = () => {
+    return (
+      <div className="payment-method-section">
+        <h4>결제 방법 선택</h4>
+        <div className="payment-method-options">
+          <label
+            className={`payment-method-option ${paymentMethod === 'card' ? 'selected' : ''}`}
+          >
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="card"
+              checked={paymentMethod === 'card'}
+              onChange={(e) =>
+                setPaymentMethod(e.target.value as 'card' | 'cash')
+              }
+            />
+            <div className="payment-method-info">
+              <span className="payment-method-name">💳 카드 결제</span>
+              <span className="payment-method-desc">
+                안전하고 빠른 온라인 카드 결제
+              </span>
+            </div>
+          </label>
+
+          <label
+            className={`payment-method-option ${paymentMethod === 'cash' ? 'selected' : ''}`}
+          >
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="cash"
+              checked={paymentMethod === 'cash'}
+              onChange={(e) =>
+                setPaymentMethod(e.target.value as 'card' | 'cash')
+              }
+            />
+            <div className="payment-method-info">
+              <span className="payment-method-name">
+                🏦 현금 결제 (계좌이체)
+              </span>
+              <span className="payment-method-desc">
+                계좌이체 후 관리자 승인
+              </span>
+            </div>
+          </label>
+        </div>
+
+        {paymentMethod === 'cash' && (
+          <div className="cash-payment-info">
+            <div className="depositor-name-section">
+              <label htmlFor="depositorName">입금자명 *</label>
+              <input
+                id="depositorName"
+                type="text"
+                value={depositorName}
+                onChange={(e) => setDepositorName(e.target.value)}
+                placeholder="입금하실 분의 성함을 입력해주세요"
+                maxLength={20}
+                required
+              />
+            </div>
+
+            <div className="account-info-highlight">
+              <h5>📋 입금 계좌 정보</h5>
+              <div className="account-details">
+                <p>
+                  <strong>은행:</strong> 카카오뱅크
+                </p>
+                <p>
+                  <strong>계좌번호:</strong>{' '}
+                  <span className="account-number">3333-30-8265756</span>
+                </p>
+                <p>
+                  <strong>예금주:</strong> 김봉준
+                </p>
+                <p>
+                  <strong>입금금액:</strong>{' '}
+                  {selectedProduct?.price.toLocaleString()}원
+                </p>
+              </div>
+              <div className="cash-payment-notice">
+                <p>⚠️ 입금 후 관리자 확인까지 시간이 소요될 수 있습니다.</p>
+                <p>📞 문의사항이 있으시면 고객센터로 연락해주세요.</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // 주문 확인 렌더링
   const renderOrderConfirmation = () => {
     return (
@@ -420,6 +568,11 @@ const Subscription: React.FC = () => {
 
             <hr className="divider" />
 
+            {/* 🆕 결제 방법 선택 추가 */}
+            {renderPaymentMethodSelection()}
+
+            <hr className="divider" />
+
             <h4>요청사항</h4>
             <div className="special-request-section">
               <textarea
@@ -442,6 +595,16 @@ const Subscription: React.FC = () => {
           </div>
         </div>
 
+        {/* 계좌번호 정보 (기존 위치에서 이동) */}
+        {paymentMethod === 'card' && (
+          <div className="account-info">
+            <p className="account-text">
+              계좌번호: 카카오뱅크{' '}
+              <span className="account-number">3333-30-8265756</span> 김봉준
+            </p>
+          </div>
+        )}
+
         <div className="center-container">
           <button
             className="payment-button"
@@ -453,12 +616,16 @@ const Subscription: React.FC = () => {
                 className="loading-spinner"
                 style={{ width: '20px', height: '20px' }}
               ></div>
+            ) : paymentMethod === 'cash' ? (
+              '입금 정보 확인 후 주문하기'
             ) : (
               '안전결제 진행하기'
             )}
           </button>
           <p className="payment-notice">
-            클릭 시 나이스페이 안전결제창이 열립니다
+            {paymentMethod === 'cash'
+              ? '주문 후 계좌로 입금해주시면 관리자 확인 후 배송이 시작됩니다.'
+              : '클릭 시 나이스페이 안전결제창이 열립니다'}
           </p>
         </div>
       </>
@@ -539,14 +706,6 @@ const Subscription: React.FC = () => {
 
       <div className="content-paper">
         {getStepContent(activeStep)}
-
-        {/* 계좌번호 정보 */}
-        <div className="account-info">
-          <p className="account-text">
-            계좌번호: 카카오뱅크{' '}
-            <span className="account-number">3333-30-8265756</span> 김봉준
-          </p>
-        </div>
 
         <div className="navigation-buttons">
           <button

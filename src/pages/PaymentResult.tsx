@@ -19,6 +19,7 @@ interface PaymentResultData {
   deliveries?: any[];
   error?: string;
   errorCode?: string;
+  cash_pending?: boolean;
 }
 
 const PaymentResult: React.FC = () => {
@@ -43,10 +44,32 @@ const PaymentResult: React.FC = () => {
       const authResultMsg = searchParams.get('authResultMsg');
       const error = searchParams.get('error');
 
+      // 🆕 현금 결제 관련 파라미터 추가
+      const paymentMethod = searchParams.get('paymentMethod');
+      const status = searchParams.get('status');
+
       if (!orderId) {
         setResult({
           success: false,
           error: '잘못된 접근입니다. 주문 정보를 확인할 수 없습니다.',
+        });
+        setLoading(false);
+        return;
+      }
+
+      // 🆕 현금 결제 대기 상태 처리
+      if (paymentMethod === 'cash' && status === 'cash_pending') {
+        setResult({
+          success: true,
+          message: '현금 결제 요청이 완료되었습니다.',
+          payment: {
+            id: 0, // 임시 ID
+            order_id: orderId,
+            status: 'cash_pending',
+            amount: parseInt(amount || '0'),
+            paid_at: new Date().toISOString(),
+          },
+          cash_pending: true, // 🆕 현금 대기 상태 플래그
         });
         setLoading(false);
         return;
@@ -172,63 +195,127 @@ const PaymentResult: React.FC = () => {
     <div className="payment-result-container">
       <div className="result-card">
         {result?.success ? (
-          // 결제 성공
-          <div className="success-section">
-            <div className="success-icon">✓</div>
-            <h2 className="success-title">결제 완료</h2>
-            <p className="success-message">
-              {result.message || '결제가 성공적으로 완료되었습니다.'}
-            </p>
+          result.cash_pending ? (
+            // 🆕 현금 결제 대기 상태 UI
+            <div className="cash-pending-section">
+              <div className="cash-pending-icon">⏳</div>
+              <h2 className="cash-pending-title">입금 대기 중</h2>
+              <p className="cash-pending-message">
+                현금 결제 요청이 접수되었습니다.
+                <br />
+                아래 계좌로 입금 후 관리자 승인을 기다려주세요.
+              </p>
 
-            {result.payment && (
-              <div className="receipt-info">
-                <h3>결제 정보</h3>
-                <dl className="receipt-details">
-                  <dt>주문번호</dt>
-                  <dd>{result.payment.order_id}</dd>
-
-                  <dt>결제금액</dt>
-                  <dd>{formatAmount(result.payment.amount)}</dd>
-
-                  <dt>결제방법</dt>
-                  <dd>신용카드</dd>
-
-                  <dt>결제일시</dt>
-                  <dd>{formatDate(result.payment.paid_at)}</dd>
-                </dl>
-
-                {result.payment.receipt_url && (
-                  <a
-                    href={result.payment.receipt_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="receipt-link"
-                  >
-                    영수증 보기
-                  </a>
-                )}
+              <div className="cash-payment-info">
+                <h3>입금 계좌 정보</h3>
+                <div className="account-details-box">
+                  <div className="account-item">
+                    <span className="label">은행:</span>
+                    <span className="value">카카오뱅크</span>
+                  </div>
+                  <div className="account-item">
+                    <span className="label">계좌번호:</span>
+                    <span className="value account-number">
+                      3333-30-8265756
+                    </span>
+                  </div>
+                  <div className="account-item">
+                    <span className="label">예금주:</span>
+                    <span className="value">김봉준</span>
+                  </div>
+                  <div className="account-item">
+                    <span className="label">입금금액:</span>
+                    <span className="value amount">
+                      {formatAmount(result.payment?.amount || 0)}
+                    </span>
+                  </div>
+                  <div className="account-item">
+                    <span className="label">주문번호:</span>
+                    <span className="value order-id">
+                      {result.payment?.order_id}
+                    </span>
+                  </div>
+                </div>
               </div>
-            )}
 
-            {result.delivery_count && (
-              <div className="delivery-info">
-                <p className="delivery-notice">
-                  <strong>배송 안내:</strong> 총 {result.delivery_count}회의
-                  배송이 자동으로 스케줄되었습니다. 자세한 배송 일정은
-                  마이페이지에서 확인하실 수 있습니다.
-                </p>
+              <div className="cash-pending-notice">
+                <h4>📌 유의사항</h4>
+                <ul>
+                  <li>입금자명을 정확히 입력해주세요.</li>
+                  <li>입금 후 관리자 확인까지 1-2시간 소요될 수 있습니다.</li>
+                  <li>영업시간: 평일 09:00 - 18:00</li>
+                  <li>주문 상태는 마이페이지에서 확인 가능합니다.</li>
+                </ul>
               </div>
-            )}
 
-            <div className="action-buttons">
-              <button className="btn btn-primary" onClick={handleGoToMyPage}>
-                마이페이지로 이동
-              </button>
-              <button className="btn btn-outline" onClick={handleGoHome}>
-                홈으로 이동
-              </button>
+              <div className="action-buttons">
+                <button className="btn btn-primary" onClick={handleGoToMyPage}>
+                  주문 상태 확인하기
+                </button>
+                <button className="btn btn-outline" onClick={handleGoHome}>
+                  홈으로 이동
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            // 기존 결제 성공 UI (카드 결제)
+            <div className="success-section">
+              <div className="success-icon">✓</div>
+              <h2 className="success-title">결제 완료</h2>
+              <p className="success-message">
+                {result.message || '결제가 성공적으로 완료되었습니다.'}
+              </p>
+
+              {result.payment && (
+                <div className="receipt-info">
+                  <h3>결제 정보</h3>
+                  <dl className="receipt-details">
+                    <dt>주문번호</dt>
+                    <dd>{result.payment.order_id}</dd>
+
+                    <dt>결제금액</dt>
+                    <dd>{formatAmount(result.payment.amount)}</dd>
+
+                    <dt>결제방법</dt>
+                    <dd>신용카드</dd>
+
+                    <dt>결제일시</dt>
+                    <dd>{formatDate(result.payment.paid_at)}</dd>
+                  </dl>
+
+                  {result.payment.receipt_url && (
+                    <a
+                      href={result.payment.receipt_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="receipt-link"
+                    >
+                      영수증 보기
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {result.delivery_count && (
+                <div className="delivery-info">
+                  <p className="delivery-notice">
+                    <strong>배송 안내:</strong> 총 {result.delivery_count}회의
+                    배송이 자동으로 스케줄되었습니다. 자세한 배송 일정은
+                    마이페이지에서 확인하실 수 있습니다.
+                  </p>
+                </div>
+              )}
+
+              <div className="action-buttons">
+                <button className="btn btn-primary" onClick={handleGoToMyPage}>
+                  마이페이지로 이동
+                </button>
+                <button className="btn btn-outline" onClick={handleGoHome}>
+                  홈으로 이동
+                </button>
+              </div>
+            </div>
+          )
         ) : (
           // 결제 실패
           <div className="error-section">

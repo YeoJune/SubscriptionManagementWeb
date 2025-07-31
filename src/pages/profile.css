@@ -227,6 +227,72 @@
   border: 1px solid #0dcaf0;
 }
 
+/* 결제 내역 제목 */
+.payment-history-title {
+  color: var(--accent-color);
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+/* 주문번호 셀 스타일 */
+.order-id-cell {
+  line-height: 1.4;
+}
+
+.order-id {
+  font-weight: 600;
+  color: var(--accent-color);
+  display: block;
+}
+
+.depositor-info {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+/* 현금 대기 알림 */
+.cash-pending-notice {
+  font-size: 0.8rem;
+  color: #ff8c00;
+  margin-top: 0.25rem;
+  font-weight: 600;
+  display: block;
+}
+
+/* 날짜 셀 스타일 */
+.date-cell {
+  line-height: 1.4;
+}
+
+.paid-date {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-top: 0.25rem;
+}
+
+/* 배송 잔여 횟수 개선 */
+.product-delivery-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.delivery-count {
+  margin-top: 0;
+  padding: 1rem;
+  background-color: rgba(164, 226, 46, 0.1);
+  border-radius: 10px;
+  border-left: 4px solid var(--primary-color);
+  color: var(--accent-color);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 /* Responsive adjustments */
 @media (max-width: 960px) {
   .profile-grid {
