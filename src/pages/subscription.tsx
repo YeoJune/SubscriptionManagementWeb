@@ -46,14 +46,19 @@ const Subscription: React.FC = () => {
   const [specialRequest, setSpecialRequest] = useState<string>('');
   const [showImageModal, setShowImageModal] = useState(false);
 
-  // 🆕 결제 방법 관련 상태 추가
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash'>('card');
   const [depositorName, setDepositorName] = useState<string>('');
+
+  const [deliveryAddress, setDeliveryAddress] = useState<string>('');
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
     fetchProducts();
     loadNicePaySDK();
-  }, []);
+    if (isAuthenticated) {
+      fetchUserProfile();
+    }
+  }, [isAuthenticated]);
 
   const fetchProducts = async () => {
     try {
@@ -79,6 +84,43 @@ const Subscription: React.FC = () => {
       console.error('상품 조회 실패:', err);
       setError('상품 정보를 불러오는 중 오류가 발생했습니다.');
       setLoading(false);
+    }
+  };
+
+  // 사용자 프로필 조회
+  const fetchUserProfile = async () => {
+    try {
+      const response = await axios.get('/api/auth/profile');
+      setUserProfile(response.data.user);
+    } catch (err) {
+      console.error('사용자 프로필 조회 실패:', err);
+    }
+  };
+
+  // 사용자 주소 불러오기
+  const loadUserAddress = async () => {
+    if (!userProfile) {
+      await fetchUserProfile();
+    }
+    if (userProfile?.address) {
+      setDeliveryAddress(userProfile.address);
+    } else {
+      alert('저장된 주소가 없습니다.');
+    }
+  };
+
+  // 주소 저장하기
+  const saveUserAddress = async () => {
+    if (!deliveryAddress.trim()) {
+      alert('저장할 주소를 입력해주세요.');
+      return;
+    }
+    try {
+      await axios.put('/api/auth/profile', { address: deliveryAddress.trim() });
+      alert('주소가 저장되었습니다.');
+      await fetchUserProfile(); // 프로필 재조회
+    } catch (err) {
+      alert('주소 저장에 실패했습니다.');
     }
   };
 
@@ -123,10 +165,16 @@ const Subscription: React.FC = () => {
       }
     }
 
-    // 🆕 주문 확인 단계에서 현금 결제 시 입금자명 검증
-    if (activeStep === 3 && paymentMethod === 'cash' && !depositorName.trim()) {
-      setError('현금 결제 시 입금자명은 필수입니다.');
-      return;
+    // 🆕 주문 확인 단계에서 필수 입력 검증
+    if (activeStep === 3) {
+      if (!deliveryAddress.trim()) {
+        setError('배송 주소는 필수입니다.');
+        return;
+      }
+      if (paymentMethod === 'cash' && !depositorName.trim()) {
+        setError('현금 결제 시 입금자명은 필수입니다.');
+        return;
+      }
     }
 
     setError(null);
@@ -181,6 +229,8 @@ const Subscription: React.FC = () => {
     const cashPaymentData = {
       product_id: selectedProduct.id,
       special_request: specialRequest.trim() || null,
+      delivery_address: deliveryAddress.trim(),
+      selected_dates: selectedDates.length > 0 ? selectedDates : null,
       depositor_name: depositorName.trim(),
     };
 
@@ -192,10 +242,6 @@ const Subscription: React.FC = () => {
     if (!response.data.success) {
       throw new Error(response.data.error || '현금 결제 요청 실패');
     }
-
-    // 선택된 날짜 정보를 세션에 저장
-    sessionStorage.setItem('selectedDates', JSON.stringify(selectedDates));
-    sessionStorage.setItem('specialRequest', specialRequest.trim() || '');
 
     // 현금 결제 결과 페이지로 이동
     navigate(
@@ -210,15 +256,12 @@ const Subscription: React.FC = () => {
     const prepareResponse = await axios.post('/api/payments/prepare', {
       product_id: selectedProduct.id,
       special_request: specialRequest.trim() || null,
+      delivery_address: deliveryAddress.trim(),
     });
 
     if (!prepareResponse.data.success) {
       throw new Error(prepareResponse.data.error || '결제 준비 실패');
     }
-
-    // 선택된 날짜와 요청사항을 세션에 저장
-    sessionStorage.setItem('selectedDates', JSON.stringify(selectedDates));
-    sessionStorage.setItem('specialRequest', specialRequest.trim() || '');
 
     const { paramsForNicePaySDK } = prepareResponse.data;
 
@@ -565,6 +608,50 @@ const Subscription: React.FC = () => {
                 <strong>배송 일정:</strong> 자동 스케줄링 (월/수/금)
               </p>
             )}
+
+            <hr className="divider" />
+
+            {/* 🆕 배송 주소 입력 섹션 */}
+            <h4>배송 주소</h4>
+            <div className="delivery-address-section">
+              <div className="address-input-container">
+                <textarea
+                  className="address-input"
+                  placeholder="배송받을 주소를 입력해주세요 (필수)"
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  maxLength={200}
+                  rows={3}
+                  required
+                />
+                <div className="char-count">{deliveryAddress.length}/200</div>
+              </div>
+
+              <div className="address-buttons">
+                <button
+                  type="button"
+                  className="address-button load-button"
+                  onClick={loadUserAddress}
+                  disabled={!isAuthenticated}
+                >
+                  기존 주소 불러오기
+                </button>
+                <button
+                  type="button"
+                  className="address-button save-button"
+                  onClick={saveUserAddress}
+                  disabled={!deliveryAddress.trim() || !isAuthenticated}
+                >
+                  주소 저장
+                </button>
+              </div>
+
+              {userProfile?.address && (
+                <div className="saved-address-info">
+                  <small>저장된 주소: {userProfile.address}</small>
+                </div>
+              )}
+            </div>
 
             <hr className="divider" />
 

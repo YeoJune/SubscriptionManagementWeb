@@ -220,7 +220,11 @@ const AdminPayments: React.FC = () => {
     setProcessingCashAction(paymentId);
     try {
       const response = await axios.post(
-        `/api/payments/admin/${paymentId}/approve-cash`
+        `/api/payments/admin/${paymentId}/approve-cash`,
+        {
+          // 필요한 경우 선택된 날짜 정보를 전달할 수 있음
+          selected_dates: null,
+        }
       );
 
       if (response.data.success) {
@@ -558,14 +562,14 @@ const AdminPayments: React.FC = () => {
                       </td>
                       <td>
                         <div className="action-buttons">
-                          {/* 🆕 결제 취소 버튼 */}
+                          {/* 🆕 결제 취소 버튼 - 현금/카드 결제 모두 가능 */}
                           {payment.status === 'completed' && (
                             <button
                               className="action-btn cancel-btn"
                               onClick={() => openCancelModal(payment.id)}
-                              title="결제 취소"
+                              title={`결제 취소 (${payment.payment_method === 'CASH' ? '현금' : '카드'})`}
                             >
-                              취소
+                              결제 취소
                             </button>
                           )}
 

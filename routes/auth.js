@@ -283,4 +283,83 @@ router.get('/', authMiddleware, (req, res) => {
   }
 });
 
+// PUT /api/auth/profile - 사용자 프로필 업데이트 (주소 저장용)
+router.put('/profile', authMiddleware, (req, res) => {
+  try {
+    const user_id = req.session.user.id;
+    const { address, name, phone_number, email } = req.body;
+
+    // 업데이트할 필드들을 동적으로 구성
+    const updateFields = [];
+    const updateValues = [];
+
+    if (address !== undefined) {
+      updateFields.push('address = ?');
+      updateValues.push(address);
+    }
+    if (name !== undefined) {
+      updateFields.push('name = ?');
+      updateValues.push(name);
+    }
+    if (phone_number !== undefined) {
+      updateFields.push('phone_number = ?');
+      updateValues.push(phone_number);
+    }
+    if (email !== undefined) {
+      updateFields.push('email = ?');
+      updateValues.push(email);
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({ error: '업데이트할 정보가 없습니다.' });
+    }
+
+    updateValues.push(user_id);
+
+    const query = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
+
+    db.run(query, updateValues, function (err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      if (this.changes === 0) {
+        return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+      }
+
+      res.json({
+        message: '프로필이 성공적으로 업데이트되었습니다.',
+        updated_fields: Object.keys(req.body),
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/auth/profile - 사용자 프로필 조회
+router.get('/profile', authMiddleware, (req, res) => {
+  try {
+    const user_id = req.session.user.id;
+
+    db.get(
+      'SELECT id, name, phone_number, email, address, created_at FROM users WHERE id = ?',
+      [user_id],
+      (err, user) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+
+        if (!user) {
+          return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+        }
+
+        res.json({ user });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

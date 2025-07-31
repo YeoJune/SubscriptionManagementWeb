@@ -83,6 +83,7 @@ export interface DeliveryProps {
   address?: string;
   special_request?: string;
   remaining_count_for_product?: number; // 해당 상품의 남은 배송 횟수
+  delivery_info?: string;
 }
 
 export interface BoardListProps {

@@ -599,7 +599,7 @@ const Delivery: React.FC = () => {
                       <th>배송일</th>
                       <th>상품</th>
                       <th className="hide-xs">연락처</th>
-                      <th className="hide-sm">주소</th>
+                      <th className="hide-sm">배송 주소</th>
                       <th className="hide-md">요청사항</th>
                       <th style={{ textAlign: 'center' }}>상태</th>
                       <th style={{ textAlign: 'center' }}>액션</th>
@@ -608,6 +608,25 @@ const Delivery: React.FC = () => {
                   <tbody className="admin-table-body">
                     {deliveries.map((delivery) => {
                       const statusInfo = getStatusInfo(delivery.status);
+
+                      // 배송 주소 정보 파싱
+                      let deliveryAddress = delivery.address; // 기본값: 회원 주소
+                      let addressSource = '회원 주소';
+
+                      if (delivery.delivery_info) {
+                        try {
+                          const deliveryInfo = JSON.parse(
+                            delivery.delivery_info
+                          );
+                          if (deliveryInfo.delivery_address) {
+                            deliveryAddress = deliveryInfo.delivery_address;
+                            addressSource = '배송 주소';
+                          }
+                        } catch (e) {
+                          console.error('배송 정보 파싱 오류:', e);
+                        }
+                      }
+
                       return (
                         <tr key={delivery.id}>
                           <td>{delivery.id}</td>
@@ -617,7 +636,16 @@ const Delivery: React.FC = () => {
                           </td>
                           <td>{delivery.product_name}</td>
                           <td className="hide-xs">{delivery.phone_number}</td>
-                          <td className="hide-sm">{delivery.address}</td>
+                          <td className="hide-sm">
+                            <div className="address-info">
+                              <div className="address-text">
+                                {deliveryAddress}
+                              </div>
+                              <div className="address-source">
+                                ({addressSource})
+                              </div>
+                            </div>
+                          </td>
                           <td className="hide-md">
                             {delivery.special_request ? (
                               <div

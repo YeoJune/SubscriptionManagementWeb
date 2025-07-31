@@ -70,9 +70,15 @@ router.post('/prepare', authMiddleware, (req, res) => {
         const timestamp = Date.now().toString();
         const signature = generateSignature(orderId, amount, timestamp);
 
+        const deliveryInfo = JSON.stringify({
+          special_request: req.body.special_request || null,
+          delivery_address: req.body.delivery_address || null,
+          selected_dates: null, // approve 시점에 업데이트
+        });
+
         db.run(
-          `INSERT INTO payments (user_id, product_id, count, amount, order_id, status) VALUES (?, ?, ?, ?, ?, ?)`,
-          [user_id, product_id, 1, amount, orderId, 'pending'],
+          `INSERT INTO payments (user_id, product_id, count, amount, order_id, status, delivery_info) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [user_id, product_id, 1, amount, orderId, 'pending', deliveryInfo],
           function (err) {
             if (err) {
               return res
@@ -81,10 +87,6 @@ router.post('/prepare', authMiddleware, (req, res) => {
             }
 
             const paymentId = this.lastID;
-
-            if (special_request) {
-              req.session.special_request = special_request;
-            }
 
             const paramsForNicePaySDK = {
               clientId: NICEPAY_CLIENT_KEY,
@@ -265,12 +267,33 @@ router.post('/approve', authMiddleware, (req, res) => {
                             .json({ success: false, error: err.message });
                         }
 
-                        // 세션에서 특별 요청사항 가져오기
+                        // 저장된 배송 정보 가져오기 및 업데이트
+                        let deliveryInfo = {};
+                        try {
+                          deliveryInfo = JSON.parse(
+                            payment.delivery_info || '{}'
+                          );
+                        } catch (e) {
+                          console.error('배송 정보 파싱 오류:', e);
+                        }
+
                         const specialRequest =
-                          req.session.special_request || null;
-                        const selectedDates = req.body.selected_dates;
-                        if (req.session.special_request) {
-                          delete req.session.special_request;
+                          deliveryInfo.special_request || null;
+                        const selectedDates =
+                          req.body.selected_dates ||
+                          deliveryInfo.selected_dates;
+
+                        // 선택된 날짜가 있으면 delivery_info 업데이트
+                        if (req.body.selected_dates) {
+                          const updatedDeliveryInfo = {
+                            ...deliveryInfo,
+                            selected_dates: req.body.selected_dates,
+                          };
+
+                          db.run(
+                            'UPDATE payments SET delivery_info = ? WHERE id = ?',
+                            [JSON.stringify(updatedDeliveryInfo), payment.id]
+                          );
                         }
 
                         let deliveryPromise;
@@ -1038,6 +1061,76 @@ router.post('/admin/:id/cancel', checkAdmin, async (req, res) => {
           });
         }
 
+        // 현금 결제와 카드 결제 분기 처리
+        if (payment.payment_method === 'CASH') {
+          // 현금 결제 취소 처리
+          db.run('BEGIN TRANSACTION', (err) => {
+            if (err) {
+              return res
+                .status(500)
+                .json({ success: false, error: err.message });
+            }
+
+            // 결제 상태 업데이트
+            db.run(
+              `UPDATE payments 
+               SET status = 'cancelled',
+                   cancelled_reason = ?
+               WHERE id = ?`,
+              [reason, payment.id],
+              async (err) => {
+                if (err) {
+                  db.run('ROLLBACK');
+                  return res
+                    .status(500)
+                    .json({ success: false, error: err.message });
+                }
+
+                try {
+                  // 배송 취소 처리
+                  const deliveryResult =
+                    await deliveryManager.cancelPaymentDeliveries(
+                      payment.user_id,
+                      payment.product_id,
+                      payment.count
+                    );
+
+                  // 커밋
+                  db.run('COMMIT', (err) => {
+                    if (err) {
+                      db.run('ROLLBACK');
+                      return res
+                        .status(500)
+                        .json({ success: false, error: err.message });
+                    }
+
+                    res.json({
+                      success: true,
+                      message: '현금 결제가 성공적으로 취소되었습니다.',
+                      payment: {
+                        id: payment.id,
+                        order_id: payment.order_id,
+                        status: 'cancelled',
+                        cancelled_reason: reason,
+                      },
+                      delivery_info: deliveryResult,
+                    });
+                  });
+                } catch (deliveryError) {
+                  db.run('ROLLBACK');
+                  res.status(500).json({
+                    success: false,
+                    error: '배송 취소 처리 중 오류가 발생했습니다.',
+                    details: deliveryError.message,
+                  });
+                }
+              }
+            );
+          });
+          return;
+        }
+
+        // 카드 결제 취소 처리 (기존 로직)
         if (!payment.payment_gateway_transaction_id) {
           return res.status(400).json({
             success: false,
@@ -1193,9 +1286,14 @@ router.post('/cash/prepare', authMiddleware, (req, res) => {
 
         const orderId = generateOrderId();
         const amount = product.price;
+        const deliveryInfo = JSON.stringify({
+          special_request: req.body.special_request || null,
+          delivery_address: req.body.delivery_address || null,
+          selected_dates: req.body.selected_dates || null,
+        });
 
         db.run(
-          `INSERT INTO payments (user_id, product_id, count, amount, order_id, status, payment_method, depositor_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO payments (user_id, product_id, count, amount, order_id, status, payment_method, depositor_name, delivery_info) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             user_id,
             product_id,
@@ -1205,6 +1303,7 @@ router.post('/cash/prepare', authMiddleware, (req, res) => {
             'cash_pending',
             'CASH',
             depositor_name,
+            deliveryInfo,
           ],
           function (err) {
             if (err) {
@@ -1214,10 +1313,6 @@ router.post('/cash/prepare', authMiddleware, (req, res) => {
             }
 
             const paymentId = this.lastID;
-
-            if (special_request) {
-              req.session.special_request = special_request;
-            }
 
             res.json({
               success: true,
@@ -1310,15 +1405,27 @@ router.post('/admin/:id/approve-cash', checkAdmin, (req, res) => {
                         .json({ success: false, error: err.message });
                     }
 
+                    // 저장된 배송 정보 가져오기
+                    let deliveryInfo = {};
+                    try {
+                      deliveryInfo = JSON.parse(payment.delivery_info || '{}');
+                    } catch (e) {
+                      console.error('배송 정보 파싱 오류:', e);
+                    }
+
+                    const specialRequest = deliveryInfo.special_request || null;
+                    const finalSelectedDates =
+                      selected_dates || deliveryInfo.selected_dates;
+
                     // 배송 처리
                     let deliveryPromise;
-                    if (selected_dates && selected_dates.length > 0) {
+                    if (finalSelectedDates && finalSelectedDates.length > 0) {
                       deliveryPromise =
                         deliveryManager.bulkAddDeliveryWithSchedule(
                           payment.user_id,
                           payment.product_id,
-                          selected_dates,
-                          null
+                          finalSelectedDates,
+                          specialRequest
                         );
                     } else {
                       deliveryPromise = deliveryManager.addDeliveryCount(

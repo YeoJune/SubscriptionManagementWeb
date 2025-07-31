@@ -30,10 +30,17 @@ router.get('/', checkAdmin, async (req, res) => {
     // 쿼리 구성
     let query = `
       SELECT d.id, d.user_id, u.name AS user_name, d.status, d.date, d.product_id, 
-             p.name AS product_name, u.phone_number, u.address, d.special_request
+             p.name AS product_name, u.phone_number, u.address, d.special_request,
+             pay.delivery_info
       FROM delivery_list d
       JOIN product p ON d.product_id = p.id
       JOIN users u ON d.user_id = u.id
+      LEFT JOIN (
+        SELECT DISTINCT user_id, product_id, delivery_info 
+        FROM payments 
+        WHERE status IN ('completed', 'cancelled') 
+        AND delivery_info IS NOT NULL
+      ) pay ON d.user_id = pay.user_id AND d.product_id = pay.product_id
     `;
 
     let countQuery = `
@@ -41,6 +48,12 @@ router.get('/', checkAdmin, async (req, res) => {
       FROM delivery_list d
       JOIN product p ON d.product_id = p.id
       JOIN users u ON d.user_id = u.id
+      LEFT JOIN (
+        SELECT DISTINCT user_id, product_id, delivery_info 
+        FROM payments 
+        WHERE status IN ('completed', 'cancelled') 
+        AND delivery_info IS NOT NULL
+      ) pay ON d.user_id = pay.user_id AND d.product_id = pay.product_id
     `;
 
     // 조건 추가
