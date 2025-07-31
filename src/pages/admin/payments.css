@@ -1,110 +1,6 @@
-/* 현금 결제 버튼 */
-.cash-payment-button {
-  background-color: var(--success-color);
-  color: white;
-  font-weight: 600;
-  border-radius: 30px;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  width: 100%;
-}
-
-.cash-payment-button:hover {
-  background-color: #218838;
-  transform: translateY(-2px);
-}
-
-/* 모달 스타일 */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--background-dark);
-}
-
-.modal-header h3 {
-  margin: 0;
-  color: var(--accent-color);
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--text-light);
-}
-
-.cash-payment-form {
-  padding: 1.5rem;
-}
-
-.cash-payment-form .form-control {
-  margin-bottom: 1rem;
-}
-
-.cash-payment-form textarea {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  resize: vertical;
-  font-family: inherit;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
-}
-
-.modal-actions button {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.modal-actions button[type='button'] {
-  background-color: var(--background-dark);
-  color: var(--text-light);
-}
-
-.modal-actions button.primary {
-  background-color: var(--primary-color);
-  color: white;
-}
 /* src/pages/admin/payments.css */
 
-/* 기본 컨테이너 및 공통 스타일은 delivery.css와 동일 */
+/* ===== 기본 레이아웃 ===== */
 .admin-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -130,7 +26,7 @@
   border-radius: 2px;
 }
 
-/* 요약 카드 스타일 */
+/* ===== 요약 카드 ===== */
 .summary-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -163,15 +59,18 @@
   color: var(--success-color);
 }
 
+.summary-value.text-warning {
+  color: #ffc107;
+}
+
 .summary-value.text-primary {
   color: var(--primary-color);
 }
 
-/* 필터 스타일 */
+/* ===== 필터 및 검색 ===== */
 .filter-paper {
   border-radius: 10px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   background-color: white;
@@ -181,7 +80,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
-  align-items: center;
+  align-items: end;
 }
 
 .form-control {
@@ -193,42 +92,62 @@
   color: var(--accent-color);
   margin-bottom: 0.5rem;
   font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .form-control select,
-.form-control input {
+.form-control input,
+.form-control textarea {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #ddd;
   border-radius: 4px;
   transition: border-color 0.3s ease;
+  font-family: inherit;
+  box-sizing: border-box;
 }
 
 .form-control select:focus,
-.form-control input:focus {
+.form-control input:focus,
+.form-control textarea:focus {
   border-color: var(--primary-color);
   outline: none;
+  box-shadow: 0 0 0 2px rgba(164, 226, 46, 0.2);
 }
 
-.filter-button {
+.form-control textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* ===== 버튼 스타일 ===== */
+.filter-button,
+.cash-payment-button {
   background-color: var(--primary-color);
-  color: var(--accent-color);
+  color: white;
   font-weight: 600;
-  border-radius: 30px;
+  border-radius: 6px;
   padding: 0.75rem 1.5rem;
   border: none;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
   cursor: pointer;
-  width: 100%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.filter-button:hover {
+.filter-button:hover,
+.cash-payment-button:hover {
   background-color: var(--primary-dark);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* 테이블 스타일 */
+.filter-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ===== 테이블 스타일 ===== */
 .table-container {
   border-radius: 10px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
@@ -260,7 +179,7 @@
 }
 
 .admin-table-body tr:hover {
-  background-color: rgba(164, 226, 46, 0.1);
+  background-color: rgba(164, 226, 46, 0.05);
 }
 
 .admin-table-body td {
@@ -269,7 +188,7 @@
   vertical-align: top;
 }
 
-/* 셀 내용 스타일 */
+/* ===== 테이블 셀 내용 ===== */
 .order-id-cell {
   font-family: 'Courier New', monospace;
   font-size: 0.85rem;
@@ -292,6 +211,12 @@
   font-size: 0.8rem;
 }
 
+.depositor-name {
+  color: var(--primary-color);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 .product-info-cell {
   max-width: 200px;
 }
@@ -305,6 +230,7 @@
 .amount-text {
   color: var(--primary-color);
   font-size: 1.1rem;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -317,48 +243,105 @@
   color: var(--text-light);
 }
 
-/* 상태 칩 스타일 */
+/* ===== 상태 칩 ===== */
 .status-chip {
   display: inline-block;
   font-weight: 600;
-  padding: 0.25rem 0.75rem;
+  padding: 0.3rem 0.8rem;
   border-radius: 16px;
   font-size: 0.75rem;
   text-align: center;
   white-space: nowrap;
+  border: 1px solid;
 }
 
 .status-success {
   background-color: rgba(40, 167, 69, 0.1);
   color: var(--success-color);
-  border: 1px solid var(--success-color);
+  border-color: var(--success-color);
 }
 
 .status-warning {
   background-color: rgba(255, 193, 7, 0.1);
-  color: #ffc107;
-  border: 1px solid #ffc107;
+  color: #e6a700;
+  border-color: #ffc107;
 }
 
 .status-error {
   background-color: rgba(220, 53, 69, 0.1);
   color: var(--error-color);
-  border: 1px solid var(--error-color);
+  border-color: var(--error-color);
 }
 
 .status-info {
   background-color: rgba(13, 202, 240, 0.1);
   color: #0dcaf0;
-  border: 1px solid #0dcaf0;
+  border-color: #0dcaf0;
+}
+
+.status-pending {
+  background-color: rgba(255, 140, 66, 0.1);
+  color: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 .status-default {
   background-color: rgba(108, 117, 125, 0.1);
   color: #6c757d;
-  border: 1px solid #6c757d;
+  border-color: #6c757d;
 }
 
-/* 페이지네이션 스타일 */
+/* ===== 액션 버튼 ===== */
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.action-btn {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.cancel-btn {
+  background-color: var(--error-color);
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #c82333;
+}
+
+.approve-btn {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.approve-btn:hover {
+  background-color: #218838;
+}
+
+.reject-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.reject-btn:hover {
+  background-color: #c82333;
+}
+
+.action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== 페이지네이션 ===== */
 .pagination-container {
   display: flex;
   justify-content: space-between;
@@ -366,6 +349,10 @@
   margin-top: 1rem;
   flex-wrap: wrap;
   gap: 1rem;
+  padding: 1rem;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .rows-per-page {
@@ -377,7 +364,7 @@
 .rows-per-page select {
   border: 1px solid #ddd;
   border-radius: 4px;
-  padding: 0.25rem;
+  padding: 0.25rem 0.5rem;
 }
 
 .pagination-controls {
@@ -394,6 +381,7 @@
   padding: 0.5rem 1rem;
   border-radius: 4px;
   transition: all 0.3s ease;
+  font-weight: 500;
 }
 
 .pagination-button:hover:not(:disabled) {
@@ -418,7 +406,144 @@
   font-size: 0.9rem;
 }
 
-/* 로딩 및 알림 스타일 */
+/* ===== 모달 스타일 ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--background-dark);
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--accent-color);
+  font-weight: 700;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-light);
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.modal-close:hover {
+  background-color: var(--background-color);
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding: 1rem 1.5rem 1.5rem;
+  border-top: 1px solid var(--background-dark);
+}
+
+.modal-actions button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.modal-actions button[type='button'] {
+  background-color: var(--background-dark);
+  color: var(--text-light);
+}
+
+.modal-actions button[type='button']:hover {
+  background-color: #6c757d;
+}
+
+.modal-actions button.primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.modal-actions button.primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.modal-actions button.danger {
+  background-color: var(--error-color);
+  color: white;
+}
+
+.modal-actions button.danger:hover {
+  background-color: #c82333;
+}
+
+.modal-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== 모달 내용 특화 ===== */
+.cancel-warning {
+  background-color: rgba(255, 193, 7, 0.1);
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.cancel-warning p {
+  margin: 0 0 0.5rem 0;
+  color: #d97706;
+  font-weight: 600;
+}
+
+.cancel-warning ul {
+  margin: 0.5rem 0 0 0;
+  padding-left: 1.5rem;
+  color: #d97706;
+}
+
+.cancel-warning li {
+  margin: 0.25rem 0;
+  line-height: 1.4;
+}
+
+.cash-payment-form {
+  padding: 0;
+}
+
+/* ===== 로딩 및 알림 ===== */
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -450,33 +575,28 @@
   border-radius: 10px;
   padding: 1rem;
   margin-bottom: 1rem;
+  border: 1px solid;
 }
 
 .alert-info {
   background-color: rgba(13, 202, 240, 0.1);
   color: #0dcaf0;
-  border: 1px solid #0dcaf0;
+  border-color: #0dcaf0;
 }
 
 .alert-error {
   background-color: rgba(220, 53, 69, 0.1);
   color: var(--error-color);
-  border: 1px solid var(--error-color);
+  border-color: var(--error-color);
 }
 
-.action-btn {
-  background-color: var(--background-dark);
-  color: var(--text-light);
-  font-weight: 600;
-  border-radius: 30px;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  cursor: pointer;
+/* ===== 반응형 디자인 ===== */
+@media (max-width: 1200px) {
+  .admin-container {
+    padding: 1.5rem 0.75rem 3rem;
+  }
 }
 
-/* 반응형 디자인 */
 @media (max-width: 768px) {
   .admin-table th,
   .admin-table td {
@@ -493,7 +613,7 @@
   }
 
   .summary-cards {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .filter-grid {
@@ -512,9 +632,21 @@
   .amount-text {
     font-size: 1rem;
   }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .modal-overlay {
+    padding: 0.5rem;
+  }
 }
 
 @media (max-width: 480px) {
+  .admin-container {
+    padding: 1rem 0.5rem 2rem;
+  }
+
   .admin-title {
     font-size: 1.8rem;
   }
@@ -527,6 +659,10 @@
 
   .hide-xs {
     display: none;
+  }
+
+  .summary-cards {
+    grid-template-columns: 1fr;
   }
 
   .summary-card {
@@ -543,5 +679,19 @@
 
   .order-id-cell {
     font-size: 0.7rem;
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-actions {
+    padding: 1rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions button {
+    width: 100%;
   }
 }
