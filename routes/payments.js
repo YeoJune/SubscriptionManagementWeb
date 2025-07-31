@@ -1252,7 +1252,7 @@ router.post('/admin/:id/cancel', checkAdmin, async (req, res) => {
 // POST /api/payments/cash/prepare (현금 결제 준비)
 router.post('/cash/prepare', authMiddleware, (req, res) => {
   try {
-    const { product_id, special_request, depositor_name } = req.body;
+    const { product_id, depositor_name } = req.body;
     const user_id = req.session.user.id;
 
     if (!product_id) {
