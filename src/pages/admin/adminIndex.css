@@ -431,10 +431,11 @@
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   cursor: pointer;
   font-size: 15px;
   margin-bottom: 8px;
+  width: fit-content;
 }
 
 .checkbox-label input[type='checkbox'] {
