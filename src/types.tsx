@@ -49,6 +49,9 @@ export interface InquiryProps {
   created_at: string;
   answered_at?: string;
   createdAt?: Date; // 프론트엔드용 변환 날짜
+  payment_requested?: boolean;
+  payment_amount?: number;
+  payment_requested_at?: string;
 }
 
 export interface ProductProps {

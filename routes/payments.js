@@ -1537,4 +1537,173 @@ router.post('/admin/:id/reject-cash', checkAdmin, (req, res) => {
   }
 });
 
+// 🆕 POST /api/payments/catering-prepare - 케이터링 카드 결제 준비
+router.post('/catering-prepare', authMiddleware, (req, res) => {
+  try {
+    const { inquiry_id, special_request } = req.body;
+    const user_id = req.session.user.id;
+
+    if (!inquiry_id) {
+      return res.status(400).json({
+        success: false,
+        error: '문의 ID는 필수 입력 사항입니다.',
+      });
+    }
+
+    // 문의 정보 및 권한 확인
+    db.get(
+      `SELECT * FROM inquiries WHERE id = ? AND user_id = ? AND payment_requested = TRUE`,
+      [inquiry_id, user_id],
+      (err, inquiry) => {
+        if (err) {
+          return res.status(500).json({ success: false, error: err.message });
+        }
+
+        if (!inquiry) {
+          return res.status(404).json({
+            success: false,
+            error: '결제 요청된 문의를 찾을 수 없습니다.',
+          });
+        }
+
+        const orderId = generateOrderId();
+        const amount = inquiry.payment_amount;
+        const timestamp = Date.now().toString();
+        const signature = generateSignature(orderId, amount, timestamp);
+
+        const deliveryInfo = JSON.stringify({
+          special_request: special_request || null,
+          inquiry_id: inquiry_id,
+          inquiry_title: inquiry.title,
+        });
+
+        // payments 테이블에 저장 (product_id 대신 특별한 값 사용)
+        db.run(
+          `INSERT INTO payments (user_id, product_id, count, amount, order_id, status, delivery_info) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [user_id, -inquiry_id, 1, amount, orderId, 'pending', deliveryInfo], // product_id를 -inquiry_id로 설정하여 구분
+          function (err) {
+            if (err) {
+              return res
+                .status(500)
+                .json({ success: false, error: err.message });
+            }
+
+            const paymentId = this.lastID;
+
+            const paramsForNicePaySDK = {
+              clientId: NICEPAY_CLIENT_KEY,
+              method: 'card',
+              orderId: orderId,
+              amount: parseInt(amount),
+              goodsName: `케이터링 서비스 - ${inquiry.title}`,
+              returnUrl: `https://saluvallday.com/api/payments/payment-result`,
+              timestamp: timestamp,
+              signature: signature,
+            };
+
+            res.json({
+              success: true,
+              payment_id: paymentId,
+              order_id: orderId,
+              paramsForNicePaySDK,
+            });
+          }
+        );
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 🆕 POST /api/payments/catering-cash-prepare - 케이터링 현금 결제 준비
+router.post('/catering-cash-prepare', authMiddleware, (req, res) => {
+  try {
+    const { inquiry_id, depositor_name, special_request } = req.body;
+    const user_id = req.session.user.id;
+
+    if (!inquiry_id) {
+      return res.status(400).json({
+        success: false,
+        error: '문의 ID는 필수 입력 사항입니다.',
+      });
+    }
+
+    if (!depositor_name) {
+      return res.status(400).json({
+        success: false,
+        error: '입금자명은 필수 입력 사항입니다.',
+      });
+    }
+
+    // 문의 정보 및 권한 확인
+    db.get(
+      `SELECT * FROM inquiries WHERE id = ? AND user_id = ? AND payment_requested = TRUE`,
+      [inquiry_id, user_id],
+      (err, inquiry) => {
+        if (err) {
+          return res.status(500).json({ success: false, error: err.message });
+        }
+
+        if (!inquiry) {
+          return res.status(404).json({
+            success: false,
+            error: '결제 요청된 문의를 찾을 수 없습니다.',
+          });
+        }
+
+        const orderId = generateOrderId();
+        const amount = inquiry.payment_amount;
+        const deliveryInfo = JSON.stringify({
+          special_request: special_request || null,
+          inquiry_id: inquiry_id,
+          inquiry_title: inquiry.title,
+        });
+
+        db.run(
+          `INSERT INTO payments (user_id, product_id, count, amount, order_id, status, payment_method, depositor_name, delivery_info) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            user_id,
+            -inquiry_id, // product_id를 -inquiry_id로 설정하여 구분
+            1,
+            amount,
+            orderId,
+            'cash_pending',
+            'CASH',
+            depositor_name,
+            deliveryInfo,
+          ],
+          function (err) {
+            if (err) {
+              return res
+                .status(500)
+                .json({ success: false, error: err.message });
+            }
+
+            const paymentId = this.lastID;
+
+            res.json({
+              success: true,
+              payment_id: paymentId,
+              order_id: orderId,
+              status: 'cash_pending',
+              message:
+                '현금 결제 요청이 등록되었습니다. 관리자 승인을 기다려주세요.',
+              account_info: {
+                bank: '카카오뱅크',
+                account_number: '3333-30-8265756',
+                account_holder: '김봉준',
+                amount: amount,
+                depositor_name: depositor_name,
+              },
+            });
+          }
+        );
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;

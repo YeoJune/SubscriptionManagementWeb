@@ -24,6 +24,10 @@ const AdminCateringInquiry: React.FC = () => {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [answerError, setAnswerError] = useState<string | null>(null);
 
+  // 🆕 결제 요청 관련 상태
+  const [requestPayment, setRequestPayment] = useState<boolean>(false);
+  const [paymentAmount, setPaymentAmount] = useState<string>('');
+
   useEffect(() => {
     fetchInquiries();
   }, [currentPage, statusFilter, searchTerm]);
@@ -67,6 +71,8 @@ const AdminCateringInquiry: React.FC = () => {
   const handleAnswerClick = (inquiry: InquiryProps) => {
     setSelectedInquiry(inquiry);
     setAnswer(inquiry.answer || '');
+    setRequestPayment(inquiry.payment_requested || false);
+    setPaymentAmount(inquiry.payment_amount?.toString() || '');
     setAnswerDialog(true);
     setAnswerError(null);
   };
@@ -75,12 +81,20 @@ const AdminCateringInquiry: React.FC = () => {
     setAnswerDialog(false);
     setSelectedInquiry(null);
     setAnswer('');
+    setRequestPayment(false);
+    setPaymentAmount('');
     setAnswerError(null);
   };
 
+  // 🔧 답변 제출 함수 수정 (결제 요청 기능 추가)
   const handleSubmitAnswer = async () => {
     if (!answer.trim()) {
       setAnswerError('답변 내용을 입력해주세요.');
+      return;
+    }
+
+    if (requestPayment && (!paymentAmount || parseFloat(paymentAmount) <= 0)) {
+      setAnswerError('결제 요청 시 올바른 금액을 입력해주세요.');
       return;
     }
 
@@ -89,9 +103,21 @@ const AdminCateringInquiry: React.FC = () => {
     setSubmitting(true);
 
     try {
-      await axios.put(`/api/inquiries/${selectedInquiry.id}/answer`, {
-        answer: answer.trim(),
-      });
+      if (requestPayment) {
+        // 🆕 결제 요청과 함께 답변 등록
+        await axios.put(
+          `/api/inquiries/${selectedInquiry.id}/request-payment`,
+          {
+            answer: answer.trim(),
+            payment_amount: parseInt(paymentAmount),
+          }
+        );
+      } else {
+        // 기존 답변만 등록
+        await axios.put(`/api/inquiries/${selectedInquiry.id}/answer`, {
+          answer: answer.trim(),
+        });
+      }
 
       handleCloseAnswerDialog();
       fetchInquiries();
@@ -198,6 +224,7 @@ const AdminCateringInquiry: React.FC = () => {
                 <th>제목</th>
                 <th className="date-column">작성일</th>
                 <th style={{ textAlign: 'center' }}>상태</th>
+                <th style={{ textAlign: 'center' }}>결제 요청</th>
                 <th style={{ textAlign: 'center' }}>관리</th>
               </tr>
             </thead>
@@ -224,6 +251,22 @@ const AdminCateringInquiry: React.FC = () => {
                     >
                       {inquiry.status === 'answered' ? '답변 완료' : '미답변'}
                     </span>
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    {inquiry.payment_requested ? (
+                      <div className="payment-requested-info">
+                        <span className="payment-chip payment-requested">
+                          결제 요청됨
+                        </span>
+                        <div className="payment-amount">
+                          {inquiry.payment_amount?.toLocaleString()}원
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="payment-chip payment-not-requested">
+                        -
+                      </span>
+                    )}
                   </td>
                   <td style={{ textAlign: 'center' }}>
                     <button
@@ -293,6 +336,61 @@ const AdminCateringInquiry: React.FC = () => {
                   autoFocus
                 />
               </div>
+
+              {/* 🆕 결제 요청 섹션 */}
+              <div className="payment-request-section">
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={requestPayment}
+                      onChange={(e) => setRequestPayment(e.target.checked)}
+                    />
+                    <span className="checkbox-text">결제 요청하기</span>
+                  </label>
+                  <small className="form-help">
+                    체크하면 고객이 답변 확인 후 결제를 진행할 수 있습니다.
+                  </small>
+                </div>
+
+                {requestPayment && (
+                  <div className="payment-amount-section">
+                    <div className="form-group">
+                      <label htmlFor="payment-amount" className="form-label">
+                        결제 금액 (원) *
+                      </label>
+                      <input
+                        id="payment-amount"
+                        type="number"
+                        className="form-control"
+                        placeholder="예: 50000"
+                        value={paymentAmount}
+                        onChange={(e) => setPaymentAmount(e.target.value)}
+                        min="1000"
+                        step="1000"
+                        required={requestPayment}
+                      />
+                      <small className="form-help">
+                        고객에게 요청할 결제 금액을 입력해주세요.
+                      </small>
+                    </div>
+
+                    <div className="payment-request-info">
+                      <h5>💡 결제 요청 안내</h5>
+                      <ul>
+                        <li>
+                          결제 요청 시 고객은 카드결제 또는 현금결제를 선택할 수
+                          있습니다.
+                        </li>
+                        <li>현금결제의 경우 관리자 승인이 필요합니다.</li>
+                        <li>
+                          결제 완료 후 해당 문의의 결제 상태가 업데이트됩니다.
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="dialog-actions">
               <button
@@ -307,7 +405,11 @@ const AdminCateringInquiry: React.FC = () => {
                 onClick={handleSubmitAnswer}
                 disabled={submitting}
               >
-                {submitting ? '등록 중...' : '답변 등록'}
+                {submitting
+                  ? '등록 중...'
+                  : requestPayment
+                    ? '답변 + 결제 요청'
+                    : '답변 등록'}
               </button>
             </div>
           </div>

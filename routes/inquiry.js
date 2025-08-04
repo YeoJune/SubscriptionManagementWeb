@@ -6,7 +6,7 @@ const { authMiddleware } = require('../lib/auth');
 const db = require('../lib/db');
 
 /*
--- 고객의 소리 테이블 (inquiries)
+-- 고객의 소리 테이블 (inquiries) - 결제 관련 컬럼 추가됨
 CREATE TABLE IF NOT EXISTS inquiries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id TEXT NOT NULL,
@@ -15,12 +15,15 @@ CREATE TABLE IF NOT EXISTS inquiries (
   answer TEXT,
   category TEXT CHECK(category IN ('general', 'catering')) NOT NULL DEFAULT 'general',
   status TEXT CHECK(status IN ('answered', 'unanswered')) NOT NULL DEFAULT 'unanswered',
+  payment_requested BOOLEAN DEFAULT FALSE,
+  payment_amount INTEGER,
+  payment_requested_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   answered_at TIMESTAMP
 );
 */
 
-// GET /api/inquiries - 고객의 소리 목록 조회
+// GET /api/inquiries - 고객의 소리 목록 조회 (기존 코드 유지)
 router.get('/', authMiddleware, (req, res) => {
   try {
     // 페이지네이션 처리
@@ -34,7 +37,8 @@ router.get('/', authMiddleware, (req, res) => {
     const isAdmin = req.session.user.isAdmin;
 
     let query = `
-      SELECT i.id, i.user_id, u.name as user_name, i.title, i.content, i.answer, i.status, i.created_at, i.answered_at
+      SELECT i.id, i.user_id, u.name as user_name, i.title, i.content, i.answer, i.status, 
+             i.created_at, i.answered_at, i.payment_requested, i.payment_amount, i.payment_requested_at
       FROM inquiries i
       JOIN users u ON i.user_id = u.id
     `;
@@ -117,7 +121,7 @@ router.get('/', authMiddleware, (req, res) => {
   }
 });
 
-// GET /api/inquiries/:id - 특정 문의 조회
+// GET /api/inquiries/:id - 특정 문의 조회 (기존 코드 유지)
 router.get('/:id', authMiddleware, (req, res) => {
   try {
     const { id } = req.params;
@@ -125,7 +129,8 @@ router.get('/:id', authMiddleware, (req, res) => {
     const isAdmin = req.session.user.isAdmin;
 
     let query = `
-      SELECT i.id, i.user_id, u.name as user_name, i.title, i.content, i.answer, i.status, i.created_at, i.answered_at
+      SELECT i.id, i.user_id, u.name as user_name, i.title, i.content, i.answer, i.status, 
+             i.created_at, i.answered_at, i.payment_requested, i.payment_amount, i.payment_requested_at
       FROM inquiries i
       JOIN users u ON i.user_id = u.id
       WHERE i.id = ?
@@ -155,7 +160,7 @@ router.get('/:id', authMiddleware, (req, res) => {
   }
 });
 
-// POST /api/inquiries - 문의 등록
+// POST /api/inquiries - 문의 등록 (기존 코드 유지)
 router.post('/', authMiddleware, (req, res) => {
   try {
     const { title, content, category } = req.body;
@@ -191,7 +196,68 @@ router.post('/', authMiddleware, (req, res) => {
   }
 });
 
-// PUT /api/inquiries/:id/answer - 문의 답변 등록/수정 (관리자 전용)
+// 🆕 PUT /api/inquiries/:id/request-payment - 문의 답변 + 결제 요청 (관리자 전용)
+router.put('/:id/request-payment', checkAdmin, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { answer, payment_amount } = req.body;
+
+    // 유효성 검사
+    if (!answer) {
+      return res.status(400).json({ error: '답변은 필수 입력 사항입니다.' });
+    }
+
+    if (!payment_amount || payment_amount <= 0) {
+      return res
+        .status(400)
+        .json({ error: '올바른 결제 금액을 입력해주세요.' });
+    }
+
+    // 해당 문의가 존재하는지 확인
+    db.get(`SELECT * FROM inquiries WHERE id = ?`, [id], (err, inquiry) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      if (!inquiry) {
+        return res.status(404).json({ error: '문의를 찾을 수 없습니다.' });
+      }
+
+      // 답변 + 결제 요청 등록
+      db.run(
+        `UPDATE inquiries SET 
+         answer = ?, 
+         status = 'answered', 
+         answered_at = CURRENT_TIMESTAMP,
+         payment_requested = TRUE,
+         payment_amount = ?,
+         payment_requested_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        [answer, payment_amount, id],
+        function (err) {
+          if (err) {
+            return res.status(500).json({ error: err.message });
+          }
+
+          if (this.changes === 0) {
+            return res.status(404).json({ error: '답변 등록에 실패했습니다.' });
+          }
+
+          res.json({
+            id: parseInt(id),
+            message: '답변 및 결제 요청이 등록되었습니다.',
+            payment_requested: true,
+            payment_amount: payment_amount,
+          });
+        }
+      );
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT /api/inquiries/:id/answer - 문의 답변 등록/수정 (관리자 전용) - 기존 코드 유지
 router.put('/:id/answer', checkAdmin, (req, res) => {
   try {
     const { id } = req.params;
@@ -237,7 +303,7 @@ router.put('/:id/answer', checkAdmin, (req, res) => {
   }
 });
 
-// PUT /api/inquiries/:id - 문의 수정 (작성자 또는 관리자)
+// PUT /api/inquiries/:id - 문의 수정 (작성자 또는 관리자) - 기존 코드 유지
 router.put('/:id', authMiddleware, (req, res) => {
   try {
     const { id } = req.params;
@@ -292,7 +358,7 @@ router.put('/:id', authMiddleware, (req, res) => {
   }
 });
 
-// DELETE /api/inquiries/:id - 문의 삭제 (작성자 또는 관리자)
+// DELETE /api/inquiries/:id - 문의 삭제 (작성자 또는 관리자) - 기존 코드 유지
 router.delete('/:id', authMiddleware, (req, res) => {
   try {
     const { id } = req.params;
