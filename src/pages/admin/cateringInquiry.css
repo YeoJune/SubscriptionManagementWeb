@@ -428,22 +428,26 @@
   border-left: 4px solid #2196f3;
 }
 
-.checkbox-label {
-  display: flex;
+.payment-request-section .checkbox-label {
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   cursor: pointer;
   font-size: 15px;
   margin-bottom: 8px;
 }
 
+.payment-request-section input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+}
+
 .checkbox-label input[type='checkbox'] {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transform: scale(1.2);
+  accent-color: #2196f3;
 }
 
 .checkbox-text {
@@ -569,82 +573,6 @@
   cursor: not-allowed;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .admin-filters {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .status-filters {
-    justify-content: center;
-  }
-
-  .search-form {
-    flex-direction: column;
-  }
-
-  .search-input {
-    min-width: auto;
-  }
-
-  .admin-catering-table th,
-  .admin-catering-table td {
-    padding: 0.75rem 0.5rem;
-  }
-
-  .dialog {
-    width: 95%;
-  }
-
-  .dialog-content {
-    padding: 1.5rem;
-  }
-
-  .payment-requested-info {
-    gap: 2px;
-  }
-
-  .payment-chip {
-    font-size: 10px;
-    padding: 3px 6px;
-  }
-
-  .payment-amount {
-    font-size: 11px;
-  }
-}
-
-@media (max-width: 480px) {
-  .admin-catering-table .date-column {
-    display: none;
-  }
-
-  .dialog-title {
-    padding: 1rem 1.5rem;
-    font-size: 1.1rem;
-  }
-
-  .dialog-actions {
-    padding: 0.5rem 1.5rem 1.5rem;
-    flex-direction: column;
-  }
-
-  .btn-cancel,
-  .btn-submit {
-    width: 100%;
-    justify-content: center;
-  }
-
-  /* 모바일에서 결제 요청 컬럼 숨기기 */
-  .admin-catering-table th:nth-child(5),
-  .admin-catering-table td:nth-child(5) {
-    display: none;
-  }
-}
-
-/* catering.css와 admin/cateringInquiry.css 두 파일 모두에 추가할 스타일 */
-
 /* 삭제 버튼 */
 .delete-btn {
   background: linear-gradient(135deg, #dc3545, #c82333);
@@ -745,16 +673,75 @@
   opacity: 0.7;
   cursor: not-allowed;
 }
-
-/* 반응형 */
 @media (max-width: 768px) {
-  .admin-action-buttons {
+  .admin-filters {
     flex-direction: column;
-    gap: 4px;
+    align-items: stretch;
   }
 
-  .admin-delete-btn {
+  .status-filters {
+    justify-content: center;
+  }
+
+  .search-form {
+    flex-direction: column;
+  }
+
+  .search-input {
+    min-width: auto;
+  }
+
+  .admin-catering-table th,
+  .admin-catering-table td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .dialog {
+    width: 95%;
+  }
+
+  .dialog-content {
+    padding: 1.5rem;
+  }
+
+  .payment-requested-info {
+    gap: 2px;
+  }
+
+  .payment-chip {
     font-size: 10px;
-    padding: 4px 8px;
+    padding: 3px 6px;
+  }
+
+  .payment-amount {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-catering-table .date-column {
+    display: none;
+  }
+
+  .dialog-title {
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+  }
+
+  .dialog-actions {
+    padding: 0.5rem 1.5rem 1.5rem;
+    flex-direction: column;
+  }
+
+  .btn-cancel,
+  .btn-submit {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* 모바일에서 결제 요청 컬럼 숨기기 */
+  .admin-catering-table th:nth-child(5),
+  .admin-catering-table td:nth-child(5) {
+    display: none;
   }
 }
