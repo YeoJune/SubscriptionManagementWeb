@@ -477,6 +477,7 @@ const AdminCateringInquiry: React.FC = () => {
                   <label className="checkbox-label">
                     <input
                       type="checkbox"
+                      className="checkbox-input"
                       checked={requestPayment}
                       onChange={(e) => setRequestPayment(e.target.checked)}
                     />
