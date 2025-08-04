@@ -7,18 +7,28 @@ import { InquiryProps } from '../../types';
 
 const PAGE_SIZE = 10;
 
+// 🆕 결제 상태가 포함된 인터페이스
+interface InquiryWithPayment extends InquiryProps {
+  payment_status?:
+    | 'pending'
+    | 'completed'
+    | 'cash_pending'
+    | 'authenticated'
+    | 'failed'
+    | null;
+}
+
 const AdminCateringInquiry: React.FC = () => {
   const navigate = useNavigate();
-  const [inquiries, setInquiries] = useState<InquiryProps[]>([]);
+  const [inquiries, setInquiries] = useState<InquiryWithPayment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [selectedInquiry, setSelectedInquiry] = useState<InquiryProps | null>(
-    null
-  );
+  const [selectedInquiry, setSelectedInquiry] =
+    useState<InquiryWithPayment | null>(null);
   const [answer, setAnswer] = useState<string>('');
   const [answerDialog, setAnswerDialog] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -32,6 +42,7 @@ const AdminCateringInquiry: React.FC = () => {
     fetchInquiries();
   }, [currentPage, statusFilter, searchTerm]);
 
+  // 🔧 fetchInquiries 함수 수정 - 결제 상태까지 함께 조회
   const fetchInquiries = async () => {
     setLoading(true);
     try {
@@ -51,7 +62,34 @@ const AdminCateringInquiry: React.FC = () => {
 
       const response = await axios.get('/api/inquiries', { params });
 
-      setInquiries(response.data.inquiries);
+      // 🆕 각 문의에 대해 결제 상태 확인
+      const inquiriesWithPayment = await Promise.all(
+        response.data.inquiries.map(async (inquiry: InquiryProps) => {
+          if (inquiry.payment_requested) {
+            try {
+              const paymentResponse = await axios.get(
+                `/api/inquiries/${inquiry.id}/payment-status`
+              );
+              return {
+                ...inquiry,
+                payment_status: paymentResponse.data.payment?.status || null,
+              };
+            } catch (err) {
+              console.error(
+                `결제 상태 조회 실패 (문의 ID: ${inquiry.id}):`,
+                err
+              );
+              return {
+                ...inquiry,
+                payment_status: null,
+              };
+            }
+          }
+          return inquiry;
+        })
+      );
+
+      setInquiries(inquiriesWithPayment);
 
       const total = response.data.pagination?.total ?? 0;
       setTotalPages(Math.ceil(total / PAGE_SIZE) || 1);
@@ -64,11 +102,58 @@ const AdminCateringInquiry: React.FC = () => {
     }
   };
 
-  const handleInquiryClick = (inquiry: InquiryProps) => {
+  // 🆕 결제 상태에 따른 표시 함수 추가
+  const getPaymentStatusInfo = (inquiry: InquiryWithPayment) => {
+    if (!inquiry.payment_requested) {
+      return {
+        className: 'payment-not-requested',
+        label: '-',
+        amount: null,
+      };
+    }
+
+    const paymentStatus = inquiry.payment_status;
+
+    switch (paymentStatus) {
+      case 'completed':
+        return {
+          className: 'payment-completed',
+          label: '결제 완료',
+          amount: inquiry.payment_amount,
+        };
+      case 'cash_pending':
+        return {
+          className: 'payment-pending',
+          label: '입금 대기',
+          amount: inquiry.payment_amount,
+        };
+      case 'pending':
+      case 'authenticated':
+        return {
+          className: 'payment-processing',
+          label: '결제 진행중',
+          amount: inquiry.payment_amount,
+        };
+      case 'failed':
+        return {
+          className: 'payment-failed',
+          label: '결제 실패',
+          amount: inquiry.payment_amount,
+        };
+      default:
+        return {
+          className: 'payment-requested',
+          label: '결제 요청됨',
+          amount: inquiry.payment_amount,
+        };
+    }
+  };
+
+  const handleInquiryClick = (inquiry: InquiryWithPayment) => {
     navigate(`/inquiry/${inquiry.id}`);
   };
 
-  const handleAnswerClick = (inquiry: InquiryProps) => {
+  const handleAnswerClick = (inquiry: InquiryWithPayment) => {
     setSelectedInquiry(inquiry);
     setAnswer(inquiry.answer || '');
     setRequestPayment(inquiry.payment_requested || false);
@@ -229,57 +314,59 @@ const AdminCateringInquiry: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {inquiries.map((inquiry) => (
-                <tr key={inquiry.id}>
-                  <td className="user-name">{inquiry.user_name}</td>
-                  <td
-                    className="inquiry-title"
-                    onClick={() => handleInquiryClick(inquiry)}
-                  >
-                    {inquiry.title}
-                  </td>
-                  <td className="date-column">
-                    {new Date(inquiry.created_at).toLocaleDateString()}
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    <span
-                      className={`status-chip ${
-                        inquiry.status === 'answered'
-                          ? 'status-answered'
-                          : 'status-unanswered'
-                      }`}
+              {inquiries.map((inquiry) => {
+                const paymentInfo = getPaymentStatusInfo(inquiry);
+
+                return (
+                  <tr key={inquiry.id}>
+                    <td className="user-name">{inquiry.user_name}</td>
+                    <td
+                      className="inquiry-title"
+                      onClick={() => handleInquiryClick(inquiry)}
                     >
-                      {inquiry.status === 'answered' ? '답변 완료' : '미답변'}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    {inquiry.payment_requested ? (
-                      <div className="payment-requested-info">
-                        <span className="payment-chip payment-requested">
-                          결제 요청됨
-                        </span>
-                        <div className="payment-amount">
-                          {inquiry.payment_amount?.toLocaleString()}원
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="payment-chip payment-not-requested">
-                        -
+                      {inquiry.title}
+                    </td>
+                    <td className="date-column">
+                      {new Date(inquiry.created_at).toLocaleDateString()}
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span
+                        className={`status-chip ${
+                          inquiry.status === 'answered'
+                            ? 'status-answered'
+                            : 'status-unanswered'
+                        }`}
+                      >
+                        {inquiry.status === 'answered' ? '답변 완료' : '미답변'}
                       </span>
-                    )}
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    <button
-                      className="answer-btn"
-                      onClick={() => handleAnswerClick(inquiry)}
-                    >
-                      {inquiry.status === 'answered'
-                        ? '답변 수정'
-                        : '답변 등록'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <div className="payment-requested-info">
+                        <span
+                          className={`payment-chip ${paymentInfo.className}`}
+                        >
+                          {paymentInfo.label}
+                        </span>
+                        {paymentInfo.amount && (
+                          <div className="payment-amount">
+                            {paymentInfo.amount.toLocaleString()}원
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button
+                        className="answer-btn"
+                        onClick={() => handleAnswerClick(inquiry)}
+                      >
+                        {inquiry.status === 'answered'
+                          ? '답변 수정'
+                          : '답변 등록'}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

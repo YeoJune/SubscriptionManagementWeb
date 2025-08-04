@@ -401,4 +401,83 @@ router.delete('/:id', authMiddleware, (req, res) => {
   }
 });
 
+// GET /api/inquiries/:id/payment-status - 특정 문의의 결제 상태 조회 (관리자 전용)
+router.get('/:id/payment-status', authMiddleware, (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.session.user.id;
+    const isAdmin = req.session.user.isAdmin;
+
+    // 문의 정보 조회
+    let inquiryQuery = `
+      SELECT i.*, u.name as user_name
+      FROM inquiries i
+      JOIN users u ON i.user_id = u.id
+      WHERE i.id = ?
+    `;
+
+    const inquiryParams = [id];
+
+    // 관리자가 아닌 경우 자신의 문의만 조회 가능
+    if (!isAdmin) {
+      inquiryQuery += ` AND i.user_id = ?`;
+      inquiryParams.push(userId);
+    }
+
+    db.get(inquiryQuery, inquiryParams, (err, inquiry) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      if (!inquiry) {
+        return res.status(404).json({ error: '문의를 찾을 수 없습니다.' });
+      }
+
+      // 해당 문의의 결제 정보 조회
+      db.get(
+        `SELECT * FROM payments WHERE product_id = ? ORDER BY created_at DESC LIMIT 1`,
+        [-inquiry.id], // product_id가 -inquiry_id인 결제 찾기
+        (err, payment) => {
+          if (err) {
+            return res.status(500).json({ error: err.message });
+          }
+
+          const paymentStatus = payment
+            ? {
+                id: payment.id,
+                order_id: payment.order_id,
+                status: payment.status,
+                amount: payment.amount,
+                payment_method: payment.payment_method,
+                depositor_name: payment.depositor_name,
+                paid_at: payment.paid_at,
+                created_at: payment.created_at,
+              }
+            : null;
+
+          res.json({
+            inquiry: {
+              id: inquiry.id,
+              user_id: inquiry.user_id,
+              user_name: inquiry.user_name,
+              title: inquiry.title,
+              content: inquiry.content,
+              answer: inquiry.answer,
+              status: inquiry.status,
+              payment_requested: inquiry.payment_requested,
+              payment_amount: inquiry.payment_amount,
+              payment_requested_at: inquiry.payment_requested_at,
+              created_at: inquiry.created_at,
+              answered_at: inquiry.answered_at,
+            },
+            payment: paymentStatus,
+          });
+        }
+      );
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

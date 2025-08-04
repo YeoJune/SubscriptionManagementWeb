@@ -114,7 +114,7 @@ router.post('/prepare', authMiddleware, (req, res) => {
   }
 });
 
-// POST /api/payments/approve (올바른 버전)
+// POST /api/payments/approve
 router.post('/approve', authMiddleware, (req, res) => {
   try {
     const { orderId, authToken, amount } = req.body;
@@ -144,31 +144,52 @@ router.post('/approve', authMiddleware, (req, res) => {
 
         // 이미 완료된 결제인지 확인
         if (payment.status === 'completed') {
-          db.get(
-            'SELECT * FROM product WHERE id = ?',
-            [payment.product_id],
-            (err, product) => {
-              if (err) {
-                return res
-                  .status(500)
-                  .json({ success: false, error: err.message });
-              }
+          // 🆕 케이터링 결제와 일반 결제 구분 처리
+          const isCreteringPayment = payment.product_id < 0;
 
-              return res.json({
-                success: true,
-                message: '이미 처리된 결제입니다.',
-                payment: {
-                  id: payment.id,
-                  order_id: payment.order_id,
-                  status: 'completed',
-                  amount: payment.amount,
-                  paid_at: payment.paid_at,
-                  receipt_url: null,
-                },
-                delivery_count: product?.delivery_count || 0,
-              });
-            }
-          );
+          if (isCreteringPayment) {
+            // 케이터링 결제는 배송 카운트 없음
+            return res.json({
+              success: true,
+              message: '이미 처리된 케이터링 결제입니다.',
+              payment: {
+                id: payment.id,
+                order_id: payment.order_id,
+                status: 'completed',
+                amount: payment.amount,
+                paid_at: payment.paid_at,
+                receipt_url: null,
+              },
+              delivery_count: 0,
+            });
+          } else {
+            // 기존 일반 상품 결제 처리
+            db.get(
+              'SELECT * FROM product WHERE id = ?',
+              [payment.product_id],
+              (err, product) => {
+                if (err) {
+                  return res
+                    .status(500)
+                    .json({ success: false, error: err.message });
+                }
+
+                return res.json({
+                  success: true,
+                  message: '이미 처리된 결제입니다.',
+                  payment: {
+                    id: payment.id,
+                    order_id: payment.order_id,
+                    status: 'completed',
+                    amount: payment.amount,
+                    paid_at: payment.paid_at,
+                    receipt_url: null,
+                  },
+                  delivery_count: product?.delivery_count || 0,
+                });
+              }
+            );
+          }
           return;
         }
 
@@ -225,41 +246,101 @@ router.post('/approve', authMiddleware, (req, res) => {
                   .json({ success: false, error: err.message });
               }
 
-              db.run(
-                `UPDATE payments SET 
-                 status = ?, 
-                 payment_method = ?, 
-                 payment_gateway_transaction_id = ?, 
-                 raw_response_data = ?, 
-                 paid_at = CURRENT_TIMESTAMP 
-                 WHERE id = ?`,
-                [
-                  'completed',
-                  payMethod,
-                  finalTid,
-                  JSON.stringify(response.data),
-                  payment.id,
-                ],
-                function (err) {
-                  if (err) {
-                    db.run('ROLLBACK');
-                    return res
-                      .status(500)
-                      .json({ success: false, error: err.message });
-                  }
+              // 🆕 케이터링 결제 처리
+              const isCateringPayment = payment.product_id < 0;
 
-                  db.get(
-                    'SELECT * FROM product WHERE id = ?',
-                    [payment.product_id],
-                    (err, product) => {
-                      if (err) {
-                        db.run('ROLLBACK');
-                        return res
-                          .status(500)
-                          .json({ success: false, error: err.message });
+              if (isCateringPayment) {
+                // 케이터링 결제 처리
+                const inquiryId = Math.abs(payment.product_id);
+
+                db.run(
+                  `UPDATE payments SET 
+                   status = ?, 
+                   payment_method = ?, 
+                   payment_gateway_transaction_id = ?, 
+                   raw_response_data = ?, 
+                   paid_at = CURRENT_TIMESTAMP 
+                   WHERE id = ?`,
+                  [
+                    'completed',
+                    payMethod,
+                    finalTid,
+                    JSON.stringify(response.data),
+                    payment.id,
+                  ],
+                  function (err) {
+                    if (err) {
+                      db.run('ROLLBACK');
+                      return res
+                        .status(500)
+                        .json({ success: false, error: err.message });
+                    }
+
+                    // 🆕 문의 상태 업데이트 (결제 완료로 표시)
+                    db.run(
+                      'UPDATE inquiries SET payment_requested = TRUE WHERE id = ?',
+                      [inquiryId],
+                      (updateErr) => {
+                        if (updateErr) {
+                          console.error('문의 상태 업데이트 실패:', updateErr);
+                        }
+
+                        db.run('COMMIT', (err) => {
+                          if (err) {
+                            db.run('ROLLBACK');
+                            return res
+                              .status(500)
+                              .json({ success: false, error: err.message });
+                          }
+
+                          res.json({
+                            success: true,
+                            message:
+                              '케이터링 결제가 성공적으로 처리되었습니다.',
+                            payment: {
+                              id: payment.id,
+                              order_id: payment.order_id,
+                              status: 'completed',
+                              amount: payment.amount,
+                              paid_at: new Date(),
+                              receipt_url: response.data.receiptUrl || null,
+                            },
+                            delivery_count: 0, // 케이터링은 배송 카운트 없음
+                          });
+                        });
                       }
+                    );
+                  }
+                );
+              } else {
+                // 기존 일반 상품 결제 처리 (기존 코드 그대로 유지)
+                db.run(
+                  `UPDATE payments SET 
+                   status = ?, 
+                   payment_method = ?, 
+                   payment_gateway_transaction_id = ?, 
+                   raw_response_data = ?, 
+                   paid_at = CURRENT_TIMESTAMP 
+                   WHERE id = ?`,
+                  [
+                    'completed',
+                    payMethod,
+                    finalTid,
+                    JSON.stringify(response.data),
+                    payment.id,
+                  ],
+                  function (err) {
+                    if (err) {
+                      db.run('ROLLBACK');
+                      return res
+                        .status(500)
+                        .json({ success: false, error: err.message });
+                    }
 
-                      db.run('COMMIT', (err) => {
+                    db.get(
+                      'SELECT * FROM product WHERE id = ?',
+                      [payment.product_id],
+                      (err, product) => {
                         if (err) {
                           db.run('ROLLBACK');
                           return res
@@ -267,92 +348,101 @@ router.post('/approve', authMiddleware, (req, res) => {
                             .json({ success: false, error: err.message });
                         }
 
-                        // 저장된 배송 정보 가져오기 및 업데이트
-                        let deliveryInfo = {};
-                        try {
-                          deliveryInfo = JSON.parse(
-                            payment.delivery_info || '{}'
-                          );
-                        } catch (e) {
-                          console.error('배송 정보 파싱 오류:', e);
-                        }
+                        db.run('COMMIT', (err) => {
+                          if (err) {
+                            db.run('ROLLBACK');
+                            return res
+                              .status(500)
+                              .json({ success: false, error: err.message });
+                          }
 
-                        const specialRequest =
-                          deliveryInfo.special_request || null;
-                        const selectedDates =
-                          req.body.selected_dates ||
-                          deliveryInfo.selected_dates;
+                          // 저장된 배송 정보 가져오기 및 업데이트
+                          let deliveryInfo = {};
+                          try {
+                            deliveryInfo = JSON.parse(
+                              payment.delivery_info || '{}'
+                            );
+                          } catch (e) {
+                            console.error('배송 정보 파싱 오류:', e);
+                          }
 
-                        // 선택된 날짜가 있으면 delivery_info 업데이트
-                        if (req.body.selected_dates) {
-                          const updatedDeliveryInfo = {
-                            ...deliveryInfo,
-                            selected_dates: req.body.selected_dates,
-                          };
+                          const specialRequest =
+                            deliveryInfo.special_request || null;
+                          const selectedDates =
+                            req.body.selected_dates ||
+                            deliveryInfo.selected_dates;
 
-                          db.run(
-                            'UPDATE payments SET delivery_info = ? WHERE id = ?',
-                            [JSON.stringify(updatedDeliveryInfo), payment.id]
-                          );
-                        }
+                          // 선택된 날짜가 있으면 delivery_info 업데이트
+                          if (req.body.selected_dates) {
+                            const updatedDeliveryInfo = {
+                              ...deliveryInfo,
+                              selected_dates: req.body.selected_dates,
+                            };
 
-                        let deliveryPromise;
-                        if (selectedDates && selectedDates.length > 0) {
-                          deliveryPromise =
-                            deliveryManager.bulkAddDeliveryWithSchedule(
+                            db.run(
+                              'UPDATE payments SET delivery_info = ? WHERE id = ?',
+                              [JSON.stringify(updatedDeliveryInfo), payment.id]
+                            );
+                          }
+
+                          let deliveryPromise;
+                          if (selectedDates && selectedDates.length > 0) {
+                            deliveryPromise =
+                              deliveryManager.bulkAddDeliveryWithSchedule(
+                                user_id,
+                                payment.product_id,
+                                selectedDates,
+                                specialRequest
+                              );
+                          } else {
+                            deliveryPromise = deliveryManager.addDeliveryCount(
                               user_id,
                               payment.product_id,
-                              selectedDates,
-                              specialRequest
+                              product.delivery_count
                             );
-                        } else {
-                          deliveryPromise = deliveryManager.addDeliveryCount(
-                            user_id,
-                            payment.product_id,
-                            product.delivery_count
-                          );
-                        }
+                          }
 
-                        deliveryPromise
-                          .then((result) => {
-                            res.json({
-                              success: true,
-                              message: '결제가 성공적으로 처리되었습니다.',
-                              payment: {
-                                id: payment.id,
-                                order_id: payment.order_id,
-                                status: 'completed',
-                                amount: payment.amount,
-                                paid_at: new Date(),
-                                receipt_url: response.data.receiptUrl || null,
-                              },
-                              delivery_count: product.delivery_count,
-                              delivery_result: result,
-                              deliveries: result.schedule || null,
+                          deliveryPromise
+                            .then((result) => {
+                              res.json({
+                                success: true,
+                                message: '결제가 성공적으로 처리되었습니다.',
+                                payment: {
+                                  id: payment.id,
+                                  order_id: payment.order_id,
+                                  status: 'completed',
+                                  amount: payment.amount,
+                                  paid_at: new Date(),
+                                  receipt_url: response.data.receiptUrl || null,
+                                },
+                                delivery_count: product.delivery_count,
+                                delivery_result: result,
+                                deliveries: result.schedule || null,
+                              });
+                            })
+                            .catch((error) => {
+                              console.error('배송 처리 실패:', error);
+                              res.json({
+                                success: true,
+                                message:
+                                  '결제가 완료되었으나 배송 처리 중 오류가 발생했습니다.',
+                                payment: {
+                                  id: payment.id,
+                                  order_id: payment.order_id,
+                                  status: 'completed',
+                                  amount: payment.amount,
+                                  paid_at: new Date(),
+                                  receipt_url: response.data.receiptUrl || null,
+                                },
+                                error_detail: error.message,
+                              });
                             });
-                          })
-                          .catch((error) => {
-                            console.error('배송 처리 실패:', error);
-                            res.json({
-                              success: true,
-                              message:
-                                '결제가 완료되었으나 배송 처리 중 오류가 발생했습니다.',
-                              payment: {
-                                id: payment.id,
-                                order_id: payment.order_id,
-                                status: 'completed',
-                                amount: payment.amount,
-                                paid_at: new Date(),
-                                receipt_url: response.data.receiptUrl || null,
-                              },
-                              error_detail: error.message,
-                            });
-                          });
-                      });
-                    }
-                  );
-                }
-              );
+                        });
+                      }
+                    );
+                  }
+                );
+              }
             });
           } else {
             // 승인 실패
@@ -684,23 +774,29 @@ router.get('/admin', checkAdmin, (req, res) => {
     const sortBy = req.query.sortBy || 'created_at';
     const order = req.query.order === 'asc' ? 'ASC' : 'DESC';
 
+    // 🆕 케이터링 결제와 일반 결제를 모두 처리하는 쿼리
     let query = `
       SELECT p.id, p.user_id, p.product_id, p.count, p.amount, p.order_id, 
              p.status, p.payment_method, p.payment_gateway_transaction_id,
              p.depositor_name,
              p.paid_at, p.created_at,
              u.name AS user_name, u.phone_number AS user_phone,
-             pr.name AS product_name
+             CASE 
+               WHEN p.product_id >= 0 THEN pr.name 
+               ELSE CONCAT('케이터링 서비스 - ', i.title)
+             END AS product_name
       FROM payments p
       JOIN users u ON p.user_id = u.id
-      JOIN product pr ON p.product_id = pr.id
+      LEFT JOIN product pr ON p.product_id = pr.id AND p.product_id >= 0
+      LEFT JOIN inquiries i ON p.product_id = -i.id AND p.product_id < 0
     `;
 
     let countQuery = `
       SELECT COUNT(*) as total
       FROM payments p
       JOIN users u ON p.user_id = u.id
-      JOIN product pr ON p.product_id = pr.id
+      LEFT JOIN product pr ON p.product_id = pr.id AND p.product_id >= 0
+      LEFT JOIN inquiries i ON p.product_id = -i.id AND p.product_id < 0
     `;
 
     const conditions = [];
@@ -723,9 +819,11 @@ router.get('/admin', checkAdmin, (req, res) => {
 
     if (search) {
       conditions.push(
-        `(u.name LIKE ? OR u.phone_number LIKE ? OR p.order_id LIKE ? OR pr.name LIKE ? OR u.id LIKE ?)`
+        `(u.name LIKE ? OR u.phone_number LIKE ? OR p.order_id LIKE ? OR 
+          pr.name LIKE ? OR i.title LIKE ? OR u.id LIKE ?)`
       );
       params.push(
+        `%${search}%`,
         `%${search}%`,
         `%${search}%`,
         `%${search}%`,
@@ -1386,18 +1484,52 @@ router.post('/admin/:id/approve-cash', checkAdmin, (req, res) => {
                   .json({ success: false, error: err.message });
               }
 
-              db.get(
-                'SELECT * FROM product WHERE id = ?',
-                [payment.product_id],
-                (err, product) => {
-                  if (err) {
-                    db.run('ROLLBACK');
-                    return res
-                      .status(500)
-                      .json({ success: false, error: err.message });
-                  }
+              // 🆕 케이터링 결제와 일반 결제 구분 처리
+              const isCateringPayment = payment.product_id < 0;
 
-                  db.run('COMMIT', (err) => {
+              if (isCateringPayment) {
+                // 케이터링 결제 처리
+                const inquiryId = Math.abs(payment.product_id);
+
+                // 문의 상태 업데이트 (결제 완료로 표시)
+                db.run(
+                  'UPDATE inquiries SET payment_requested = TRUE WHERE id = ?',
+                  [inquiryId],
+                  (updateErr) => {
+                    if (updateErr) {
+                      console.error('문의 상태 업데이트 실패:', updateErr);
+                    }
+
+                    db.run('COMMIT', (err) => {
+                      if (err) {
+                        db.run('ROLLBACK');
+                        return res
+                          .status(500)
+                          .json({ success: false, error: err.message });
+                      }
+
+                      res.json({
+                        success: true,
+                        message: '케이터링 현금 결제가 승인되었습니다.',
+                        payment: {
+                          id: payment.id,
+                          order_id: payment.order_id,
+                          status: 'completed',
+                          amount: payment.amount,
+                          depositor_name: payment.depositor_name,
+                          paid_at: new Date(),
+                        },
+                        delivery_count: 0, // 케이터링은 배송 카운트 없음
+                      });
+                    });
+                  }
+                );
+              } else {
+                // 기존 일반 상품 결제 처리
+                db.get(
+                  'SELECT * FROM product WHERE id = ?',
+                  [payment.product_id],
+                  (err, product) => {
                     if (err) {
                       db.run('ROLLBACK');
                       return res
@@ -1405,73 +1537,85 @@ router.post('/admin/:id/approve-cash', checkAdmin, (req, res) => {
                         .json({ success: false, error: err.message });
                     }
 
-                    // 저장된 배송 정보 가져오기
-                    let deliveryInfo = {};
-                    try {
-                      deliveryInfo = JSON.parse(payment.delivery_info || '{}');
-                    } catch (e) {
-                      console.error('배송 정보 파싱 오류:', e);
-                    }
+                    db.run('COMMIT', (err) => {
+                      if (err) {
+                        db.run('ROLLBACK');
+                        return res
+                          .status(500)
+                          .json({ success: false, error: err.message });
+                      }
 
-                    const specialRequest = deliveryInfo.special_request || null;
-                    const finalSelectedDates =
-                      selected_dates || deliveryInfo.selected_dates;
+                      // 저장된 배송 정보 가져오기
+                      let deliveryInfo = {};
+                      try {
+                        deliveryInfo = JSON.parse(
+                          payment.delivery_info || '{}'
+                        );
+                      } catch (e) {
+                        console.error('배송 정보 파싱 오류:', e);
+                      }
 
-                    // 배송 처리
-                    let deliveryPromise;
-                    if (finalSelectedDates && finalSelectedDates.length > 0) {
-                      deliveryPromise =
-                        deliveryManager.bulkAddDeliveryWithSchedule(
+                      const specialRequest =
+                        deliveryInfo.special_request || null;
+                      const finalSelectedDates =
+                        selected_dates || deliveryInfo.selected_dates;
+
+                      // 배송 처리
+                      let deliveryPromise;
+                      if (finalSelectedDates && finalSelectedDates.length > 0) {
+                        deliveryPromise =
+                          deliveryManager.bulkAddDeliveryWithSchedule(
+                            payment.user_id,
+                            payment.product_id,
+                            finalSelectedDates,
+                            specialRequest
+                          );
+                      } else {
+                        deliveryPromise = deliveryManager.addDeliveryCount(
                           payment.user_id,
                           payment.product_id,
-                          finalSelectedDates,
-                          specialRequest
+                          product.delivery_count
                         );
-                    } else {
-                      deliveryPromise = deliveryManager.addDeliveryCount(
-                        payment.user_id,
-                        payment.product_id,
-                        product.delivery_count
-                      );
-                    }
+                      }
 
-                    deliveryPromise
-                      .then((result) => {
-                        res.json({
-                          success: true,
-                          message: '현금 결제가 승인되었습니다.',
-                          payment: {
-                            id: payment.id,
-                            order_id: payment.order_id,
-                            status: 'completed',
-                            amount: payment.amount,
-                            depositor_name: payment.depositor_name,
-                            paid_at: new Date(),
-                          },
-                          delivery_count: product.delivery_count,
-                          delivery_result: result,
+                      deliveryPromise
+                        .then((result) => {
+                          res.json({
+                            success: true,
+                            message: '현금 결제가 승인되었습니다.',
+                            payment: {
+                              id: payment.id,
+                              order_id: payment.order_id,
+                              status: 'completed',
+                              amount: payment.amount,
+                              depositor_name: payment.depositor_name,
+                              paid_at: new Date(),
+                            },
+                            delivery_count: product.delivery_count,
+                            delivery_result: result,
+                          });
+                        })
+                        .catch((error) => {
+                          console.error('배송 처리 실패:', error);
+                          res.json({
+                            success: true,
+                            message:
+                              '현금 결제는 승인되었으나 배송 처리 중 오류가 발생했습니다.',
+                            payment: {
+                              id: payment.id,
+                              order_id: payment.order_id,
+                              status: 'completed',
+                              amount: payment.amount,
+                              depositor_name: payment.depositor_name,
+                              paid_at: new Date(),
+                            },
+                            error_detail: error.message,
+                          });
                         });
-                      })
-                      .catch((error) => {
-                        console.error('배송 처리 실패:', error);
-                        res.json({
-                          success: true,
-                          message:
-                            '현금 결제는 승인되었으나 배송 처리 중 오류가 발생했습니다.',
-                          payment: {
-                            id: payment.id,
-                            order_id: payment.order_id,
-                            status: 'completed',
-                            amount: payment.amount,
-                            depositor_name: payment.depositor_name,
-                            paid_at: new Date(),
-                          },
-                          error_detail: error.message,
-                        });
-                      });
-                  });
-                }
-              );
+                    });
+                  }
+                );
+              }
             }
           );
         });
