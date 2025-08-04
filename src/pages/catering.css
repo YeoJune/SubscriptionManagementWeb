@@ -1,385 +1,409 @@
-/* src/pages/catering.css */
+/* 기존 catering.css 파일 끝에 다음 스타일들을 추가하세요 */
 
-.catering-container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-}
+/* ===== 결제 관련 스타일 ===== */
 
-/* Header section */
-.catering-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
-  gap: 2rem;
-}
-
-.catering-title-section {
-  flex: 1;
-}
-
-.catering-title {
-  color: var(--accent-color);
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  position: relative;
-  padding-bottom: 0.75rem;
-}
-
-.catering-title::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 60px;
-  height: 3px;
-  background: linear-gradient(90deg, #ff6b35, #f7931e);
-  border-radius: 2px;
-}
-
-.catering-description {
-  color: var(--text-light);
-  font-size: 0.95rem;
-  line-height: 1.5;
-  margin: 0;
-}
-
-/* Add catering button */
-.catering-add-button {
-  background: linear-gradient(135deg, #ff6b35, #f7931e);
+/* 결제 버튼 스타일 */
+.payment-btn {
+  background: linear-gradient(135deg, #28a745, #20c997);
   color: white;
-  font-weight: 600;
-  border-radius: 30px;
-  padding: 0.6rem 1.8rem;
   border: none;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
-  white-space: nowrap;
-}
-
-.catering-add-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
-}
-
-.catering-add-button .add-icon {
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-
-/* Loading container */
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #ff6b35;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Alert messages */
-.alert {
-  padding: 1rem 1.5rem;
-  border-radius: 10px;
-  margin-bottom: 1.5rem;
-  font-weight: 500;
-}
-
-.alert-error {
-  background-color: rgba(220, 53, 69, 0.1);
-  color: var(--error-color);
-  border: 1px solid var(--error-color);
-}
-
-.alert-info {
-  background-color: rgba(255, 107, 53, 0.1);
-  color: #ff6b35;
-  border: 1px solid #ff6b35;
-}
-
-/* Table styling */
-.catering-table-container {
-  background-color: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  margin-bottom: 2rem;
-}
-
-.catering-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95rem;
-}
-
-.catering-table th {
-  background: linear-gradient(135deg, #ff6b35, #f7931e);
-  color: white;
-  font-weight: 600;
-  padding: 1.2rem 1rem;
-  text-align: left;
-  border-bottom: none;
-}
-
-.catering-table tbody tr {
-  border-bottom: 1px solid var(--background-dark);
-  transition: all 0.2s;
-  cursor: pointer;
-}
-
-.catering-table tbody tr:hover {
-  background-color: rgba(255, 107, 53, 0.05);
-  transform: translateX(2px);
-}
-
-.catering-table td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--background-dark);
-}
-
-/* Status chip styling */
-.status-chip {
-  display: inline-block;
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  text-align: center;
-}
-
-.status-answered {
-  background-color: rgba(40, 167, 69, 0.1);
-  color: var(--success-color);
-  border: 1px solid var(--success-color);
-}
-
-.status-unanswered {
-  background-color: rgba(255, 107, 53, 0.1);
-  color: #ff6b35;
-  border: 1px solid #ff6b35;
-}
-
-/* Pagination styling */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 2rem;
-  gap: 0.5rem;
-}
-
-.page-button {
-  min-width: 40px;
-  height: 40px;
-  border-radius: 20px;
-  border: 1px solid #ddd;
-  background-color: white;
-  color: var(--text-light);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.page-button:hover:not(:disabled) {
-  border-color: #ff6b35;
-  background-color: rgba(255, 107, 53, 0.1);
-  color: #ff6b35;
-}
-
-.page-button.active {
-  background: linear-gradient(135deg, #ff6b35, #f7931e);
-  color: white;
-  border-color: #ff6b35;
-}
-
-/* Dialog styling */
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.dialog {
-  background-color: white;
-  border-radius: 15px;
-  width: 90%;
-  max-width: 600px;
-  overflow: hidden;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
-.dialog-title {
-  background: linear-gradient(135deg, #ff6b35, #f7931e);
-  color: white;
-  font-weight: 700;
-  padding: 1.5rem 2rem;
-  border-bottom: none;
-}
-
-.dialog-content {
-  padding: 2rem;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: var(--accent-color);
-}
-
-.form-control {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
+  padding: 8px 12px;
   border-radius: 8px;
-  font-family: inherit;
-  font-size: 1rem;
-  transition: border-color 0.3s;
-}
-
-.form-control:hover {
-  border-color: #ff6b35;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: #ff6b35;
-  box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.2);
-}
-
-.form-control::placeholder {
-  color: #999;
-  font-size: 0.9rem;
-}
-
-.dialog-actions {
-  padding: 1rem 2rem 2rem;
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-}
-
-.btn-cancel {
-  background-color: white;
-  color: var(--text-light);
-  border: 1px solid #ddd;
-  border-radius: 30px;
-  padding: 0.5rem 1.5rem;
-  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  min-width: 80px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
 }
 
-.btn-cancel:hover:not(:disabled) {
-  border-color: #ff6b35;
-  color: #ff6b35;
+.payment-btn:hover {
+  background: linear-gradient(135deg, #20c997, #28a745);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
 }
 
-.btn-submit {
+.payment-btn:active {
+  transform: translateY(0);
+}
+
+.payment-btn small {
+  font-size: 10px;
+  opacity: 0.9;
+  display: block;
+  margin-top: 2px;
+}
+
+.no-payment {
+  color: #999;
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* 로그인 링크 버튼 */
+.login-link-button {
   background: linear-gradient(135deg, #ff6b35, #f7931e);
   color: white;
-  font-weight: 600;
-  border-radius: 30px;
-  padding: 0.5rem 1.5rem;
   border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
   cursor: pointer;
-  transition: all 0.3s;
+  margin-left: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
 }
 
-.btn-submit:hover:not(:disabled) {
+.login-link-button:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
 }
 
-.btn-submit:disabled,
-.btn-cancel:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+/* 결제 다이얼로그 특별 스타일 */
+.payment-dialog {
+  max-width: 650px;
+  width: 90%;
 }
 
-/* Responsive adjustments */
+.inquiry-info {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  border-left: 4px solid #ff6b35;
+}
+
+.inquiry-info h4 {
+  margin: 0 0 16px 0;
+  color: var(--accent-color);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.inquiry-details p {
+  margin: 10px 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.inquiry-details strong {
+  color: var(--accent-color);
+  font-weight: 600;
+  display: inline-block;
+  min-width: 80px;
+}
+
+/* 결제 방법 선택 스타일 */
+.payment-method-section {
+  margin: 24px 0;
+}
+
+.payment-method-section h4 {
+  margin: 0 0 20px 0;
+  color: var(--accent-color);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.payment-method-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.payment-method-option {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.payment-method-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 107, 53, 0.1),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.payment-method-option:hover::before {
+  left: 100%;
+}
+
+.payment-method-option:hover {
+  border-color: #ff6b35;
+  background: rgba(255, 107, 53, 0.02);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.1);
+}
+
+.payment-method-option.selected {
+  border-color: #ff6b35;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 53, 0.05),
+    rgba(247, 147, 30, 0.05)
+  );
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.15);
+}
+
+.payment-method-option input[type='radio'] {
+  margin-right: 16px;
+  transform: scale(1.3);
+  accent-color: #ff6b35;
+}
+
+.payment-method-info {
+  flex: 1;
+  z-index: 1;
+  position: relative;
+}
+
+.payment-method-name {
+  display: block;
+  font-weight: 700;
+  color: var(--accent-color);
+  margin-bottom: 6px;
+  font-size: 16px;
+}
+
+.payment-method-desc {
+  display: block;
+  color: var(--text-light);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* 현금 결제 정보 스타일 */
+.cash-payment-info {
+  margin-top: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff8e1, #ffecb3);
+  border-radius: 12px;
+  border-left: 4px solid #ffa726;
+}
+
+.depositor-name-section {
+  margin-bottom: 20px;
+}
+
+.depositor-name-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--accent-color);
+  font-size: 15px;
+}
+
+.depositor-name-section input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.depositor-name-section input:focus {
+  border-color: #ff6b35;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+  outline: none;
+}
+
+.account-info-highlight {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.account-info-highlight h5 {
+  margin: 0 0 16px 0;
+  color: var(--accent-color);
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.account-details {
+  display: grid;
+  gap: 12px;
+}
+
+.account-details p {
+  margin: 0;
+  font-size: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.account-details p:last-child {
+  border-bottom: none;
+}
+
+.account-details strong {
+  color: var(--text-light);
+  font-weight: 600;
+  min-width: 80px;
+}
+
+.account-details .value {
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.account-number {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: #2196f3;
+  font-size: 16px;
+  background: rgba(33, 150, 243, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.cash-payment-notice {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.cash-payment-notice p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* 문자 수 카운터 */
+.char-count {
+  text-align: right;
+  font-size: 12px;
+  color: #999;
+  margin-top: 6px;
+}
+
+/* 로딩 스피너 작은 버전 */
+.loading-spinner.small {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+  margin-right: 8px;
+}
+
+/* 폼 도움말 텍스트 */
+.form-help {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+/* 결제 다이얼로그 액션 버튼 개선 */
+.payment-dialog .dialog-actions {
+  padding: 1rem 2rem 2rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  border-top: 1px solid #e9ecef;
+  margin-top: 20px;
+}
+
+.payment-dialog .btn-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px;
+  padding: 0.75rem 1.5rem;
+}
+
+/* 반응형 디자인 */
 @media (max-width: 768px) {
-  .catering-header {
+  .payment-dialog {
+    width: 95%;
+    margin: 20px auto;
+  }
+
+  .payment-method-options {
+    gap: 12px;
+  }
+
+  .payment-method-option {
+    padding: 16px;
+  }
+
+  .payment-method-name {
+    font-size: 15px;
+  }
+
+  .payment-method-desc {
+    font-size: 13px;
+  }
+
+  .account-details p {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 4px;
   }
 
-  .catering-title {
-    font-size: 1.8rem;
-    margin-bottom: 0.5rem;
+  .account-details strong {
+    min-width: auto;
   }
 
-  .catering-add-button {
-    width: 100%;
-    justify-content: center;
+  .inquiry-info {
+    padding: 16px;
   }
 
-  .catering-table td,
-  .catering-table th {
-    padding: 0.75rem;
+  .cash-payment-info {
+    padding: 16px;
   }
 
-  .dialog {
-    width: 95%;
+  .account-info-highlight {
+    padding: 16px;
   }
 }
 
 @media (max-width: 480px) {
-  .catering-title {
-    font-size: 1.6rem;
+  .payment-method-option {
+    padding: 12px;
   }
 
-  .catering-description {
-    font-size: 0.9rem;
+  .payment-method-option input[type='radio'] {
+    transform: scale(1.2);
+    margin-right: 12px;
   }
 
-  .catering-table .date-column {
-    display: none;
+  .payment-dialog .dialog-actions {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
   }
 
-  .dialog-title {
-    padding: 1rem 1.5rem;
-    font-size: 1.1rem;
-  }
-
-  .dialog-content {
-    padding: 1.5rem;
-  }
-
-  .dialog-actions {
-    padding: 0.5rem 1.5rem 1.5rem;
+  .payment-dialog .btn-submit,
+  .payment-dialog .btn-cancel {
+    width: 100%;
+    justify-content: center;
   }
 }

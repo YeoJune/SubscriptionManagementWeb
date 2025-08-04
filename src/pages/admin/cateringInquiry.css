@@ -515,3 +515,204 @@
     justify-content: center;
   }
 }
+
+/* 기존 cateringInquiry.css 파일 끝에 다음 스타일들을 추가하세요 */
+
+/* 결제 요청 상태 표시 */
+.payment-requested-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.payment-chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.payment-requested {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+}
+
+.payment-not-requested {
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #e9ecef;
+}
+
+.payment-amount {
+  font-size: 12px;
+  font-weight: 700;
+  color: #28a745;
+  margin-top: 2px;
+}
+
+/* 결제 요청 섹션 스타일 */
+.payment-request-section {
+  margin-top: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9ff, #e3f2fd);
+  border-radius: 12px;
+  border-left: 4px solid #2196f3;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.checkbox-label input[type='checkbox'] {
+  transform: scale(1.2);
+  accent-color: #2196f3;
+}
+
+.checkbox-text {
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+.form-help {
+  font-size: 13px;
+  color: #6c757d;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.payment-amount-section {
+  margin-top: 16px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.payment-amount-section .form-control {
+  background: white;
+  border: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.payment-amount-section .form-control:focus {
+  border-color: #2196f3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.payment-request-info {
+  margin-top: 16px;
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.payment-request-info h5 {
+  margin: 0 0 12px 0;
+  color: #2196f3;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.payment-request-info ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style-type: disc;
+}
+
+.payment-request-info li {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.payment-request-info li:last-child {
+  margin-bottom: 0;
+}
+
+/* 답변 다이얼로그 개선 */
+.answer-dialog {
+  max-width: 700px;
+}
+
+.answer-dialog .dialog-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.answer-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* 테이블 열 너비 조정 */
+.admin-catering-table th:nth-child(5),
+.admin-catering-table td:nth-child(5) {
+  width: 120px;
+  min-width: 120px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .payment-requested-info {
+    gap: 2px;
+  }
+
+  .payment-chip {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+
+  .payment-amount {
+    font-size: 11px;
+  }
+
+  .payment-request-section {
+    padding: 16px;
+    margin-top: 20px;
+  }
+
+  .checkbox-label {
+    font-size: 14px;
+    gap: 8px;
+  }
+
+  .payment-request-info {
+    padding: 12px;
+  }
+
+  .payment-request-info h5 {
+    font-size: 13px;
+  }
+
+  .payment-request-info li {
+    font-size: 12px;
+  }
+
+  /* 모바일에서 결제 요청 컬럼 숨기기 (너무 좁은 경우) */
+  @media (max-width: 480px) {
+    .admin-catering-table th:nth-child(5),
+    .admin-catering-table td:nth-child(5) {
+      display: none;
+    }
+  }
+}
