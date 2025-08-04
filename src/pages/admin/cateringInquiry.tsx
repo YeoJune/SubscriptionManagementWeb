@@ -38,6 +38,12 @@ const AdminCateringInquiry: React.FC = () => {
   const [requestPayment, setRequestPayment] = useState<boolean>(false);
   const [paymentAmount, setPaymentAmount] = useState<string>('');
 
+  const [deleteDialog, setDeleteDialog] = useState<boolean>(false);
+  const [deleteInquiry, setDeleteInquiry] = useState<InquiryWithPayment | null>(
+    null
+  );
+  const [deleting, setDeleting] = useState<boolean>(false);
+
   useEffect(() => {
     fetchInquiries();
   }, [currentPage, statusFilter, searchTerm]);
@@ -225,6 +231,38 @@ const AdminCateringInquiry: React.FC = () => {
     fetchInquiries();
   };
 
+  // 삭제 핸들러 추가
+  const handleDeleteClick = (
+    inquiry: InquiryWithPayment,
+    e: React.MouseEvent
+  ) => {
+    e.stopPropagation();
+    setDeleteInquiry(inquiry);
+    setDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteInquiry) return;
+
+    setDeleting(true);
+    try {
+      await axios.delete(`/api/inquiries/${deleteInquiry.id}`);
+      setDeleteDialog(false);
+      setDeleteInquiry(null);
+      fetchInquiries();
+    } catch (err: any) {
+      console.error('Failed to delete inquiry:', err);
+      alert(err.response?.data?.error || '문의 삭제 중 오류가 발생했습니다.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialog(false);
+    setDeleteInquiry(null);
+  };
+
   const renderPageButtons = () => {
     const buttons = [];
 
@@ -355,14 +393,23 @@ const AdminCateringInquiry: React.FC = () => {
                       </div>
                     </td>
                     <td style={{ textAlign: 'center' }}>
-                      <button
-                        className="answer-btn"
-                        onClick={() => handleAnswerClick(inquiry)}
-                      >
-                        {inquiry.status === 'answered'
-                          ? '답변 수정'
-                          : '답변 등록'}
-                      </button>
+                      <div className="admin-action-buttons">
+                        <button
+                          className="answer-btn"
+                          onClick={() => handleAnswerClick(inquiry)}
+                        >
+                          {inquiry.status === 'answered'
+                            ? '답변 수정'
+                            : '답변 등록'}
+                        </button>
+                        <button
+                          className="delete-btn admin-delete-btn"
+                          onClick={(e) => handleDeleteClick(inquiry, e)}
+                          title="문의 삭제"
+                        >
+                          삭제
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -497,6 +544,67 @@ const AdminCateringInquiry: React.FC = () => {
                   : requestPayment
                     ? '답변 + 결제 요청'
                     : '답변 등록'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Delete Confirmation Dialog */}
+      {deleteDialog && deleteInquiry && (
+        <div className="dialog-overlay">
+          <div className="dialog delete-dialog">
+            <div className="dialog-title">문의 삭제 (관리자)</div>
+            <div className="dialog-content">
+              <div className="delete-warning">
+                <p>
+                  ⚠️ <strong>관리자 권한으로 문의를 삭제합니다</strong>
+                </p>
+                <ul>
+                  <li>삭제된 문의는 복구할 수 없습니다.</li>
+                  <li>관련된 답변과 결제 정보도 함께 확인해주세요.</li>
+                  <li>결제가 진행 중이거나 완료된 경우 신중히 결정하세요.</li>
+                </ul>
+              </div>
+              <div className="delete-inquiry-info">
+                <p>
+                  <strong>고객:</strong> {deleteInquiry.user_name}
+                </p>
+                <p>
+                  <strong>문의 제목:</strong> {deleteInquiry.title}
+                </p>
+                <p>
+                  <strong>작성일:</strong>{' '}
+                  {new Date(deleteInquiry.created_at).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>답변 상태:</strong>{' '}
+                  {deleteInquiry.status === 'answered' ? '답변 완료' : '미답변'}
+                </p>
+                <p>
+                  <strong>결제 상태:</strong>{' '}
+                  {deleteInquiry.payment_requested
+                    ? `결제 요청됨 (${deleteInquiry.payment_amount?.toLocaleString()}원)`
+                    : '결제 요청 없음'}
+                </p>
+              </div>
+              <p>
+                <strong>정말로 이 문의를 삭제하시겠습니까?</strong>
+              </p>
+            </div>
+            <div className="dialog-actions">
+              <button
+                className="btn-cancel"
+                onClick={handleDeleteCancel}
+                disabled={deleting}
+              >
+                취소
+              </button>
+              <button
+                className="btn-delete"
+                onClick={handleDeleteConfirm}
+                disabled={deleting}
+              >
+                {deleting ? '삭제 중...' : '삭제'}
               </button>
             </div>
           </div>

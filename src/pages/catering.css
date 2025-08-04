@@ -632,3 +632,119 @@
     justify-content: center;
   }
 }
+
+/* catering.css와 admin/cateringInquiry.css 두 파일 모두에 추가할 스타일 */
+
+/* 삭제 버튼 */
+.delete-btn {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.delete-btn:hover {
+  background: linear-gradient(135deg, #c82333, #dc3545);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* 관리자 액션 버튼 그룹 */
+.admin-action-buttons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
+
+.admin-delete-btn {
+  font-size: 11px;
+  padding: 5px 10px;
+}
+
+/* 삭제 다이얼로그 */
+.delete-dialog {
+  max-width: 500px;
+}
+
+.delete-warning {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.delete-warning p {
+  margin: 0 0 12px 0;
+  color: #856404;
+  font-weight: 600;
+}
+
+.delete-warning ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #856404;
+}
+
+.delete-warning li {
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.delete-inquiry-info {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.delete-inquiry-info p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.delete-inquiry-info strong {
+  color: var(--accent-color);
+}
+
+.btn-delete {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  font-weight: 600;
+  border-radius: 30px;
+  padding: 0.6rem 1.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c82333, #dc3545);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.btn-delete:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .admin-action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .admin-delete-btn {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+}

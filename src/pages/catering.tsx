@@ -52,6 +52,10 @@ const Catering: React.FC = () => {
   const [processingPayment, setProcessingPayment] = useState<boolean>(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
+  const [deleteDialog, setDeleteDialog] = useState<boolean>(false);
+  const [deleteInquiry, setDeleteInquiry] = useState<InquiryProps | null>(null);
+  const [deleting, setDeleting] = useState<boolean>(false);
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchInquiries();
@@ -234,6 +238,35 @@ const Catering: React.FC = () => {
     }
   };
 
+  // 삭제 핸들러 추가
+  const handleDeleteClick = (inquiry: InquiryProps, e: React.MouseEvent) => {
+    e.stopPropagation(); // 행 클릭 이벤트 방지
+    setDeleteInquiry(inquiry);
+    setDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteInquiry) return;
+
+    setDeleting(true);
+    try {
+      await axios.delete(`/api/inquiries/${deleteInquiry.id}`);
+      setDeleteDialog(false);
+      setDeleteInquiry(null);
+      fetchInquiries();
+    } catch (err: any) {
+      console.error('Failed to delete inquiry:', err);
+      alert(err.response?.data?.error || '문의 삭제 중 오류가 발생했습니다.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialog(false);
+    setDeleteInquiry(null);
+  };
+
   const renderPageButtons = () => {
     const buttons = [];
 
@@ -408,6 +441,7 @@ const Catering: React.FC = () => {
                 <th className="date-column">작성일</th>
                 <th style={{ textAlign: 'center' }}>상태</th>
                 <th style={{ textAlign: 'center' }}>결제</th>
+                <th style={{ textAlign: 'center' }}>관리</th>
               </tr>
             </thead>
             <tbody>
@@ -437,7 +471,10 @@ const Catering: React.FC = () => {
                     {inquiry.payment_requested ? (
                       <button
                         className="payment-btn"
-                        onClick={() => handlePaymentClick(inquiry)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePaymentClick(inquiry);
+                        }}
                       >
                         결제하기
                         <br />
@@ -448,6 +485,15 @@ const Catering: React.FC = () => {
                     ) : (
                       <span className="no-payment">-</span>
                     )}
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <button
+                      className="delete-btn"
+                      onClick={(e) => handleDeleteClick(inquiry, e)}
+                      title="문의 삭제"
+                    >
+                      삭제
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -586,6 +632,55 @@ const Catering: React.FC = () => {
                 ) : (
                   '안전결제 진행하기'
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {deleteDialog && deleteInquiry && (
+        <div className="dialog-overlay">
+          <div className="dialog delete-dialog">
+            <div className="dialog-title">문의 삭제</div>
+            <div className="dialog-content">
+              <div className="delete-warning">
+                <p>
+                  ⚠️ <strong>주의사항</strong>
+                </p>
+                <ul>
+                  <li>삭제된 문의는 복구할 수 없습니다.</li>
+                  <li>관련된 답변도 함께 삭제됩니다.</li>
+                  <li>
+                    결제가 완료된 문의는 삭제하기 전에 관리자에게 문의하세요.
+                  </li>
+                </ul>
+              </div>
+              <div className="delete-inquiry-info">
+                <p>
+                  <strong>삭제할 문의:</strong> {deleteInquiry.title}
+                </p>
+                <p>
+                  <strong>작성일:</strong>{' '}
+                  {new Date(deleteInquiry.created_at).toLocaleDateString()}
+                </p>
+              </div>
+              <p>정말로 이 문의를 삭제하시겠습니까?</p>
+            </div>
+            <div className="dialog-actions">
+              <button
+                className="btn-cancel"
+                onClick={handleDeleteCancel}
+                disabled={deleting}
+              >
+                취소
+              </button>
+              <button
+                className="btn-delete"
+                onClick={handleDeleteConfirm}
+                disabled={deleting}
+              >
+                {deleting ? '삭제 중...' : '삭제'}
               </button>
             </div>
           </div>
