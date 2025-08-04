@@ -429,22 +429,19 @@
 }
 
 .payment-request-section .checkbox-label {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
   font-size: 15px;
   margin-bottom: 8px;
-  width: fit-content;
 }
 
-.payment-request-section .checkbox-label input[type='checkbox'] {
+.payment-request-section input[type='checkbox'] {
   width: 16px;
   height: 16px;
   margin: 0;
   padding: 0;
-  transform: none;
-  accent-color: #2196f3;
   flex-shrink: 0;
 }
 
