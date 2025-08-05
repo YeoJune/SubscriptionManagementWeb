@@ -466,14 +466,13 @@ const Catering: React.FC = () => {
             </thead>
             <tbody>
               {inquiries.map((inquiry) => (
-                <tr key={inquiry.id}>
+                <tr
+                  key={inquiry.id}
+                  className="clickable-row"
+                  onClick={() => handleInquiryClick(inquiry)}
+                >
                   <td className="author-column">{getAuthorDisplay(inquiry)}</td>
-                  <td
-                    className="inquiry-title"
-                    onClick={() => handleInquiryClick(inquiry)}
-                  >
-                    {inquiry.title}
-                  </td>
+                  <td className="inquiry-title">{inquiry.title}</td>
                   <td className="date-column">
                     {new Date(inquiry.created_at).toLocaleDateString()}
                   </td>

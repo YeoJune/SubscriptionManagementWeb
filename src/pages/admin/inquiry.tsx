@@ -217,7 +217,9 @@ const AdminInquiry: React.FC = () => {
                     <td className="inquiry-table-cell">{inquiry.id}</td>
                     <td className="inquiry-table-cell">{inquiry.title}</td>
                     <td className="inquiry-table-cell">
-                      {inquiry.user_name || inquiry.user_id}
+                      {inquiry.anonymous_name ||
+                        inquiry.user_name ||
+                        inquiry.user_id}
                     </td>
                     <td className="inquiry-table-cell">
                       {new Date(inquiry.created_at).toLocaleDateString()}
@@ -289,7 +291,9 @@ const AdminInquiry: React.FC = () => {
 
               <div className="dialog-meta">
                 <strong>작성자:</strong>{' '}
-                {selectedInquiry.user_name || selectedInquiry.user_id}
+                {selectedInquiry.anonymous_name ||
+                  selectedInquiry.user_name ||
+                  selectedInquiry.user_id}
               </div>
 
               <div className="dialog-meta">

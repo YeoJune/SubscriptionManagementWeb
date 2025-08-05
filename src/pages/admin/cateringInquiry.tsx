@@ -357,7 +357,9 @@ const AdminCateringInquiry: React.FC = () => {
 
                 return (
                   <tr key={inquiry.id}>
-                    <td className="user-name">{inquiry.user_name}</td>
+                    <td className="user-name">
+                      {inquiry.anonymous_name || inquiry.user_name}
+                    </td>
                     <td
                       className="inquiry-title"
                       onClick={() => handleInquiryClick(inquiry)}
@@ -438,7 +440,9 @@ const AdminCateringInquiry: React.FC = () => {
                 <h4>문의 내용</h4>
                 <div className="inquiry-details">
                   <p>
-                    <strong>고객:</strong> {selectedInquiry.user_name}
+                    <strong>고객:</strong>{' '}
+                    {selectedInquiry.anonymous_name ||
+                      selectedInquiry.user_name}
                   </p>
                   <p>
                     <strong>제목:</strong> {selectedInquiry.title}
@@ -568,7 +572,8 @@ const AdminCateringInquiry: React.FC = () => {
               </div>
               <div className="delete-inquiry-info">
                 <p>
-                  <strong>고객:</strong> {deleteInquiry.user_name}
+                  <strong>고객:</strong>{' '}
+                  {deleteInquiry.anonymous_name || deleteInquiry.user_name}
                 </p>
                 <p>
                   <strong>문의 제목:</strong> {deleteInquiry.title}
