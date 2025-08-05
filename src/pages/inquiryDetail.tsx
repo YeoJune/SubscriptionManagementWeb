@@ -241,14 +241,17 @@ const InquiryDetail: React.FC = () => {
     return inquiry.category === 'catering' ? '단체주문 문의' : '일반 문의';
   };
 
+  // 🆕 돌아갈 URL 결정
+  const getReturnUrl = () => {
+    if (inquiry?.category === 'catering') {
+      return '/catering';
+    }
+    return '/inquiry';
+  };
+
   return (
     <div className="inquiry-detail-container">
-      <button
-        className="back-button"
-        onClick={() =>
-          navigate(inquiry?.category === 'catering' ? '/catering' : '/inquiry')
-        }
-      >
+      <button className="back-button" onClick={() => navigate(getReturnUrl())}>
         <span className="back-icon">←</span>
         목록으로 돌아가기
       </button>
@@ -439,11 +442,7 @@ const InquiryDetail: React.FC = () => {
             <div className="dialog-actions">
               <button
                 className="btn-cancel"
-                onClick={() =>
-                  navigate(
-                    inquiry?.category === 'catering' ? '/catering' : '/inquiry'
-                  )
-                }
+                onClick={() => navigate(getReturnUrl())}
               >
                 취소
               </button>
