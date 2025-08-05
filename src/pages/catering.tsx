@@ -41,6 +41,11 @@ const Catering: React.FC = () => {
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
 
+  // 🆕 익명 문의 관련 상태
+  const [isAnonymous, setIsAnonymous] = useState<boolean>(false);
+  const [anonymousName, setAnonymousName] = useState<string>('');
+  const [anonymousPassword, setAnonymousPassword] = useState<string>('');
+
   // 🆕 결제 관련 상태
   const [paymentDialog, setPaymentDialog] = useState<boolean>(false);
   const [selectedInquiry, setSelectedInquiry] = useState<InquiryProps | null>(
@@ -57,11 +62,11 @@ const Catering: React.FC = () => {
   const [deleting, setDeleting] = useState<boolean>(false);
 
   useEffect(() => {
+    fetchInquiries();
     if (isAuthenticated) {
-      fetchInquiries();
       loadNicePaySDK();
     }
-  }, [currentPage, isAuthenticated]);
+  }, [currentPage]);
 
   const loadNicePaySDK = () => {
     if (window.AUTHNICE) return;
@@ -77,14 +82,13 @@ const Catering: React.FC = () => {
   const fetchInquiries = async () => {
     setLoading(true);
     try {
-      // 🔧 인증 헤더와 함께 요청 (기존 문제 해결)
+      // 🔧 category 파라미터로 케이터링 문의만 조회
       const response = await axios.get('/api/inquiries', {
         params: {
           page: currentPage,
           limit: PAGE_SIZE,
           category: 'catering',
         },
-        // 자동으로 세션 쿠키가 포함되어 전송됨
       });
 
       setInquiries(response.data.inquiries);
@@ -104,8 +108,14 @@ const Catering: React.FC = () => {
     navigate(`/inquiry/${inquiry.id}`);
   };
 
-  // 🆕 결제 모달 열기
+  // 🆕 결제 모달 열기 (로그인 사용자만)
   const handlePaymentClick = (inquiry: InquiryProps) => {
+    if (!isAuthenticated) {
+      alert('결제는 로그인 후 이용 가능합니다.');
+      navigate('/login');
+      return;
+    }
+
     setSelectedInquiry(inquiry);
     setPaymentMethod('card');
     setDepositorName('');
@@ -194,21 +204,25 @@ const Catering: React.FC = () => {
   };
 
   const handleOpenDialog = () => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
     setOpenDialog(true);
     setDialogError(null);
+    // 🔧 로그인 상태에 따라 기본 설정
+    if (!isAuthenticated) {
+      setIsAnonymous(true);
+    }
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setNewInquiry({ title: '', content: '' });
+    setAnonymousName('');
+    setAnonymousPassword('');
+    setIsAnonymous(false);
     setDialogError(null);
   };
 
   const handleSubmitInquiry = async () => {
+    // 기본 유효성 검사
     if (!newInquiry.title.trim()) {
       setDialogError('제목을 입력해주세요.');
       return;
@@ -219,14 +233,37 @@ const Catering: React.FC = () => {
       return;
     }
 
+    // 🆕 익명 문의 시 이름, 비밀번호 확인
+    if (isAnonymous) {
+      if (!anonymousName.trim()) {
+        setDialogError('이름을 입력해주세요.');
+        return;
+      }
+      if (!anonymousPassword.trim()) {
+        setDialogError('비밀번호를 입력해주세요.');
+        return;
+      }
+      if (anonymousPassword.length < 4) {
+        setDialogError('비밀번호는 4자리 이상 입력해주세요.');
+        return;
+      }
+    }
+
     setSubmitting(true);
 
     try {
-      await axios.post('/api/inquiries', {
+      // 🔧 로그인/익명 여부에 따라 다른 데이터 전송
+      const requestData = {
         title: newInquiry.title,
         content: newInquiry.content,
-        category: 'catering',
-      });
+        category: 'catering', // 케이터링 문의
+        ...(isAnonymous && {
+          anonymous_name: anonymousName.trim(),
+          anonymous_password: anonymousPassword,
+        }),
+      };
+
+      await axios.post('/api/inquiries', requestData);
 
       handleCloseDialog();
       fetchInquiries();
@@ -378,31 +415,13 @@ const Catering: React.FC = () => {
     );
   };
 
-  // 로그인하지 않은 경우
-  if (!isAuthenticated) {
-    return (
-      <div className="catering-container">
-        <div className="catering-header">
-          <div className="catering-title-section">
-            <h1 className="catering-title">단체주문/케이터링 문의</h1>
-            <p className="catering-description">
-              단체 주문이나 케이터링 서비스에 대한 문의사항을 남겨주세요.
-            </p>
-          </div>
-        </div>
-        <div className="alert alert-info">
-          단체주문 문의를 작성하고 확인하려면 로그인이 필요합니다.
-          <br />
-          <button
-            className="login-link-button"
-            onClick={() => navigate('/login')}
-          >
-            로그인하기
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // 🆕 작성자 표시 함수
+  const getAuthorDisplay = (inquiry: InquiryProps) => {
+    if (inquiry.anonymous_name) {
+      return inquiry.anonymous_name;
+    }
+    return inquiry.user_name || '****';
+  };
 
   return (
     <div className="catering-container">
@@ -437,6 +456,7 @@ const Catering: React.FC = () => {
           <table className="catering-table">
             <thead>
               <tr>
+                <th>작성자</th>
                 <th>제목</th>
                 <th className="date-column">작성일</th>
                 <th style={{ textAlign: 'center' }}>상태</th>
@@ -447,6 +467,7 @@ const Catering: React.FC = () => {
             <tbody>
               {inquiries.map((inquiry) => (
                 <tr key={inquiry.id}>
+                  <td className="author-column">{getAuthorDisplay(inquiry)}</td>
                   <td
                     className="inquiry-title"
                     onClick={() => handleInquiryClick(inquiry)}
@@ -507,7 +528,7 @@ const Catering: React.FC = () => {
         <div className="pagination">{renderPageButtons()}</div>
       )}
 
-      {/* New Catering Inquiry Dialog */}
+      {/* 🔧 New Catering Inquiry Dialog - 익명 옵션 추가 */}
       {openDialog && (
         <div className="dialog-overlay">
           <div className="dialog">
@@ -516,9 +537,75 @@ const Catering: React.FC = () => {
               {dialogError && (
                 <div className="alert alert-error">{dialogError}</div>
               )}
+
+              {/* 🆕 로그인/익명 선택 (로그인한 사용자만) */}
+              {isAuthenticated && (
+                <div className="form-group">
+                  <label className="form-label">작성 방법</label>
+                  <div className="radio-group">
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="inquiry-type"
+                        checked={!isAnonymous}
+                        onChange={() => setIsAnonymous(false)}
+                      />
+                      <span>로그인 사용자로 작성</span>
+                    </label>
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="inquiry-type"
+                        checked={isAnonymous}
+                        onChange={() => setIsAnonymous(true)}
+                      />
+                      <span>익명으로 작성</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* 🆕 익명 작성 시 이름, 비밀번호 입력 */}
+              {isAnonymous && (
+                <>
+                  <div className="form-group">
+                    <label htmlFor="anonymous-name" className="form-label">
+                      이름 *
+                    </label>
+                    <input
+                      id="anonymous-name"
+                      type="text"
+                      className="form-control"
+                      placeholder="표시될 이름을 입력해주세요"
+                      value={anonymousName}
+                      onChange={(e) => setAnonymousName(e.target.value)}
+                      maxLength={10}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="anonymous-password" className="form-label">
+                      비밀번호 *
+                    </label>
+                    <input
+                      id="anonymous-password"
+                      type="password"
+                      className="form-control"
+                      placeholder="문의 확인용 비밀번호 (4자리 이상)"
+                      value={anonymousPassword}
+                      onChange={(e) => setAnonymousPassword(e.target.value)}
+                      minLength={4}
+                      maxLength={20}
+                    />
+                    <small className="form-help">
+                      문의 내용 확인 시 필요한 비밀번호입니다
+                    </small>
+                  </div>
+                </>
+              )}
+
               <div className="form-group">
                 <label htmlFor="catering-title" className="form-label">
-                  제목
+                  제목 *
                 </label>
                 <input
                   id="catering-title"
@@ -529,12 +616,12 @@ const Catering: React.FC = () => {
                   onChange={(e) =>
                     setNewInquiry({ ...newInquiry, title: e.target.value })
                   }
-                  autoFocus
+                  autoFocus={!isAnonymous}
                 />
               </div>
               <div className="form-group">
                 <label htmlFor="catering-content" className="form-label">
-                  내용
+                  내용 *
                 </label>
                 <textarea
                   id="catering-content"
@@ -547,6 +634,19 @@ const Catering: React.FC = () => {
                   }
                 />
               </div>
+
+              {/* 🆕 익명 문의 안내 */}
+              {isAnonymous && (
+                <div className="anonymous-notice">
+                  <p>🔐 익명 단체주문 문의 안내</p>
+                  <ul>
+                    <li>입력하신 이름으로 문의가 표시됩니다</li>
+                    <li>문의 내용은 비밀번호로 보호됩니다</li>
+                    <li>비밀번호는 문의 확인/수정/삭제 시 필요합니다</li>
+                    <li>결제는 로그인 후 가능합니다</li>
+                  </ul>
+                </div>
+              )}
             </div>
             <div className="dialog-actions">
               <button

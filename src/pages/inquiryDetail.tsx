@@ -9,7 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 const InquiryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [inquiry, setInquiry] = useState<InquiryProps | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,6 +17,15 @@ const InquiryDetail: React.FC = () => {
   const [editForm, setEditForm] = useState({ title: '', content: '' });
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+
+  // 🆕 익명 문의 비밀번호 확인 관련 상태
+  const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
+  const [passwordInput, setPasswordInput] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [verifiedAnonymous, setVerifiedAnonymous] = useState<boolean>(false);
+
+  // 🆕 익명 문의 수정/삭제용 비밀번호 상태
+  const [anonymousPassword, setAnonymousPassword] = useState<string>('');
 
   useEffect(() => {
     if (!id) {
@@ -36,10 +45,57 @@ const InquiryDetail: React.FC = () => {
         content: response.data.content,
       });
       setLoading(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch inquiry:', err);
-      setError('문의 정보를 불러오는 중 오류가 발생했습니다.');
-      setLoading(false);
+
+      // 🔧 케이터링 문의의 익명 비밀번호 확인 필요
+      if (
+        err.response?.status === 403 &&
+        err.response?.data?.requiresPassword
+      ) {
+        setShowPasswordModal(true);
+        setLoading(false);
+      } else {
+        setError(
+          err.response?.data?.error ||
+            '문의 정보를 불러오는 중 오류가 발생했습니다.'
+        );
+        setLoading(false);
+      }
+    }
+  };
+
+  // 🆕 익명 비밀번호 확인
+  const verifyAnonymousPassword = async () => {
+    if (!passwordInput.trim()) {
+      setPasswordError('비밀번호를 입력해주세요.');
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `/api/inquiries/${id}/verify-anonymous`,
+        {
+          password: passwordInput.trim(),
+        }
+      );
+
+      if (response.data.success) {
+        setInquiry(response.data.inquiry);
+        setEditForm({
+          title: response.data.inquiry.title,
+          content: response.data.inquiry.content,
+        });
+        setVerifiedAnonymous(true);
+        setShowPasswordModal(false);
+        setPasswordInput('');
+        setPasswordError(null);
+      }
+    } catch (err: any) {
+      console.error('Failed to verify password:', err);
+      setPasswordError(
+        err.response?.data?.error || '비밀번호 확인 중 오류가 발생했습니다.'
+      );
     }
   };
 
@@ -55,6 +111,7 @@ const InquiryDetail: React.FC = () => {
         content: inquiry.content,
       });
     }
+    setAnonymousPassword(''); // 비밀번호 초기화
   };
 
   const handleSaveEdit = async () => {
@@ -65,12 +122,23 @@ const InquiryDetail: React.FC = () => {
       return;
     }
 
+    // 🔧 익명 문의 수정 시 비밀번호 확인
+    if (inquiry.anonymous_name && !anonymousPassword.trim()) {
+      setError('익명 문의 수정을 위해 비밀번호를 입력해주세요.');
+      return;
+    }
+
     setSubmitting(true);
     try {
-      await axios.put(`/api/inquiries/${id}`, {
+      const requestData = {
         title: editForm.title,
         content: editForm.content,
-      });
+        ...(inquiry.anonymous_name && {
+          anonymous_password: anonymousPassword,
+        }),
+      };
+
+      await axios.put(`/api/inquiries/${id}`, requestData);
 
       setInquiry({
         ...inquiry,
@@ -78,10 +146,13 @@ const InquiryDetail: React.FC = () => {
         content: editForm.content,
       });
       setEditMode(false);
+      setAnonymousPassword('');
       setError(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to update inquiry:', err);
-      setError('문의 수정 중 오류가 발생했습니다.');
+      setError(
+        err.response?.data?.error || '문의 수정 중 오류가 발생했습니다.'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -94,13 +165,25 @@ const InquiryDetail: React.FC = () => {
   const handleConfirmDelete = async () => {
     if (!id) return;
 
+    // 🔧 익명 문의 삭제 시 비밀번호 확인
+    if (inquiry?.anonymous_name && !anonymousPassword.trim()) {
+      setError('익명 문의 삭제를 위해 비밀번호를 입력해주세요.');
+      return;
+    }
+
     setSubmitting(true);
     try {
-      await axios.delete(`/api/inquiries/${id}`);
+      const requestData = inquiry?.anonymous_name
+        ? { anonymous_password: anonymousPassword }
+        : {};
+
+      await axios.delete(`/api/inquiries/${id}`, { data: requestData });
       navigate('/inquiry');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to delete inquiry:', err);
-      setError('문의 삭제 중 오류가 발생했습니다.');
+      setError(
+        err.response?.data?.error || '문의 삭제 중 오류가 발생했습니다.'
+      );
       setShowDeleteConfirm(false);
     } finally {
       setSubmitting(false);
@@ -109,11 +192,23 @@ const InquiryDetail: React.FC = () => {
 
   const handleCancelDelete = () => {
     setShowDeleteConfirm(false);
+    setAnonymousPassword(''); // 비밀번호 초기화
   };
 
+  // 🔧 수정/삭제 권한 확인
   const canEditDelete = () => {
-    if (!inquiry || !user) return false;
-    return user.isAdmin || inquiry.user_id === user.id;
+    if (!inquiry) return false;
+
+    // 관리자는 모든 문의 수정/삭제 가능
+    if (user?.isAdmin) return true;
+
+    // 로그인 사용자 본인 문의
+    if (isAuthenticated && inquiry.user_id === user?.id) return true;
+
+    // 익명 문의는 비밀번호로 확인 (verifiedAnonymous 상태 또는 비밀번호 입력 필요)
+    if (inquiry.anonymous_name) return true;
+
+    return false;
   };
 
   const formatDate = (dateString?: string) => {
@@ -131,9 +226,29 @@ const InquiryDetail: React.FC = () => {
     ));
   };
 
+  // 🆕 작성자 표시 함수
+  const getAuthorDisplay = () => {
+    if (!inquiry) return '';
+    if (inquiry.anonymous_name) {
+      return inquiry.anonymous_name;
+    }
+    return inquiry.user_name || '****';
+  };
+
+  // 🆕 카테고리 표시 함수
+  const getCategoryDisplay = () => {
+    if (!inquiry) return '';
+    return inquiry.category === 'catering' ? '단체주문 문의' : '일반 문의';
+  };
+
   return (
     <div className="inquiry-detail-container">
-      <button className="back-button" onClick={() => navigate('/inquiry')}>
+      <button
+        className="back-button"
+        onClick={() =>
+          navigate(inquiry?.category === 'catering' ? '/catering' : '/inquiry')
+        }
+      >
         <span className="back-icon">←</span>
         목록으로 돌아가기
       </button>
@@ -157,6 +272,20 @@ const InquiryDetail: React.FC = () => {
                     setEditForm({ ...editForm, title: e.target.value })
                   }
                 />
+
+                {/* 🆕 익명 문의 수정 시 비밀번호 입력 */}
+                {inquiry.anonymous_name && (
+                  <div className="anonymous-password-section">
+                    <input
+                      type="password"
+                      className="anonymous-password-input"
+                      placeholder="문의 작성 시 입력한 비밀번호"
+                      value={anonymousPassword}
+                      onChange={(e) => setAnonymousPassword(e.target.value)}
+                    />
+                  </div>
+                )}
+
                 <div className="edit-actions">
                   <button
                     className="save-button"
@@ -177,6 +306,14 @@ const InquiryDetail: React.FC = () => {
             ) : (
               <>
                 <div className="title-section">
+                  <div className="inquiry-meta">
+                    <span className="category-badge">
+                      {getCategoryDisplay()}
+                    </span>
+                    <span className="author-info">
+                      작성자: {getAuthorDisplay()}
+                    </span>
+                  </div>
                   <h1 className="inquiry-title">{inquiry.title}</h1>
                   {canEditDelete() && (
                     <div className="action-buttons">
@@ -240,6 +377,31 @@ const InquiryDetail: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* 🆕 결제 요청 정보 표시 */}
+              {inquiry.payment_requested && (
+                <div className="payment-request-info">
+                  <h3>💳 결제 요청</h3>
+                  <p>
+                    요청 금액:{' '}
+                    <strong>
+                      {inquiry.payment_amount?.toLocaleString()}원
+                    </strong>
+                  </p>
+                  {isAuthenticated ? (
+                    <button
+                      className="payment-button"
+                      onClick={() => navigate(`/catering`)}
+                    >
+                      결제하기
+                    </button>
+                  ) : (
+                    <p className="login-notice">
+                      결제는 로그인 후 이용 가능합니다.
+                    </p>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>
@@ -247,7 +409,53 @@ const InquiryDetail: React.FC = () => {
         <div className="alert alert-warning">문의를 찾을 수 없습니다.</div>
       )}
 
-      {/* 삭제 확인 다이얼로그 */}
+      {/* 🆕 익명 문의 비밀번호 입력 모달 */}
+      {showPasswordModal && (
+        <div className="dialog-overlay">
+          <div className="dialog">
+            <div className="dialog-title">비밀번호 입력</div>
+            <div className="dialog-content">
+              <p>이 문의는 비밀번호로 보호되어 있습니다.</p>
+              <p>문의 작성 시 입력한 비밀번호를 입력해주세요.</p>
+
+              {passwordError && (
+                <div className="alert alert-error">{passwordError}</div>
+              )}
+
+              <div className="form-group">
+                <input
+                  type="password"
+                  className="form-control"
+                  placeholder="비밀번호"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  onKeyPress={(e) =>
+                    e.key === 'Enter' && verifyAnonymousPassword()
+                  }
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="dialog-actions">
+              <button
+                className="btn-cancel"
+                onClick={() =>
+                  navigate(
+                    inquiry?.category === 'catering' ? '/catering' : '/inquiry'
+                  )
+                }
+              >
+                취소
+              </button>
+              <button className="btn-submit" onClick={verifyAnonymousPassword}>
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🔧 삭제 확인 다이얼로그 - 익명 비밀번호 지원 */}
       {showDeleteConfirm && (
         <div className="dialog-overlay">
           <div className="dialog">
@@ -255,6 +463,20 @@ const InquiryDetail: React.FC = () => {
             <div className="dialog-content">
               <p>정말로 이 문의를 삭제하시겠습니까?</p>
               <p>삭제된 문의는 복구할 수 없습니다.</p>
+
+              {/* 🆕 익명 문의 삭제 시 비밀번호 입력 */}
+              {inquiry?.anonymous_name && (
+                <div className="form-group">
+                  <label className="form-label">비밀번호</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="문의 작성 시 입력한 비밀번호"
+                    value={anonymousPassword}
+                    onChange={(e) => setAnonymousPassword(e.target.value)}
+                  />
+                </div>
+              )}
             </div>
             <div className="dialog-actions">
               <button

@@ -45,7 +45,7 @@ const Header: React.FC = () => {
       const response = await fetch('/api/delivery/today');
       const data = await response.json();
       const completed = data.deliveries.filter(
-        (d) => d.status === 'complete'
+        (d: { status: string }) => d.status === 'complete'
       ).length;
       const total = data.deliveries.length;
       setTodayDeliveryCount({ completed, total });
@@ -91,10 +91,11 @@ const Header: React.FC = () => {
             <span className="sal-menu-icon"></span>
           </button>
 
-          {/* 중앙 영역: 4개의 주요 카테고리 네비게이션 메뉴 */}
+          {/* 🔧 중앙 영역: 메뉴 구조 변경 */}
           <nav
             className={`sal-nav-section ${mobileMenuOpen ? 'sal-menu-open' : ''}`}
           >
+            {/* 공통 메뉴 (모든 사용자) */}
             <Link
               to="/"
               className={`sal-nav-button ${isActive('/') || isActive('/board') ? 'sal-active-nav-button' : ''}`}
@@ -110,30 +111,31 @@ const Header: React.FC = () => {
               정기배송신청
             </Link>
 
+            {/* 🆕 문의 메뉴 (모든 사용자 접근 가능) */}
+            <Link
+              to="/catering"
+              className={`sal-nav-button ${isActive('/catering') ? 'sal-active-nav-button' : ''}`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              단체주문 문의
+            </Link>
+            <Link
+              to="/inquiry"
+              className={`sal-nav-button ${isActive('/inquiry') ? 'sal-active-nav-button' : ''}`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              불편/건의 사항
+            </Link>
+
+            {/* 🔧 로그인 사용자 전용 메뉴 */}
             {isAuthenticated && (
-              <>
-                <Link
-                  to="/profile"
-                  className={`sal-nav-button ${isActive('/profile') ? 'sal-active-nav-button' : ''}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  내 프로필
-                </Link>
-                <Link
-                  to="/inquiry"
-                  className={`sal-nav-button ${isActive('/inquiry') ? 'sal-active-nav-button' : ''}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  불편/건의 사항
-                </Link>
-                <Link
-                  to="/catering"
-                  className={`sal-nav-button ${isActive('/catering') ? 'sal-active-nav-button' : ''}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  단체주문 문의
-                </Link>
-              </>
+              <Link
+                to="/profile"
+                className={`sal-nav-button ${isActive('/profile') ? 'sal-active-nav-button' : ''}`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                내 프로필
+              </Link>
             )}
 
             {/* 관리자 메뉴 (관리자만 표시) */}

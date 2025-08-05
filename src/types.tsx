@@ -52,6 +52,9 @@ export interface InquiryProps {
   payment_requested?: boolean;
   payment_amount?: number;
   payment_requested_at?: string;
+  anonymous_name?: string; // 익명 문의용 이름
+  anonymous_password?: string; // 익명 문의용 비밀번호
+  category?: 'general' | 'catering';
 }
 
 export interface ProductProps {

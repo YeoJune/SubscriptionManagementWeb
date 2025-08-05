@@ -21,6 +21,10 @@ const Inquiry: React.FC = () => {
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
 
+  // 🆕 익명 문의 관련 상태
+  const [isAnonymous, setIsAnonymous] = useState<boolean>(false);
+  const [anonymousName, setAnonymousName] = useState<string>('');
+
   useEffect(() => {
     fetchInquiries();
   }, [currentPage]);
@@ -28,8 +32,13 @@ const Inquiry: React.FC = () => {
   const fetchInquiries = async () => {
     setLoading(true);
     try {
+      // 🔧 category 파라미터 추가하여 일반 문의만 조회
       const response = await axios.get('/api/inquiries', {
-        params: { page: currentPage, limit: PAGE_SIZE },
+        params: {
+          page: currentPage,
+          limit: PAGE_SIZE,
+          category: 'general', // 일반 문의만 조회
+        },
       });
 
       setInquiries(response.data.inquiries);
@@ -50,21 +59,24 @@ const Inquiry: React.FC = () => {
   };
 
   const handleOpenDialog = () => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
     setOpenDialog(true);
     setDialogError(null);
+    // 🔧 로그인 상태에 따라 기본 설정
+    if (!isAuthenticated) {
+      setIsAnonymous(true);
+    }
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setNewInquiry({ title: '', content: '' });
+    setAnonymousName('');
+    setIsAnonymous(false);
     setDialogError(null);
   };
 
   const handleSubmitInquiry = async () => {
+    // 기본 유효성 검사
     if (!newInquiry.title.trim()) {
       setDialogError('제목을 입력해주세요.');
       return;
@@ -75,13 +87,24 @@ const Inquiry: React.FC = () => {
       return;
     }
 
+    // 🆕 익명 문의 시 이름 확인
+    if (isAnonymous && !anonymousName.trim()) {
+      setDialogError('이름을 입력해주세요.');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      await axios.post('/api/inquiries', {
+      // 🔧 로그인/익명 여부에 따라 다른 데이터 전송
+      const requestData = {
         title: newInquiry.title,
         content: newInquiry.content,
-      });
+        category: 'general', // 일반 문의
+        ...(isAnonymous && { anonymous_name: anonymousName.trim() }),
+      };
+
+      await axios.post('/api/inquiries', requestData);
 
       handleCloseDialog();
       fetchInquiries();
@@ -111,6 +134,14 @@ const Inquiry: React.FC = () => {
     return buttons;
   };
 
+  // 🆕 작성자 표시 함수
+  const getAuthorDisplay = (inquiry: InquiryProps) => {
+    if (inquiry.anonymous_name) {
+      return inquiry.anonymous_name;
+    }
+    return inquiry.user_name || '****';
+  };
+
   return (
     <div className="inquiry-container">
       <div className="inquiry-header">
@@ -135,6 +166,7 @@ const Inquiry: React.FC = () => {
           <table className="inquiry-table">
             <thead>
               <tr>
+                <th>작성자</th>
                 <th>제목</th>
                 <th className="date-column">작성일</th>
                 <th style={{ textAlign: 'center' }}>상태</th>
@@ -146,6 +178,7 @@ const Inquiry: React.FC = () => {
                   key={inquiry.id}
                   onClick={() => handleInquiryClick(inquiry)}
                 >
+                  <td className="author-column">{getAuthorDisplay(inquiry)}</td>
                   <td>{inquiry.title}</td>
                   <td className="date-column">
                     {new Date(inquiry.created_at).toLocaleDateString()}
@@ -173,7 +206,7 @@ const Inquiry: React.FC = () => {
         <div className="pagination">{renderPageButtons()}</div>
       )}
 
-      {/* New Inquiry Dialog */}
+      {/* 🔧 New Inquiry Dialog - 익명 옵션 추가 */}
       {openDialog && (
         <div className="dialog-overlay">
           <div className="dialog">
@@ -182,9 +215,55 @@ const Inquiry: React.FC = () => {
               {dialogError && (
                 <div className="alert alert-error">{dialogError}</div>
               )}
+
+              {/* 🆕 로그인/익명 선택 (로그인한 사용자만) */}
+              {isAuthenticated && (
+                <div className="form-group">
+                  <label className="form-label">작성 방법</label>
+                  <div className="radio-group">
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="inquiry-type"
+                        checked={!isAnonymous}
+                        onChange={() => setIsAnonymous(false)}
+                      />
+                      <span>로그인 사용자로 작성</span>
+                    </label>
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="inquiry-type"
+                        checked={isAnonymous}
+                        onChange={() => setIsAnonymous(true)}
+                      />
+                      <span>익명으로 작성</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* 🆕 익명 작성 시 이름 입력 */}
+              {isAnonymous && (
+                <div className="form-group">
+                  <label htmlFor="anonymous-name" className="form-label">
+                    이름 *
+                  </label>
+                  <input
+                    id="anonymous-name"
+                    type="text"
+                    className="form-control"
+                    placeholder="표시될 이름을 입력해주세요"
+                    value={anonymousName}
+                    onChange={(e) => setAnonymousName(e.target.value)}
+                    maxLength={10}
+                  />
+                </div>
+              )}
+
               <div className="form-group">
                 <label htmlFor="inquiry-title" className="form-label">
-                  제목
+                  제목 *
                 </label>
                 <input
                   id="inquiry-title"
@@ -194,12 +273,12 @@ const Inquiry: React.FC = () => {
                   onChange={(e) =>
                     setNewInquiry({ ...newInquiry, title: e.target.value })
                   }
-                  autoFocus
+                  autoFocus={!isAnonymous}
                 />
               </div>
               <div className="form-group">
                 <label htmlFor="inquiry-content" className="form-label">
-                  내용
+                  내용 *
                 </label>
                 <textarea
                   id="inquiry-content"
@@ -211,6 +290,18 @@ const Inquiry: React.FC = () => {
                   }
                 />
               </div>
+
+              {/* 🆕 익명 문의 안내 */}
+              {isAnonymous && (
+                <div className="anonymous-notice">
+                  <p>📝 익명 문의 안내</p>
+                  <ul>
+                    <li>입력하신 이름으로 문의가 표시됩니다</li>
+                    <li>모든 사용자가 내용을 열람할 수 있습니다</li>
+                    <li>수정/삭제가 제한될 수 있습니다</li>
+                  </ul>
+                </div>
+              )}
             </div>
             <div className="dialog-actions">
               <button
