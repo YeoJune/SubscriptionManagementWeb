@@ -31,6 +31,7 @@ router.get('/', checkAdmin, async (req, res) => {
     let query = `
       SELECT d.id, d.user_id, u.name AS user_name, d.status, d.date, d.product_id, 
              p.name AS product_name, u.phone_number, u.address, d.special_request,
+             d.delivery_sequence, 
              pay.delivery_info
       FROM delivery_list d
       JOIN product p ON d.product_id = p.id
@@ -454,6 +455,36 @@ router.put(
 
       res.json({
         message: '배송 날짜가 성공적으로 수정되었습니다.',
+        delivery: result,
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+// 🆕 PUT /api/delivery/users/:userId/schedule/:deliveryId/sequence (admin) - 순서 수정
+router.put(
+  '/users/:userId/schedule/:deliveryId/sequence',
+  checkAdmin,
+  async (req, res) => {
+    try {
+      const { deliveryId } = req.params;
+      const { sequence } = req.body;
+
+      if (!sequence || sequence < 1) {
+        return res.status(400).json({
+          error: '순서는 1 이상의 숫자여야 합니다.',
+        });
+      }
+
+      const result = await deliveryManager.updateDeliverySequence(
+        deliveryId,
+        sequence
+      );
+
+      res.json({
+        message: '배송 순서가 성공적으로 수정되었습니다.',
         delivery: result,
       });
     } catch (error) {

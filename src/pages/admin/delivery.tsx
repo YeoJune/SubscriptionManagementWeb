@@ -95,6 +95,13 @@ const Delivery: React.FC = () => {
   const [editingDate, setEditingDate] = useState<string>('');
   const [openEditDialog, setOpenEditDialog] = useState(false);
 
+  // 🆕 순서 수정 관련 상태들 추가
+  const [editingSequenceId, setEditingSequenceId] = useState<number | null>(
+    null
+  );
+  const [editingSequence, setEditingSequence] = useState<number>(1);
+  const [openSequenceDialog, setOpenSequenceDialog] = useState(false);
+
   // 배송 추가 관련 상태
   const [products, setProducts] = useState<Product[]>([]);
   const [usersPage, setUsersPage] = useState(1);
@@ -327,6 +334,46 @@ const Delivery: React.FC = () => {
       console.error('Failed to update delivery date:', err);
       setScheduleError(
         err.response?.data?.error || '배송 날짜 수정 중 오류가 발생했습니다.'
+      );
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
+
+  // 🆕 순서 수정 관련 함수들 추가
+  const handleOpenSequenceDialog = (
+    deliveryId: number,
+    currentSequence?: number
+  ) => {
+    setEditingSequenceId(deliveryId);
+    setEditingSequence(currentSequence || 1);
+    setOpenSequenceDialog(true);
+  };
+
+  const handleCloseSequenceDialog = () => {
+    setOpenSequenceDialog(false);
+    setEditingSequenceId(null);
+    setEditingSequence(1);
+  };
+
+  const handleUpdateSequence = async () => {
+    if (!selectedUser || !editingSequenceId || !editingSequence) return;
+
+    setScheduleLoading(true);
+    setScheduleError(null);
+
+    try {
+      await axios.put(
+        `/api/delivery/users/${selectedUser.user.id}/schedule/${editingSequenceId}/sequence`,
+        { sequence: editingSequence }
+      );
+
+      await fetchUserSchedule(selectedUser.user.id);
+      handleCloseSequenceDialog();
+    } catch (err: any) {
+      console.error('Failed to update delivery sequence:', err);
+      setScheduleError(
+        err.response?.data?.error || '배송 순서 수정 중 오류가 발생했습니다.'
       );
     } finally {
       setScheduleLoading(false);
@@ -634,7 +681,11 @@ const Delivery: React.FC = () => {
                           <td>
                             {new Date(delivery.date).toLocaleDateString()}
                           </td>
-                          <td>{delivery.product_name}</td>
+                          <td>
+                            {delivery.product_name}
+                            {delivery.delivery_sequence &&
+                              `(${delivery.delivery_sequence})`}
+                          </td>
                           <td className="hide-xs">{delivery.phone_number}</td>
                           <td className="hide-sm">
                             <div className="address-info">
@@ -888,7 +939,11 @@ const Delivery: React.FC = () => {
                       <div key={delivery.id} className="schedule-item">
                         <div className="schedule-info">
                           <strong>{delivery.date}</strong>
-                          <span>{delivery.product_name}</span>
+                          <span>
+                            {delivery.product_name}
+                            {delivery.delivery_sequence &&
+                              `(${delivery.delivery_sequence})`}
+                          </span>
                         </div>
                         <div className="schedule-actions">
                           <button
@@ -898,7 +953,20 @@ const Delivery: React.FC = () => {
                             }
                             title="날짜 수정"
                           >
-                            수정
+                            날짜
+                          </button>
+                          {/* 🆕 순서 수정 버튼 추가 */}
+                          <button
+                            className="action-button edit-button"
+                            onClick={() =>
+                              handleOpenSequenceDialog(
+                                delivery.id,
+                                delivery.delivery_sequence
+                              )
+                            }
+                            title="순서 수정"
+                          >
+                            순서
                           </button>
                           <button
                             className="action-button error-button"
@@ -930,7 +998,11 @@ const Delivery: React.FC = () => {
                         >
                           <div className="schedule-info">
                             <strong>{delivery.date}</strong>
-                            <span>{delivery.product_name}</span>
+                            <span>
+                              {delivery.product_name}
+                              {delivery.delivery_sequence &&
+                                `(${delivery.delivery_sequence})`}
+                            </span>
                           </div>
                           <span className="status-chip status-success">
                             완료
@@ -1299,6 +1371,47 @@ const Delivery: React.FC = () => {
                 className="confirm-button confirm-success"
                 onClick={handleUpdateDeliveryDate}
                 disabled={!editingDate || scheduleLoading}
+              >
+                {scheduleLoading ? '처리중...' : '수정'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🆕 순서 수정 다이얼로그 */}
+      {openSequenceDialog && editingSequenceId && (
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <h2 className="modal-title">배송 순서 수정</h2>
+            <div className="modal-body">
+              <div className="form-control">
+                <label htmlFor="sequence-input">순서 번호</label>
+                <input
+                  id="sequence-input"
+                  type="number"
+                  min="1"
+                  value={editingSequence}
+                  onChange={(e) => setEditingSequence(Number(e.target.value))}
+                />
+                <small className="form-hint">
+                  1부터 시작하는 숫자를 입력하세요. (예: 1, 2, 3...)
+                </small>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button
+                className="cancel-button"
+                onClick={handleCloseSequenceDialog}
+              >
+                취소
+              </button>
+              <button
+                className="confirm-button confirm-success"
+                onClick={handleUpdateSequence}
+                disabled={
+                  !editingSequence || editingSequence < 1 || scheduleLoading
+                }
               >
                 {scheduleLoading ? '처리중...' : '수정'}
               </button>
