@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import './profile.css';
 import { useAuth } from '../hooks/useAuth';
-import UserCard from '../components/userCard';
 import axios from 'axios';
 import { DeliveryProps } from '../types';
 
@@ -24,6 +23,18 @@ const Profile: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [paymentLoading, setPaymentLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [editForm, setEditForm] = useState<{
+    name: string;
+    phone_number: string;
+    email: string;
+    address: string;
+  }>({
+    name: '',
+    phone_number: '',
+    email: '',
+    address: '',
+  });
 
   console.log(user);
 
@@ -31,8 +42,17 @@ const Profile: React.FC = () => {
     if (isAuthenticated) {
       fetchDeliveries();
       fetchPayments();
+      // 편집 폼 초기화
+      if (user) {
+        setEditForm({
+          name: user.name || '',
+          phone_number: user.phone_number || '',
+          email: user.email || '',
+          address: user.address || '',
+        });
+      }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   const fetchDeliveries = async () => {
     try {
@@ -56,6 +76,44 @@ const Profile: React.FC = () => {
     } finally {
       setPaymentLoading(false);
     }
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!user) return;
+
+    try {
+      const response = await fetch(`/api/users/${user.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(editForm),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || '프로필 업데이트에 실패했습니다.');
+      }
+
+      // 업데이트 성공 후 페이지 새로고침 또는 상태 업데이트
+      window.location.reload();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleEditToggle = () => {
+    if (isEditing && user) {
+      // 취소 시 원래 값으로 되돌리기
+      setEditForm({
+        name: user.name || '',
+        phone_number: user.phone_number || '',
+        email: user.email || '',
+        address: user.address || '',
+      });
+    }
+    setIsEditing(!isEditing);
   };
 
   // 배송 상태별 클래스명 및 라벨
@@ -114,11 +172,104 @@ const Profile: React.FC = () => {
 
   return (
     <div className="profile-container">
-      <h1 className="profile-title">내 프로필</h1>
+      <div className="profile-header">
+        <h1 className="profile-title">내 프로필</h1>
+        <div className="profile-actions">
+          {isEditing ? (
+            <>
+              <button className="save-button" onClick={handleUpdateProfile}>
+                저장
+              </button>
+              <button className="cancel-button" onClick={handleEditToggle}>
+                취소
+              </button>
+            </>
+          ) : (
+            <button className="edit-button" onClick={handleEditToggle}>
+              수정
+            </button>
+          )}
+        </div>
+      </div>
 
       <div className="profile-grid">
-        <div>
-          <UserCard user={user} />
+        <div className="profile-card">
+          <div className="profile-card-content">
+            <h3 className="profile-card-title">개인 정보</h3>
+            <div className="profile-info">
+              <div className="info-item">
+                <label>사용자 ID:</label>
+                <span>{user.id}</span>
+              </div>
+              <div className="info-item">
+                <label>이름:</label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, name: e.target.value })
+                    }
+                    className="edit-input"
+                    placeholder="이름을 입력하세요"
+                  />
+                ) : (
+                  <span>{user.name || '-'}</span>
+                )}
+              </div>
+              <div className="info-item">
+                <label>전화번호:</label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editForm.phone_number}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        phone_number: e.target.value,
+                      })
+                    }
+                    className="edit-input"
+                    placeholder="전화번호를 입력하세요"
+                  />
+                ) : (
+                  <span>{user.phone_number}</span>
+                )}
+              </div>
+              <div className="info-item">
+                <label>이메일:</label>
+                {isEditing ? (
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, email: e.target.value })
+                    }
+                    className="edit-input"
+                    placeholder="이메일을 입력하세요"
+                  />
+                ) : (
+                  <span>{user.email || '-'}</span>
+                )}
+              </div>
+              <div className="info-item">
+                <label>주소:</label>
+                {isEditing ? (
+                  <textarea
+                    value={editForm.address}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, address: e.target.value })
+                    }
+                    className="edit-textarea"
+                    placeholder="주소를 입력하세요"
+                    rows={2}
+                  />
+                ) : (
+                  <span>{user.address || '-'}</span>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="profile-card">

@@ -52,6 +52,18 @@ const AdminUserDetail: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [deliveryLoading, setDeliveryLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [editForm, setEditForm] = useState<{
+    name: string;
+    phone_number: string;
+    email: string;
+    address: string;
+  }>({
+    name: '',
+    phone_number: '',
+    email: '',
+    address: '',
+  });
 
   useEffect(() => {
     if (!isAuthenticated || !user?.isAdmin) {
@@ -80,6 +92,13 @@ const AdminUserDetail: React.FC = () => {
 
       const data = await response.json();
       setUserDetail(data);
+      // 편집 폼 초기화
+      setEditForm({
+        name: data.name || '',
+        phone_number: data.phone_number || '',
+        email: data.email || '',
+        address: data.address || '',
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -108,6 +127,48 @@ const AdminUserDetail: React.FC = () => {
     } finally {
       setDeliveryLoading(false);
     }
+  };
+
+  const handleUpdateUser = async () => {
+    if (!id) return;
+
+    try {
+      const response = await fetch(`/api/users/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(editForm),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || '사용자 정보 업데이트에 실패했습니다.');
+      }
+
+      // 업데이트 성공 후 다시 조회
+      await fetchUserDetail(id);
+      setIsEditing(false);
+      alert('사용자 정보가 성공적으로 업데이트되었습니다.');
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // 취소 시 원래 값으로 되돌리기
+      if (userDetail) {
+        setEditForm({
+          name: userDetail.name || '',
+          phone_number: userDetail.phone_number || '',
+          email: userDetail.email || '',
+          address: userDetail.address || '',
+        });
+      }
+    }
+    setIsEditing(!isEditing);
   };
 
   const getStatusBadge = (status: string) => {
@@ -182,6 +243,22 @@ const AdminUserDetail: React.FC = () => {
           목록으로 돌아가기
         </button>
         <h1 className="page-title">사용자 상세 정보</h1>
+        <div className="action-buttons">
+          {isEditing ? (
+            <>
+              <button className="save-button" onClick={handleUpdateUser}>
+                저장
+              </button>
+              <button className="cancel-button" onClick={handleEditToggle}>
+                취소
+              </button>
+            </>
+          ) : (
+            <button className="edit-button" onClick={handleEditToggle}>
+              수정
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="content-grid">
@@ -192,28 +269,66 @@ const AdminUserDetail: React.FC = () => {
             <label>사용자 ID:</label>
             <span>{userDetail.id}</span>
           </div>
-          {userDetail.name && (
-            <div className="info-item">
-              <label>이름:</label>
-              <span>{userDetail.name}</span>
-            </div>
-          )}
+          <div className="info-item">
+            <label>이름:</label>
+            {isEditing ? (
+              <input
+                type="text"
+                value={editForm.name}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, name: e.target.value })
+                }
+                className="edit-input"
+              />
+            ) : (
+              <span>{userDetail.name || '-'}</span>
+            )}
+          </div>
           <div className="info-item">
             <label>전화번호:</label>
-            <span>{userDetail.phone_number}</span>
+            {isEditing ? (
+              <input
+                type="text"
+                value={editForm.phone_number}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, phone_number: e.target.value })
+                }
+                className="edit-input"
+              />
+            ) : (
+              <span>{userDetail.phone_number}</span>
+            )}
           </div>
-          {userDetail.email && (
-            <div className="info-item">
-              <label>이메일:</label>
-              <span>{userDetail.email}</span>
-            </div>
-          )}
-          {userDetail.address && (
-            <div className="info-item">
-              <label>주소:</label>
-              <span>{userDetail.address}</span>
-            </div>
-          )}
+          <div className="info-item">
+            <label>이메일:</label>
+            {isEditing ? (
+              <input
+                type="email"
+                value={editForm.email}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, email: e.target.value })
+                }
+                className="edit-input"
+              />
+            ) : (
+              <span>{userDetail.email || '-'}</span>
+            )}
+          </div>
+          <div className="info-item">
+            <label>주소:</label>
+            {isEditing ? (
+              <textarea
+                value={editForm.address}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, address: e.target.value })
+                }
+                className="edit-textarea"
+                rows={2}
+              />
+            ) : (
+              <span>{userDetail.address || '-'}</span>
+            )}
+          </div>
           <div className="info-item">
             <label>가입일:</label>
             <span>{new Date(userDetail.created_at).toLocaleDateString()}</span>

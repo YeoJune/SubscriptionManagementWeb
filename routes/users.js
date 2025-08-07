@@ -22,7 +22,6 @@ CREATE TABLE IF NOT EXISTS users (
 */
 
 // GET /api/users (admin) - 사용자 목록 조회
-// GET /api/users (admin) - 사용자 목록 조회 (수정된 버전)
 router.get('/', checkAdmin, (req, res) => {
   try {
     // 페이지네이션 처리
@@ -126,10 +125,24 @@ router.get('/', checkAdmin, (req, res) => {
   }
 });
 
-// GET /api/users/:id (admin) - 특정 사용자 정보 조회
-router.get('/:id', checkAdmin, (req, res) => {
+// GET /api/users/:id - 특정 사용자 정보 조회 (관리자 또는 본인)
+router.get('/:id', (req, res) => {
   try {
     const { id } = req.params;
+
+    // 인증 확인
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({ error: '로그인이 필요합니다.' });
+    }
+
+    const currentUser = req.session.user;
+    const isAdmin = currentUser.isAdmin;
+    const isOwner = currentUser.id === id;
+
+    // 관리자이거나 본인인 경우만 허용
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: '권한이 없습니다.' });
+    }
 
     // 사용자 기본 정보
     db.get(
@@ -178,12 +191,26 @@ router.get('/:id', checkAdmin, (req, res) => {
   }
 });
 
-// PUT /api/users/:id (admin) - 사용자 정보 수정
-router.put('/:id', checkAdmin, (req, res) => {
+// PUT /api/users/:id - 사용자 정보 수정 (관리자 또는 본인)
+router.put('/:id', (req, res) => {
   try {
     const { id } = req.params;
     const { name, phone_number, email, address, password, product_deliveries } =
       req.body;
+
+    // 인증 확인
+    if (!req.session || !req.session.user) {
+      return res.status(401).json({ error: '로그인이 필요합니다.' });
+    }
+
+    const currentUser = req.session.user;
+    const isAdmin = currentUser.isAdmin;
+    const isOwner = currentUser.id === id;
+
+    // 관리자이거나 본인인 경우만 허용
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: '권한이 없습니다.' });
+    }
 
     // 트랜잭션 시작
     db.run('BEGIN TRANSACTION', async (err) => {
@@ -222,8 +249,12 @@ router.put('/:id', checkAdmin, (req, res) => {
           });
         }
 
-        // 2. 상품별 배송 횟수 업데이트 (제공된 경우)
+        // 2. 상품별 배송 횟수 업데이트 (관리자만 가능)
         if (product_deliveries && Array.isArray(product_deliveries)) {
+          if (!isAdmin) {
+            throw new Error('상품별 배송 횟수는 관리자만 수정할 수 있습니다.');
+          }
+
           for (const item of product_deliveries) {
             const { product_id, remaining_count } = item;
 
