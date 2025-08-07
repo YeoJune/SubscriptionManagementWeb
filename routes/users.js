@@ -80,7 +80,7 @@ router.get('/', checkAdmin, (req, res) => {
     const countParams = [];
 
     if (searchTerm) {
-      const searchCondition = ` WHERE u.phone_number LIKE ? OR u.id LIKE ? OR u.name LIKE ? OR u.email LIKE ?`;
+      const searchCondition = ` WHERE (u.phone_number LIKE ? OR u.id LIKE ? OR COALESCE(u.name, '') LIKE ? OR COALESCE(u.email, '') LIKE ?)`;
       query += searchCondition;
       countQuery += searchCondition;
 
