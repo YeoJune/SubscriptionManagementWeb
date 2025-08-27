@@ -1,4 +1,4 @@
-// src/components/DeliveryCalendar.tsx - requiredCount 2배 제한
+// src/components/DeliveryCalendar.tsx - 백엔드에서 모든 날짜 계산 처리
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './DeliveryCalendar.css';
@@ -26,7 +26,7 @@ const DeliveryCalendar: React.FC<DeliveryCalendarProps> = ({
     setLoading(true);
     try {
       const monthStr = currentMonth.toISOString().slice(0, 7);
-      // requiredCount 파라미터를 전달하여 API에서 2배까지만 날짜 제한
+      // 백엔드에서 사용자 권한을 확인하여 모든 available dates 계산
       const response = await axios.get(
         `/api/delivery/available-dates?month=${monthStr}&required_count=${requiredCount}`
       );
@@ -74,7 +74,6 @@ const DeliveryCalendar: React.FC<DeliveryCalendarProps> = ({
     startDate.setDate(startDate.getDate() - firstDay.getDay());
 
     const days = [];
-    const today = formatDateLocal(new Date());
 
     for (let i = 0; i < 42; i++) {
       const date = new Date(startDate);
@@ -83,15 +82,14 @@ const DeliveryCalendar: React.FC<DeliveryCalendarProps> = ({
       const isCurrentMonth = date.getMonth() === month;
       const isAvailable = availableDates.includes(dateStr);
       const isSelected = selectedDates.includes(dateStr);
-      const isPast = dateStr < today;
 
       days.push(
         <div
           key={dateStr}
           className={`calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${
-            isAvailable && !isPast ? 'available' : 'disabled'
+            isAvailable ? 'available' : 'disabled'
           } ${isSelected ? 'selected' : ''}`}
-          onClick={() => isAvailable && !isPast && handleDateClick(dateStr)}
+          onClick={() => isAvailable && handleDateClick(dateStr)}
         >
           {date.getDate()}
         </div>

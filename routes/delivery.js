@@ -185,47 +185,45 @@ router.get('/my', authMiddleware, async (req, res) => {
   }
 });
 
-// GET /api/delivery/available-dates - requiredCount 기반 날짜 제한 (배송 가능일 기준)
+// GET /api/delivery/available-dates - 백엔드에서 권한 기반 날짜 계산
 router.get('/available-dates', authMiddleware, async (req, res) => {
   try {
     const user_id = req.session.user.id;
+    const isAdmin = req.session.user.isAdmin; // 세션에서 관리자 권한 확인
     const { month, required_count } = req.query;
 
     // month가 없으면 현재 월 사용
     const targetMonth = month || new Date().toISOString().slice(0, 7);
-
-    // required_count가 있으면 이를 기준으로 최대 선택 가능 날짜 계산
     const requiredCount = required_count ? parseInt(required_count) : 0;
 
     // 이미 예약된 배송 일정 조회
     const scheduledDeliveries =
       await deliveryManager.getScheduledDeliveries(user_id);
 
-    // 환경변수에서 배송 가능 요일 가져오기
-    const deliveryDays = getDeliveryDays();
+    // 권한에 따른 사용 가능한 배송 요일 가져오기
+    const availableDays = deliveryManager.getAvailableDeliveryDays(isAdmin);
 
-    // 배송 가능한 날짜를 기준으로 최대 선택 가능 개수 계산
-    const maxSelectableCount = requiredCount * 2 * 100; // 임시 (60일 제한만 적용)
-
-    // 날짜 필터링 로직 - 가능한 날짜부터 세기
+    // 배송 가능한 날짜 계산
     const availableDates = [];
     const today = new Date();
     let currentDate = new Date(today);
-    let foundDates = 0;
 
-    // 충분한 날짜를 찾을 때까지 앞으로 진행 (최대 60일)
+    // 관리자는 당일부터, 일반 사용자는 내일부터
+    if (!isAdmin) {
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    const maxSelectableCount = requiredCount * 2 * 100; // 기존 로직 유지
     const maxDaysToCheck = 60;
+    let foundDates = 0;
     let daysChecked = 0;
 
     while (foundDates < maxSelectableCount && daysChecked < maxDaysToCheck) {
-      currentDate.setDate(currentDate.getDate() + 1);
-      daysChecked++;
-
       const dayOfWeek = currentDate.getDay();
-      const formattedDate = currentDate.toISOString().split('T')[0];
+      const formattedDate = currentDate.toLocaleDateString('sv-SE');
 
       // 배송 가능 요일인지 확인
-      if (deliveryDays.includes(dayOfWeek)) {
+      if (availableDays.includes(dayOfWeek)) {
         // 이미 예약된 날짜가 아닌지 확인
         const isScheduled = scheduledDeliveries.some(
           (delivery) => delivery.date === formattedDate
@@ -236,12 +234,15 @@ router.get('/available-dates', authMiddleware, async (req, res) => {
           foundDates++;
         }
       }
+
+      currentDate.setDate(currentDate.getDate() + 1);
+      daysChecked++;
     }
 
     // 요청된 월에 해당하는 날짜만 필터링
     const [year, monthNum] = targetMonth.split('-');
     const targetYear = parseInt(year);
-    const targetMonthNum = parseInt(monthNum) - 1; // 0부터 시작
+    const targetMonthNum = parseInt(monthNum) - 1;
 
     const monthFilteredDates = availableDates.filter((dateStr) => {
       const date = new Date(dateStr);
@@ -256,6 +257,7 @@ router.get('/available-dates', authMiddleware, async (req, res) => {
       total_available_dates: availableDates.length,
       scheduled_deliveries: scheduledDeliveries.length,
       required_count: requiredCount,
+      is_admin: isAdmin, // 디버깅용
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
