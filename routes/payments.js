@@ -616,7 +616,7 @@ router.get('/', authMiddleware, (req, res) => {
   }
 });
 
-// GET /api/payments/admin/stats
+// GET /api/payments/admin/stats - 기존 API에 available_months 추가
 router.get('/admin/stats', checkAdmin, (req, res) => {
   try {
     const { date_from, date_to, month, year } = req.query;
@@ -640,6 +640,7 @@ router.get('/admin/stats', checkAdmin, (req, res) => {
       whereClause = ` WHERE ${conditions.join(' AND ')}`;
     }
 
+    // 기존 통계 쿼리
     const statsQuery = `
       SELECT 
         COUNT(*) as total_payments,
@@ -653,21 +654,120 @@ router.get('/admin/stats', checkAdmin, (req, res) => {
       FROM payments${whereClause}
     `;
 
+    // 🆕 실제 데이터가 있는 년-월 목록 쿼리
+    const availableMonthsQuery = `
+      SELECT DISTINCT strftime('%Y-%m', created_at) as month
+      FROM payments
+      WHERE created_at IS NOT NULL
+      ORDER BY month DESC
+    `;
+
+    // 두 쿼리를 병렬로 실행
     db.get(statsQuery, params, (err, stats) => {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
 
+      db.all(availableMonthsQuery, [], (monthErr, monthsResult) => {
+        if (monthErr) {
+          console.error('월별 데이터 조회 오류:', monthErr);
+          // 오류가 있어도 기본 통계는 반환
+        }
+
+        const availableMonths = monthsResult
+          ? monthsResult.map((row) => ({
+              value: row.month,
+              label: row.month,
+              year: parseInt(row.month.split('-')[0]),
+              month: parseInt(row.month.split('-')[1]),
+            }))
+          : [];
+
+        res.json({
+          stats: {
+            total_payments: stats.total_payments || 0,
+            completed_payments: stats.completed_payments || 0,
+            failed_payments: stats.failed_payments || 0,
+            pending_payments: stats.pending_payments || 0,
+            total_amount: stats.total_amount || 0,
+            avg_amount: stats.avg_amount || 0,
+            cash_payments: stats.cash_payments || 0,
+            cash_amount: stats.cash_amount || 0,
+          },
+          available_months: availableMonths,
+        });
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 🆕 새로운 API: 결제 전체 통계 (필터 조건 적용)
+router.get('/admin/total-stats', checkAdmin, (req, res) => {
+  try {
+    const { search, status, date_from, date_to } = req.query;
+
+    let query = `
+      SELECT 
+        COUNT(*) as total_payments,
+        COUNT(CASE WHEN p.status = 'completed' THEN 1 END) as completed_payments,
+        COUNT(CASE WHEN p.status = 'cash_pending' THEN 1 END) as cash_pending_payments,
+        SUM(CASE WHEN p.status = 'completed' THEN p.amount ELSE 0 END) as total_amount
+      FROM payments p
+      JOIN users u ON p.user_id = u.id
+      LEFT JOIN product pr ON p.product_id = pr.id AND p.product_id >= 0
+      LEFT JOIN inquiries i ON p.product_id = -i.id AND p.product_id < 0
+    `;
+
+    const conditions = [];
+    const params = [];
+
+    if (status) {
+      conditions.push(`p.status = ?`);
+      params.push(status);
+    }
+
+    if (date_from) {
+      conditions.push(`DATE(p.created_at) >= ?`);
+      params.push(date_from);
+    }
+
+    if (date_to) {
+      conditions.push(`DATE(p.created_at) <= ?`);
+      params.push(date_to);
+    }
+
+    if (search) {
+      conditions.push(
+        `(u.name LIKE ? OR u.phone_number LIKE ? OR p.order_id LIKE ? OR 
+          pr.name LIKE ? OR i.title LIKE ? OR u.id LIKE ?)`
+      );
+      params.push(
+        `%${search}%`,
+        `%${search}%`,
+        `%${search}%`,
+        `%${search}%`,
+        `%${search}%`,
+        `%${search}%`
+      );
+    }
+
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    db.get(query, params, (err, result) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
       res.json({
-        stats: {
-          total_payments: stats.total_payments || 0,
-          completed_payments: stats.completed_payments || 0,
-          failed_payments: stats.failed_payments || 0,
-          pending_payments: stats.pending_payments || 0,
-          total_amount: stats.total_amount || 0,
-          avg_amount: stats.avg_amount || 0,
-          cash_payments: stats.cash_payments || 0,
-          cash_amount: stats.cash_amount || 0,
+        total_stats: {
+          total_payments: result.total_payments || 0,
+          completed_payments: result.completed_payments || 0,
+          cash_pending_payments: result.cash_pending_payments || 0,
+          total_amount: result.total_amount || 0,
         },
       });
     });

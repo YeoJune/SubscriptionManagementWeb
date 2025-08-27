@@ -29,6 +29,14 @@ interface PaginationInfo {
   limit: number;
 }
 
+// 🆕 전체 통계 인터페이스
+interface TotalStats {
+  total_payments: number;
+  completed_payments: number;
+  cash_pending_payments: number;
+  total_amount: number;
+}
+
 const AdminPayments: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const [payments, setPayments] = useState<PaymentProps[]>([]);
@@ -47,6 +55,15 @@ const AdminPayments: React.FC = () => {
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
 
+  // 🆕 전체 통계 상태
+  const [totalStats, setTotalStats] = useState<TotalStats>({
+    total_payments: 0,
+    completed_payments: 0,
+    cash_pending_payments: 0,
+    total_amount: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState<boolean>(false);
+
   // 현금 결제 모달 및 폼 상태
   const [showCashModal, setShowCashModal] = useState(false);
   const [cashPaymentForm, setCashPaymentForm] = useState({
@@ -58,13 +75,13 @@ const AdminPayments: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
 
-  // 🆕 결제 취소 모달 상태
+  // 결제 취소 모달 상태
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelPaymentId, setCancelPaymentId] = useState<number | null>(null);
   const [cancelReason, setCancelReason] = useState('');
   const [processingCancel, setProcessingCancel] = useState(false);
 
-  // 🆕 현금 결제 승인/거절 처리 상태
+  // 현금 결제 승인/거절 처리 상태
   const [processingCashAction, setProcessingCashAction] = useState<
     number | null
   >(null);
@@ -72,8 +89,9 @@ const AdminPayments: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated && user?.isAdmin) {
       fetchPayments();
+      fetchTotalStats(); // 🆕 전체 통계 가져오기
     }
-  }, [page, rowsPerPage, filterStatus, dateFrom, dateTo]);
+  }, [page, rowsPerPage, filterStatus, dateFrom, dateTo, searchTerm]);
 
   const fetchPayments = async () => {
     setLoading(true);
@@ -123,6 +141,49 @@ const AdminPayments: React.FC = () => {
     }
   };
 
+  // 🆕 전체 통계 가져오기 함수
+  const fetchTotalStats = async () => {
+    setStatsLoading(true);
+
+    try {
+      const params: any = {};
+
+      if (filterStatus !== 'all') {
+        params.status = filterStatus;
+      }
+
+      if (searchTerm) {
+        params.search = searchTerm;
+      }
+
+      if (dateFrom) {
+        params.date_from = dateFrom;
+      }
+
+      if (dateTo) {
+        params.date_to = dateTo;
+      }
+
+      const response = await axios.get('/api/payments/admin/total-stats', {
+        params,
+      });
+
+      setTotalStats(
+        response.data.total_stats || {
+          total_payments: 0,
+          completed_payments: 0,
+          cash_pending_payments: 0,
+          total_amount: 0,
+        }
+      );
+    } catch (err: any) {
+      console.error('Failed to fetch total stats:', err);
+      // 통계 로딩 실패는 조용히 처리 (메인 데이터는 여전히 표시)
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
   // 사용자/상품 목록 불러오기 (현금 결제용)
   const fetchUsersAndProducts = async () => {
     try {
@@ -164,19 +225,20 @@ const AdminPayments: React.FC = () => {
         payment_memo: '',
       });
       fetchPayments();
+      fetchTotalStats(); // 🆕 통계 새로고침
     } catch (err: any) {
       alert(err.response?.data?.error || '현금 결제 등록 실패');
     }
   };
 
-  // 🆕 결제 취소 모달 열기
+  // 결제 취소 모달 열기
   const openCancelModal = (paymentId: number) => {
     setCancelPaymentId(paymentId);
     setCancelReason('');
     setShowCancelModal(true);
   };
 
-  // 🆕 결제 취소 처리
+  // 결제 취소 처리
   const handleCancelPayment = async () => {
     if (!cancelPaymentId || !cancelReason.trim()) {
       alert('취소 사유를 입력해주세요.');
@@ -203,6 +265,7 @@ const AdminPayments: React.FC = () => {
         setCancelPaymentId(null);
         setCancelReason('');
         fetchPayments();
+        fetchTotalStats(); // 🆕 통계 새로고침
       } else {
         alert(response.data.error || '취소 처리에 실패했습니다.');
       }
@@ -213,7 +276,7 @@ const AdminPayments: React.FC = () => {
     }
   };
 
-  // 🆕 현금 결제 승인 처리
+  // 현금 결제 승인 처리
   const handleApproveCashPayment = async (paymentId: number) => {
     if (!confirm('이 현금 결제를 승인하시겠습니까?')) return;
 
@@ -222,7 +285,6 @@ const AdminPayments: React.FC = () => {
       const response = await axios.post(
         `/api/payments/admin/${paymentId}/approve-cash`,
         {
-          // 필요한 경우 선택된 날짜 정보를 전달할 수 있음
           selected_dates: null,
         }
       );
@@ -230,6 +292,7 @@ const AdminPayments: React.FC = () => {
       if (response.data.success) {
         alert(response.data.message);
         fetchPayments();
+        fetchTotalStats(); // 🆕 통계 새로고침
       } else {
         alert(response.data.error || '승인 처리에 실패했습니다.');
       }
@@ -240,7 +303,7 @@ const AdminPayments: React.FC = () => {
     }
   };
 
-  // 🆕 현금 결제 거절 처리
+  // 현금 결제 거절 처리
   const handleRejectCashPayment = async (paymentId: number) => {
     const reason = prompt('거절 사유를 입력해주세요:');
     if (!reason) return;
@@ -257,6 +320,7 @@ const AdminPayments: React.FC = () => {
       if (response.data.success) {
         alert(response.data.message);
         fetchPayments();
+        fetchTotalStats(); // 🆕 통계 새로고침
       } else {
         alert(response.data.error || '거절 처리에 실패했습니다.');
       }
@@ -276,6 +340,7 @@ const AdminPayments: React.FC = () => {
   const handleSearch = () => {
     setPage(0);
     fetchPayments();
+    fetchTotalStats(); // 🆕 검색 시 통계도 새로고침
   };
 
   const handleChangePage = (newPage: number) => {
@@ -425,7 +490,6 @@ const AdminPayments: React.FC = () => {
             </button>
           </div>
 
-          {/* 현금 결제 추가 버튼 */}
           <div className="form-control">
             <label htmlFor="cash-payment-button">&nbsp;</label>
             <button
@@ -439,32 +503,30 @@ const AdminPayments: React.FC = () => {
         </div>
       </div>
 
-      {/* 요약 정보 */}
+      {/* 🆕 요약 정보 업데이트 - 전체 통계로 변경 */}
       <div className="summary-cards">
         <div className="summary-card">
-          <div className="summary-title">전체 결제</div>
-          <div className="summary-value">{pagination.total}건</div>
+          <div className="summary-title">전체 결제 (필터 적용)</div>
+          <div className="summary-value">
+            {statsLoading ? '로딩...' : `${totalStats.total_payments}건`}
+          </div>
         </div>
         <div className="summary-card">
           <div className="summary-title">완료된 결제</div>
           <div className="summary-value text-success">
-            {payments.filter((p) => p.status === 'completed').length}건
+            {statsLoading ? '로딩...' : `${totalStats.completed_payments}건`}
           </div>
         </div>
         <div className="summary-card">
           <div className="summary-title">입금 대기</div>
           <div className="summary-value text-warning">
-            {payments.filter((p) => p.status === 'cash_pending').length}건
+            {statsLoading ? '로딩...' : `${totalStats.cash_pending_payments}건`}
           </div>
         </div>
         <div className="summary-card">
-          <div className="summary-title">총 결제 금액</div>
+          <div className="summary-title">총 결제 금액 (필터 적용)</div>
           <div className="summary-value text-primary">
-            {formatCurrency(
-              payments
-                .filter((p) => p.status === 'completed')
-                .reduce((sum, p) => sum + p.amount, 0)
-            )}
+            {statsLoading ? '로딩...' : formatCurrency(totalStats.total_amount)}
           </div>
         </div>
       </div>
@@ -562,7 +624,6 @@ const AdminPayments: React.FC = () => {
                       </td>
                       <td>
                         <div className="action-buttons">
-                          {/* 🆕 결제 취소 버튼 - 현금/카드 결제 모두 가능 */}
                           {payment.status === 'completed' && (
                             <button
                               className="action-btn cancel-btn"
@@ -573,7 +634,6 @@ const AdminPayments: React.FC = () => {
                             </button>
                           )}
 
-                          {/* 🆕 현금 결제 승인/거절 버튼 */}
                           {payment.status === 'cash_pending' && (
                             <>
                               <button
@@ -648,7 +708,7 @@ const AdminPayments: React.FC = () => {
         </>
       )}
 
-      {/* 🆕 결제 취소 모달 */}
+      {/* 결제 취소 모달 */}
       {showCancelModal && (
         <div
           className="modal-overlay"
@@ -709,7 +769,7 @@ const AdminPayments: React.FC = () => {
         </div>
       )}
 
-      {/* 현금 결제 추가 모달 (기존) */}
+      {/* 현금 결제 추가 모달 */}
       {showCashModal && (
         <div className="modal-overlay" onClick={() => setShowCashModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>

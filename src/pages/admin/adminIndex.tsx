@@ -14,7 +14,15 @@ interface DashboardData {
   totalPayments: number;
   completedPayments: number;
   totalAmount: number;
-  totalHeroSlides: number; // 히어로 슬라이드 수 추가
+  totalHeroSlides: number;
+}
+
+// 🆕 월별 데이터 인터페이스
+interface AvailableMonth {
+  value: string;
+  label: string;
+  year: number;
+  month: number;
 }
 
 const AdminIndex: React.FC = () => {
@@ -33,29 +41,32 @@ const AdminIndex: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // 월별 필터 상태
+
+  // 🆕 월별 필터 상태 업데이트
   const [selectedMonth, setSelectedMonth] = useState<string>('current');
-  const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear()
-  );
+  const [availableMonths, setAvailableMonths] = useState<AvailableMonth[]>([]);
 
   useEffect(() => {
     if (isAuthenticated && user?.isAdmin) {
       fetchDashboardData();
     }
-  }, [isAuthenticated, user, selectedMonth, selectedYear]);
+  }, [isAuthenticated, user, selectedMonth]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
       // 결제 통계 API 파라미터 구성
       let paymentsStatsUrl = '/api/payments/admin/stats';
-      if (selectedMonth !== 'all') {
-        const month =
-          selectedMonth === 'current'
-            ? new Date().getMonth() + 1
-            : parseInt(selectedMonth);
-        paymentsStatsUrl += `?month=${month}&year=${selectedYear}`;
+      if (selectedMonth !== 'all' && selectedMonth !== 'current') {
+        // 선택된 월이 실제 년-월 형식일 때
+        const [year, month] = selectedMonth.split('-');
+        paymentsStatsUrl += `?month=${month}&year=${year}`;
+      } else if (selectedMonth === 'current') {
+        // 현재 월
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
+        paymentsStatsUrl += `?month=${currentMonth}&year=${currentYear}`;
       }
 
       // 여러 API 요청을 병렬로 처리
@@ -66,7 +77,7 @@ const AdminIndex: React.FC = () => {
         productsResponse,
         noticesResponse,
         paymentsStatsResponse,
-        heroSlidesResponse, // 히어로 슬라이드 추가
+        heroSlidesResponse,
       ] = await Promise.all([
         axios.get('/api/users?limit=1'),
         axios.get('/api/delivery/today'),
@@ -74,7 +85,7 @@ const AdminIndex: React.FC = () => {
         axios.get('/api/products?limit=1'),
         axios.get('/api/admin/notices?limit=1'),
         axios.get(paymentsStatsUrl),
-        axios.get('/api/hero/admin'), // 히어로 슬라이드 API 추가
+        axios.get('/api/hero/admin'),
       ]);
 
       setDashboardData({
@@ -87,8 +98,13 @@ const AdminIndex: React.FC = () => {
         completedPayments:
           paymentsStatsResponse.data.stats?.completed_payments || 0,
         totalAmount: paymentsStatsResponse.data.stats?.total_amount || 0,
-        totalHeroSlides: heroSlidesResponse.data.slides?.length || 0, // 히어로 슬라이드 수
+        totalHeroSlides: heroSlidesResponse.data.slides?.length || 0,
       });
+
+      // 🆕 사용 가능한 월 데이터 설정
+      if (paymentsStatsResponse.data.available_months) {
+        setAvailableMonths(paymentsStatsResponse.data.available_months);
+      }
 
       setLoading(false);
     } catch (err) {
@@ -111,6 +127,19 @@ const AdminIndex: React.FC = () => {
     }).format(amount);
   };
 
+  // 🆕 월별 선택 옵션 레이블 생성 함수
+  const getMonthLabel = () => {
+    if (selectedMonth === 'all') {
+      return '총 결제액';
+    } else if (selectedMonth === 'current') {
+      const now = new Date();
+      return `${now.getFullYear()}년 ${now.getMonth() + 1}월 결제액`;
+    } else {
+      const [year, month] = selectedMonth.split('-');
+      return `${year}년 ${parseInt(month)}월 결제액`;
+    }
+  };
+
   if (!isAuthenticated || !user?.isAdmin) {
     return (
       <div className="admin-dashboard-container">
@@ -123,7 +152,7 @@ const AdminIndex: React.FC = () => {
     <div className="admin-dashboard-container">
       <h1 className="admin-title">관리자 대시보드</h1>
 
-      {/* 월별 필터 */}
+      {/* 🆕 월별 필터 업데이트 */}
       <div className="month-filter-container">
         <div className="month-filter">
           <label htmlFor="month-select">통계 기간:</label>
@@ -134,34 +163,12 @@ const AdminIndex: React.FC = () => {
           >
             <option value="all">전체 기간</option>
             <option value="current">이번 달</option>
-            <option value="1">1월</option>
-            <option value="2">2월</option>
-            <option value="3">3월</option>
-            <option value="4">4월</option>
-            <option value="5">5월</option>
-            <option value="6">6월</option>
-            <option value="7">7월</option>
-            <option value="8">8월</option>
-            <option value="9">9월</option>
-            <option value="10">10월</option>
-            <option value="11">11월</option>
-            <option value="12">12월</option>
+            {availableMonths.map((monthData) => (
+              <option key={monthData.value} value={monthData.value}>
+                {monthData.year}년 {monthData.month}월
+              </option>
+            ))}
           </select>
-          {selectedMonth !== 'all' && selectedMonth !== 'current' && (
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            >
-              {Array.from(
-                { length: 5 },
-                (_, i) => new Date().getFullYear() - i
-              ).map((year) => (
-                <option key={year} value={year}>
-                  {year}년
-                </option>
-              ))}
-            </select>
-          )}
         </div>
       </div>
 
@@ -254,7 +261,6 @@ const AdminIndex: React.FC = () => {
               </div>
             </div>
 
-            {/* 히어로 슬라이드 카드 추가 */}
             <div className="summary-card hero-card">
               <div className="summary-title">히어로 슬라이드</div>
               <div className="summary-value hero-value">
@@ -269,15 +275,9 @@ const AdminIndex: React.FC = () => {
               </div>
             </div>
 
-            {/* 결제 통계 카드 */}
+            {/* 🆕 결제 통계 카드 업데이트 */}
             <div className="summary-card payments-card">
-              <div className="summary-title">
-                {selectedMonth === 'all'
-                  ? '총 결제액'
-                  : selectedMonth === 'current'
-                    ? '이번 달 결제액'
-                    : `${selectedYear}년 ${selectedMonth}월 결제액`}
-              </div>
+              <div className="summary-title">{getMonthLabel()}</div>
               <div className="summary-value payments-value">
                 {formatCurrency(dashboardData.totalAmount)}
                 <svg
@@ -291,7 +291,7 @@ const AdminIndex: React.FC = () => {
             </div>
           </div>
 
-          {/* 기능 카드 */}
+          {/* 기능 카드 (기존 코드 동일) */}
           <h2 className="section-title">관리 기능</h2>
           <div
             className="feature-grid"
@@ -391,7 +391,6 @@ const AdminIndex: React.FC = () => {
               </div>
             </div>
 
-            {/* 히어로 관리 카드 추가 */}
             <div className="feature-card hero-feature">
               <div
                 className="feature-card-action"
@@ -410,7 +409,6 @@ const AdminIndex: React.FC = () => {
               </div>
             </div>
 
-            {/* 결제 관리 카드 */}
             <div className="feature-card payments-feature">
               <div
                 className="feature-card-action"
@@ -429,7 +427,6 @@ const AdminIndex: React.FC = () => {
               </div>
             </div>
 
-            {/* 단체주문/케이터링 문의 관리 카드 */}
             <div className="feature-card catering-feature">
               <div
                 className="feature-card-action"
