@@ -7,12 +7,14 @@ interface DeliveryCalendarProps {
   requiredCount: number;
   selectedDates: string[];
   onDatesChange: (dates: string[]) => void;
+  userId?: string;
 }
 
 const DeliveryCalendar: React.FC<DeliveryCalendarProps> = ({
   requiredCount,
   selectedDates,
   onDatesChange,
+  userId,
 }) => {
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -26,9 +28,17 @@ const DeliveryCalendar: React.FC<DeliveryCalendarProps> = ({
     setLoading(true);
     try {
       const monthStr = currentMonth.toISOString().slice(0, 7);
-      // 백엔드에서 사용자 권한을 확인하여 모든 available dates 계산
+      const params = new URLSearchParams({
+        month: monthStr,
+        required_count: requiredCount.toString(),
+      });
+
+      if (userId) {
+        params.append('user_id', userId);
+      }
+
       const response = await axios.get(
-        `/api/delivery/available-dates?month=${monthStr}&required_count=${requiredCount}`
+        `/api/delivery/available-dates?${params}`
       );
       setAvailableDates(response.data.available_dates || []);
     } catch (error) {

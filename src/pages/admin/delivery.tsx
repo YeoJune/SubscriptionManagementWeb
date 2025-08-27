@@ -19,12 +19,14 @@ interface UserScheduleInfo {
     remaining_count: number;
   }>;
   scheduled_deliveries: Array<{
+    delivery_sequence: string;
     id: number;
     date: string;
     product_id: number;
     product_name: string;
   }>;
   completed_deliveries: Array<{
+    delivery_sequence: any;
     id: number;
     date: string;
     product_id: number;
@@ -961,7 +963,9 @@ const Delivery: React.FC = () => {
                             onClick={() =>
                               handleOpenSequenceDialog(
                                 delivery.id,
-                                delivery.delivery_sequence
+                                typeof delivery.delivery_sequence === 'string'
+                                  ? parseInt(delivery.delivery_sequence)
+                                  : delivery.delivery_sequence
                               )
                             }
                             title="순서 수정"
@@ -1191,7 +1195,7 @@ const Delivery: React.FC = () => {
                   }
                   selectedDates={selectedDatesForDelivery}
                   onDatesChange={setSelectedDatesForDelivery}
-                  isAdmin={true}
+                  userId={selectedUserForDelivery}
                 />
 
                 {/* 특별 요청사항 입력 */}

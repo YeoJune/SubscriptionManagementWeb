@@ -90,7 +90,7 @@ export interface DeliveryProps {
   special_request?: string;
   remaining_count_for_product?: number; // 해당 상품의 남은 배송 횟수
   delivery_info?: string;
-  delivery_sequence?: number; // 🆕 추가 (선택적 필드)
+  delivery_sequence: number | null;
 }
 
 export interface BoardListProps {

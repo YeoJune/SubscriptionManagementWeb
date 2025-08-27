@@ -188,32 +188,34 @@ router.get('/my', authMiddleware, async (req, res) => {
 // GET /api/delivery/available-dates - 백엔드에서 권한 기반 날짜 계산
 router.get('/available-dates', authMiddleware, async (req, res) => {
   try {
-    const user_id = req.session.user.id;
-    const isAdmin = req.session.user.isAdmin; // 세션에서 관리자 권한 확인
-    const { month, required_count } = req.query;
+    const sessionUserId = req.session.user.id;
+    const isAdmin = req.session.user.isAdmin;
+    const { month, required_count, user_id } = req.query;
 
-    // month가 없으면 현재 월 사용
+    // user_id 결정: 관리자가 user_id를 지정했으면 그것을 사용, 아니면 본인 ID
+    const targetUserId = user_id && isAdmin ? user_id : sessionUserId;
+
+    // 권한 확인
+    if (!isAdmin && targetUserId !== sessionUserId) {
+      return res.status(403).json({ error: '권한이 없습니다.' });
+    }
+
     const targetMonth = month || new Date().toISOString().slice(0, 7);
     const requiredCount = required_count ? parseInt(required_count) : 0;
 
-    // 이미 예약된 배송 일정 조회
     const scheduledDeliveries =
-      await deliveryManager.getScheduledDeliveries(user_id);
-
-    // 권한에 따른 사용 가능한 배송 요일 가져오기
+      await deliveryManager.getScheduledDeliveries(targetUserId);
     const availableDays = deliveryManager.getAvailableDeliveryDays(isAdmin);
 
-    // 배송 가능한 날짜 계산
     const availableDates = [];
     const today = new Date();
     let currentDate = new Date(today);
 
-    // 관리자는 당일부터, 일반 사용자는 내일부터
     if (!isAdmin) {
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    const maxSelectableCount = requiredCount * 2 * 100; // 기존 로직 유지
+    const maxSelectableCount = requiredCount * 2 * 100;
     const maxDaysToCheck = 60;
     let foundDates = 0;
     let daysChecked = 0;
@@ -222,9 +224,7 @@ router.get('/available-dates', authMiddleware, async (req, res) => {
       const dayOfWeek = currentDate.getDay();
       const formattedDate = currentDate.toLocaleDateString('sv-SE');
 
-      // 배송 가능 요일인지 확인
       if (availableDays.includes(dayOfWeek)) {
-        // 이미 예약된 날짜가 아닌지 확인
         const isScheduled = scheduledDeliveries.some(
           (delivery) => delivery.date === formattedDate
         );
@@ -239,7 +239,6 @@ router.get('/available-dates', authMiddleware, async (req, res) => {
       daysChecked++;
     }
 
-    // 요청된 월에 해당하는 날짜만 필터링
     const [year, monthNum] = targetMonth.split('-');
     const targetYear = parseInt(year);
     const targetMonthNum = parseInt(monthNum) - 1;
@@ -257,7 +256,6 @@ router.get('/available-dates', authMiddleware, async (req, res) => {
       total_available_dates: availableDates.length,
       scheduled_deliveries: scheduledDeliveries.length,
       required_count: requiredCount,
-      is_admin: isAdmin, // 디버깅용
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
