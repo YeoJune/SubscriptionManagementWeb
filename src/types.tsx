@@ -91,6 +91,7 @@ export interface DeliveryProps {
   remaining_count_for_product?: number; // 해당 상품의 남은 배송 횟수
   delivery_info?: string;
   delivery_sequence: number | null;
+  delivery_time?: string;
 }
 
 export interface BoardListProps {

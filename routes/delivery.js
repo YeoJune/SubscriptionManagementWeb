@@ -6,6 +6,28 @@ const { authMiddleware } = require('../lib/auth');
 const db = require('../lib/db');
 const deliveryManager = require('../lib/deliveryManager');
 
+// 배송 시간 옵션 상수 (중앙화)
+const DELIVERY_TIME_OPTIONS = [
+  { value: 'A', label: '오전 10시~12시' },
+  { value: 'B', label: '오후 5시~7시' },
+];
+
+// GET /api/delivery/time-options - 배송 시간 옵션 조회 (공용)
+router.get('/time-options', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      options: DELIVERY_TIME_OPTIONS,
+    });
+  } catch (err) {
+    console.error('배송 시간 옵션 조회 오류:', err);
+    res.status(500).json({
+      success: false,
+      error: '배송 시간 옵션을 불러오는 중 오류가 발생했습니다.',
+    });
+  }
+});
+
 // 환경변수에서 배송 가능 요일 가져오기
 const getDeliveryDays = () => {
   const deliveryDaysEnv = process.env.DELIVERY_DAYS || '1,3,5'; // 기본값: 월,수,금
@@ -31,7 +53,7 @@ router.get('/', checkAdmin, async (req, res) => {
     let query = `
       SELECT d.id, d.user_id, u.name AS user_name, d.status, d.date, d.product_id, 
              p.name AS product_name, u.phone_number, u.address, d.special_request,
-             d.delivery_sequence, 
+             d.delivery_sequence, d.delivery_time,
              pay.delivery_info
       FROM delivery_list d
       JOIN product p ON d.product_id = p.id

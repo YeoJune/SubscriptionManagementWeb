@@ -48,12 +48,17 @@ const Subscription: React.FC = () => {
 
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash'>('card');
   const [depositorName, setDepositorName] = useState<string>('');
+  const [deliveryTime, setDeliveryTime] = useState<string>('');
+  const [deliveryTimeOptions, setDeliveryTimeOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
 
   const [deliveryAddress, setDeliveryAddress] = useState<string>('');
   const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
     fetchProducts();
+    fetchDeliveryTimeOptions();
     loadNicePaySDK();
     if (isAuthenticated) {
       fetchUserProfile();
@@ -84,6 +89,23 @@ const Subscription: React.FC = () => {
       console.error('상품 조회 실패:', err);
       setError('상품 정보를 불러오는 중 오류가 발생했습니다.');
       setLoading(false);
+    }
+  };
+
+  // 배송 시간 옵션 조회
+  const fetchDeliveryTimeOptions = async () => {
+    try {
+      const response = await axios.get('/api/delivery/time-options');
+      if (response.data.success) {
+        setDeliveryTimeOptions(response.data.options);
+      }
+    } catch (err) {
+      console.error('배송 시간 옵션 조회 실패:', err);
+      // 기본값 설정
+      setDeliveryTimeOptions([
+        { value: 'A', label: '오전 10시~12시' },
+        { value: 'B', label: '오후 5시~7시' },
+      ]);
     }
   };
 
@@ -171,6 +193,10 @@ const Subscription: React.FC = () => {
         setError('배송 주소는 필수입니다.');
         return;
       }
+      if (!deliveryTime.trim()) {
+        setError('배송 시간은 필수입니다.');
+        return;
+      }
       if (paymentMethod === 'cash' && !depositorName.trim()) {
         setError('현금 결제 시 입금자명은 필수입니다.');
         return;
@@ -230,6 +256,7 @@ const Subscription: React.FC = () => {
       product_id: selectedProduct.id,
       special_request: specialRequest.trim() || null,
       delivery_address: deliveryAddress.trim(),
+      delivery_time: deliveryTime,
       selected_dates: selectedDates.length > 0 ? selectedDates : null,
       depositor_name: depositorName.trim(),
     };
@@ -257,6 +284,7 @@ const Subscription: React.FC = () => {
       product_id: selectedProduct.id,
       special_request: specialRequest.trim() || null,
       delivery_address: deliveryAddress.trim(),
+      delivery_time: deliveryTime,
     });
 
     if (!prepareResponse.data.success) {
@@ -651,6 +679,37 @@ const Subscription: React.FC = () => {
                   <small>저장된 주소: {userProfile.address}</small>
                 </div>
               )}
+            </div>
+
+            <hr className="divider" />
+
+            {/* 🆕 배송 시간 선택 추가 */}
+            <h4>배송 시간 *</h4>
+            <div className="delivery-time-section">
+              <div className="delivery-time-options">
+                {deliveryTimeOptions.map((option) => (
+                  <label
+                    key={option.value}
+                    className={`delivery-time-option ${
+                      deliveryTime === option.value ? 'selected' : ''
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="deliveryTime"
+                      value={option.value}
+                      checked={deliveryTime === option.value}
+                      onChange={(e) => setDeliveryTime(e.target.value)}
+                      required
+                    />
+                    <div className="delivery-time-info">
+                      <span className="delivery-time-label">
+                        {option.label}
+                      </span>
+                    </div>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <hr className="divider" />

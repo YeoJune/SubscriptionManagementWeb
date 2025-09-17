@@ -73,6 +73,7 @@ router.post('/prepare', authMiddleware, (req, res) => {
         const deliveryInfo = JSON.stringify({
           special_request: req.body.special_request || null,
           delivery_address: req.body.delivery_address || null,
+          delivery_time: req.body.delivery_time || null,
           selected_dates: null, // approve 시점에 업데이트
         });
 
@@ -392,13 +393,16 @@ router.post('/approve', authMiddleware, (req, res) => {
                                 user_id,
                                 payment.product_id,
                                 selectedDates,
-                                specialRequest
+                                specialRequest,
+                                deliveryInfo.delivery_time
                               );
                           } else {
                             deliveryPromise = deliveryManager.addDeliveryCount(
                               user_id,
                               payment.product_id,
-                              product.delivery_count
+                              product.delivery_count,
+                              specialRequest,
+                              deliveryInfo.delivery_time
                             );
                           }
 
@@ -1487,6 +1491,7 @@ router.post('/cash/prepare', authMiddleware, (req, res) => {
         const deliveryInfo = JSON.stringify({
           special_request: req.body.special_request || null,
           delivery_address: req.body.delivery_address || null,
+          delivery_time: req.body.delivery_time || null,
           selected_dates: req.body.selected_dates || null,
         });
 
@@ -1668,13 +1673,16 @@ router.post('/admin/:id/approve-cash', checkAdmin, (req, res) => {
                             payment.user_id,
                             payment.product_id,
                             finalSelectedDates,
-                            specialRequest
+                            specialRequest,
+                            deliveryInfo.delivery_time
                           );
                       } else {
                         deliveryPromise = deliveryManager.addDeliveryCount(
                           payment.user_id,
                           payment.product_id,
-                          product.delivery_count
+                          product.delivery_count,
+                          specialRequest,
+                          deliveryInfo.delivery_time
                         );
                       }
 

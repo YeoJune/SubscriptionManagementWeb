@@ -97,6 +97,11 @@ const Delivery: React.FC = () => {
   const [editingDate, setEditingDate] = useState<string>('');
   const [openEditDialog, setOpenEditDialog] = useState(false);
 
+  // 🆕 배송 시간 옵션 상태
+  const [deliveryTimeOptions, setDeliveryTimeOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
+
   // 🆕 순서 수정 관련 상태들 추가
   const [editingSequenceId, setEditingSequenceId] = useState<number | null>(
     null
@@ -133,6 +138,8 @@ const Delivery: React.FC = () => {
           fetchProducts();
         }
       }
+      // 배송 시간 옵션 가져오기
+      fetchDeliveryTimeOptions();
     }
   }, [
     page,
@@ -182,6 +189,23 @@ const Delivery: React.FC = () => {
       setProducts(response.data.products || []);
     } catch (err) {
       console.error('Failed to fetch products:', err);
+    }
+  };
+
+  // 배송 시간 옵션 조회
+  const fetchDeliveryTimeOptions = async () => {
+    try {
+      const response = await axios.get('/api/delivery/time-options');
+      if (response.data.success) {
+        setDeliveryTimeOptions(response.data.options);
+      }
+    } catch (err) {
+      console.error('배송 시간 옵션 조회 실패:', err);
+      // 기본값 설정
+      setDeliveryTimeOptions([
+        { value: 'A', label: '오전 10시~12시' },
+        { value: 'B', label: '오후 5시~7시' },
+      ]);
     }
   };
 
@@ -522,6 +546,14 @@ const Delivery: React.FC = () => {
     }
   };
 
+  // 배송 시간 라벨 가져오기
+  const getDeliveryTimeLabel = (deliveryTime?: string) => {
+    const option = deliveryTimeOptions.find(
+      (opt) => opt.value === deliveryTime
+    );
+    return option ? option.label : '미지정';
+  };
+
   // 🆕 관리자가 선택할 수 있는 모든 요일 옵션 (당일 포함)
   const getAdminAvailableDates = () => {
     const dates = [];
@@ -646,6 +678,7 @@ const Delivery: React.FC = () => {
                       <th>ID</th>
                       <th>사용자</th>
                       <th>배송일</th>
+                      <th>배송 시간</th>
                       <th>상품</th>
                       <th className="hide-xs">연락처</th>
                       <th className="hide-sm">배송 주소</th>
@@ -682,6 +715,9 @@ const Delivery: React.FC = () => {
                           <td>{delivery.user_name || delivery.user_id}</td>
                           <td>
                             {new Date(delivery.date).toLocaleDateString()}
+                          </td>
+                          <td>
+                            {getDeliveryTimeLabel(delivery.delivery_time)}
                           </td>
                           <td>
                             {delivery.product_name}
