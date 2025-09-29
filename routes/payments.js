@@ -1641,6 +1641,33 @@ router.post('/admin/:id/approve-cash', checkAdmin, (req, res) => {
                           .json({ success: false, error: err.message });
                       }
 
+                      // 케이터링 현금 결제 완료 알림톡 발송
+                      try {
+                        const userQuery =
+                          'SELECT name, phone_number FROM users WHERE id = ?';
+                        db.get(userQuery, [payment.user_id], (err, user) => {
+                          if (!err && user) {
+                            sms
+                              .sendPaymentCompletionAlimtalk(
+                                user.phone_number,
+                                user.name,
+                                `케이터링 서비스`
+                              )
+                              .catch((smsError) => {
+                                console.error(
+                                  '케이터링 현금 결제 완료 알림톡 발송 실패:',
+                                  smsError
+                                );
+                              });
+                          }
+                        });
+                      } catch (smsError) {
+                        console.error(
+                          '케이터링 현금 결제 완료 알림톡 발송 중 오류:',
+                          smsError
+                        );
+                      }
+
                       res.json({
                         success: true,
                         message: '케이터링 현금 결제가 승인되었습니다.',
@@ -1716,6 +1743,37 @@ router.post('/admin/:id/approve-cash', checkAdmin, (req, res) => {
 
                       deliveryPromise
                         .then((result) => {
+                          // 일반 상품 현금 결제 완료 알림톡 발송
+                          try {
+                            const userQuery =
+                              'SELECT name, phone_number FROM users WHERE id = ?';
+                            db.get(
+                              userQuery,
+                              [payment.user_id],
+                              (err, user) => {
+                                if (!err && user) {
+                                  sms
+                                    .sendPaymentCompletionAlimtalk(
+                                      user.phone_number,
+                                      user.name,
+                                      product.name
+                                    )
+                                    .catch((smsError) => {
+                                      console.error(
+                                        '현금 결제 완료 알림톡 발송 실패:',
+                                        smsError
+                                      );
+                                    });
+                                }
+                              }
+                            );
+                          } catch (smsError) {
+                            console.error(
+                              '현금 결제 완료 알림톡 발송 중 오류:',
+                              smsError
+                            );
+                          }
+
                           res.json({
                             success: true,
                             message: '현금 결제가 승인되었습니다.',
