@@ -4,6 +4,7 @@ const router = express.Router();
 const db = require('../lib/db');
 const { authMiddleware } = require('../lib/auth');
 const deliveryManager = require('../lib/deliveryManager');
+const sms = require('../lib/sms');
 const axios = require('axios');
 const crypto = require('crypto');
 const checkAdmin = require('../lib/checkAdmin');
@@ -407,7 +408,34 @@ router.post('/approve', authMiddleware, (req, res) => {
                           }
 
                           deliveryPromise
-                            .then((result) => {
+                            .then(async (result) => {
+                              // 결제 완료 알림톡 발송
+                              try {
+                                const userQuery =
+                                  'SELECT name, phone_number FROM users WHERE id = ?';
+                                db.get(userQuery, [user_id], (err, user) => {
+                                  if (!err && user) {
+                                    sms
+                                      .sendPaymentCompletionAlimtalk(
+                                        user.phone_number,
+                                        user.name,
+                                        product.name
+                                      )
+                                      .catch((smsError) => {
+                                        console.error(
+                                          '결제 완료 알림톡 발송 실패:',
+                                          smsError
+                                        );
+                                      });
+                                  }
+                                });
+                              } catch (smsError) {
+                                console.error(
+                                  '결제 완료 알림톡 발송 중 오류:',
+                                  smsError
+                                );
+                              }
+
                               res.json({
                                 success: true,
                                 message: '결제가 성공적으로 처리되었습니다.',
