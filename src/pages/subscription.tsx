@@ -523,7 +523,6 @@ const Subscription: React.FC = () => {
 
   // 🆕 결제 방법 선택 렌더링
   const renderPaymentMethodSelection = () => {
-    console.log(user);
     const canUseCard = !!user?.card_payment_allowed;
 
     return (
