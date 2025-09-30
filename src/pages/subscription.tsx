@@ -76,6 +76,14 @@ const Subscription: React.FC = () => {
     }
   }, [isAuthenticated, user]);
 
+  // 카드 결제 불가 사용자의 결제 방법 자동 조정
+  useEffect(() => {
+    const canUseCard = user?.card_payment_allowed === true;
+    if (!canUseCard && paymentMethod === 'card') {
+      setPaymentMethod('cash');
+    }
+  }, [user?.card_payment_allowed, paymentMethod]);
+
   const fetchProducts = async () => {
     try {
       const response = await axios.get('/api/products');
@@ -516,13 +524,6 @@ const Subscription: React.FC = () => {
   // 🆕 결제 방법 선택 렌더링
   const renderPaymentMethodSelection = () => {
     const canUseCard = user?.card_payment_allowed === true;
-
-    // 카드 결제 불가 사용자는 현금 결제로 강제 설정 (한 번만 실행)
-    React.useEffect(() => {
-      if (!canUseCard && paymentMethod === 'card') {
-        setPaymentMethod('cash');
-      }
-    }, [canUseCard]); // paymentMethod 의존성 제거로 무한 루프 방지
 
     return (
       <div className="payment-method-section">
