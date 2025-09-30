@@ -46,7 +46,7 @@ const Subscription: React.FC = () => {
   const [specialRequest, setSpecialRequest] = useState<string>('');
   const [showImageModal, setShowImageModal] = useState(false);
 
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash'>('card');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash'>('cash'); // 기본값을 cash로 변경
   const [depositorName, setDepositorName] = useState<string>('');
   const [deliveryTime, setDeliveryTime] = useState<string>('');
   const [deliveryTimeOptions, setDeliveryTimeOptions] = useState<
@@ -62,6 +62,18 @@ const Subscription: React.FC = () => {
     loadNicePaySDK();
     if (isAuthenticated) {
       fetchUserProfile();
+    }
+  }, [isAuthenticated]);
+
+  // 사용자 인증 상태 변경 시 결제 방법 초기화
+  useEffect(() => {
+    if (isAuthenticated) {
+      const { user } = useAuth();
+      if (user?.card_payment_allowed) {
+        setPaymentMethod('card');
+      } else {
+        setPaymentMethod('cash');
+      }
     }
   }, [isAuthenticated]);
 
@@ -507,12 +519,12 @@ const Subscription: React.FC = () => {
     const { user } = useAuth();
     const canUseCard = user?.card_payment_allowed === true;
 
-    // 카드 결제 불가 사용자는 현금 결제로 강제 설정
+    // 카드 결제 불가 사용자는 현금 결제로 강제 설정 (한 번만 실행)
     React.useEffect(() => {
       if (!canUseCard && paymentMethod === 'card') {
         setPaymentMethod('cash');
       }
-    }, [canUseCard, paymentMethod]);
+    }, [canUseCard]); // paymentMethod 의존성 제거로 무한 루프 방지
 
     return (
       <div className="payment-method-section">

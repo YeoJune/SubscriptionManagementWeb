@@ -333,21 +333,16 @@ const AdminUsers: React.FC = () => {
                       </span>
                     </td>
                     <td className="users-table-cell">
-                      <button
-                        className={`card-payment-toggle ${
-                          user.card_payment_allowed ? 'enabled' : 'disabled'
-                        }`}
-                        onClick={(e) => {
+                      <input
+                        type="checkbox"
+                        className="card-payment-checkbox"
+                        checked={user.card_payment_allowed}
+                        onChange={(e) => {
                           e.stopPropagation();
-                          handleToggleCardPayment(
-                            user.id,
-                            !user.card_payment_allowed
-                          );
+                          handleToggleCardPayment(user.id, e.target.checked);
                         }}
                         title={`카드 결제 ${user.card_payment_allowed ? '허용됨' : '차단됨'}`}
-                      >
-                        {user.card_payment_allowed ? '✅' : '❌'}
-                      </button>
+                      />
                     </td>
                     <td className="users-table-cell hide-xs">
                       {new Date(user.created_at).toLocaleDateString()}

@@ -290,31 +290,16 @@
   }
 }
 
-/* 카드 결제 토글 버튼 스타일 */
-.card-payment-toggle {
-  background: none;
-  border: none;
+/* 카드 결제 체크박스 스타일 */
+.card-payment-checkbox {
+  width: 18px;
+  height: 18px;
   cursor: pointer;
-  font-size: 1.2rem;
-  padding: 0.25rem;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  height: 32px;
+  accent-color: var(--primary-color, #007bff);
+  border-radius: 3px;
 }
 
-.card-payment-toggle:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+.card-payment-checkbox:hover {
   transform: scale(1.1);
-}
-
-.card-payment-toggle.enabled {
-  color: #28a745;
-}
-
-.card-payment-toggle.disabled {
-  color: #dc3545;
+  transition: transform 0.2s ease;
 }
