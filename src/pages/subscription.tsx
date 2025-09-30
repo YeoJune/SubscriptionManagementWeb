@@ -504,29 +504,42 @@ const Subscription: React.FC = () => {
 
   // 🆕 결제 방법 선택 렌더링
   const renderPaymentMethodSelection = () => {
+    const { user } = useAuth();
+    const canUseCard = user?.card_payment_allowed === true;
+
+    // 카드 결제 불가 사용자는 현금 결제로 강제 설정
+    React.useEffect(() => {
+      if (!canUseCard && paymentMethod === 'card') {
+        setPaymentMethod('cash');
+      }
+    }, [canUseCard, paymentMethod]);
+
     return (
       <div className="payment-method-section">
         <h4>결제 방법 선택</h4>
+
         <div className="payment-method-options">
-          <label
-            className={`payment-method-option ${paymentMethod === 'card' ? 'selected' : ''}`}
-          >
-            <input
-              type="radio"
-              name="paymentMethod"
-              value="card"
-              checked={paymentMethod === 'card'}
-              onChange={(e) =>
-                setPaymentMethod(e.target.value as 'card' | 'cash')
-              }
-            />
-            <div className="payment-method-info">
-              <span className="payment-method-name">💳 카드 결제</span>
-              <span className="payment-method-desc">
-                안전하고 빠른 온라인 카드 결제
-              </span>
-            </div>
-          </label>
+          {canUseCard && (
+            <label
+              className={`payment-method-option ${paymentMethod === 'card' ? 'selected' : ''}`}
+            >
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="card"
+                checked={paymentMethod === 'card'}
+                onChange={(e) =>
+                  setPaymentMethod(e.target.value as 'card' | 'cash')
+                }
+              />
+              <div className="payment-method-info">
+                <span className="payment-method-name">💳 카드 결제</span>
+                <span className="payment-method-desc">
+                  안전하고 빠른 온라인 카드 결제
+                </span>
+              </div>
+            </label>
+          )}
 
           <label
             className={`payment-method-option ${paymentMethod === 'cash' ? 'selected' : ''}`}

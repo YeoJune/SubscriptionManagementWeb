@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
   phone_number TEXT,
   email TEXT,
   address TEXT,
+  card_payment_allowed BOOLEAN DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   last_login TIMESTAMP
 );
@@ -52,7 +53,7 @@ router.get('/', checkAdmin, (req, res) => {
     // 🔧 수정된 쿼리 - 서브쿼리를 사용하여 정확한 계산
     let query = `
       SELECT 
-        u.id, u.name, u.phone_number, u.email, u.address, u.total_delivery_count, u.created_at, u.last_login,
+        u.id, u.name, u.phone_number, u.email, u.address, u.total_delivery_count, u.card_payment_allowed, u.created_at, u.last_login,
         COALESCE(remaining_summary.total_remaining_deliveries, 0) as total_remaining_deliveries,
         COALESCE(delivery_summary.pending_deliveries, 0) as pending_deliveries,
         COALESCE(delivery_summary.completed_deliveries, 0) as completed_deliveries
@@ -146,7 +147,7 @@ router.get('/:id', (req, res) => {
 
     // 사용자 기본 정보
     db.get(
-      `SELECT id, name, phone_number, email, address, created_at, last_login FROM users WHERE id = ?`,
+      `SELECT id, name, phone_number, email, address, card_payment_allowed, created_at, last_login FROM users WHERE id = ?`,
       [id],
       (err, user) => {
         if (err) {
@@ -195,8 +196,15 @@ router.get('/:id', (req, res) => {
 router.put('/:id', (req, res) => {
   try {
     const { id } = req.params;
-    const { name, phone_number, email, address, password, product_deliveries } =
-      req.body;
+    const {
+      name,
+      phone_number,
+      email,
+      address,
+      password,
+      product_deliveries,
+      card_payment_allowed,
+    } = req.body;
 
     // 인증 확인
     if (!req.session || !req.session.user) {
@@ -226,26 +234,54 @@ router.put('/:id', (req, res) => {
           const password_hash = hashPassword(password, salt);
 
           await new Promise((resolve, reject) => {
-            db.run(
-              `UPDATE users SET password_hash = ?, salt = ?, name = ?, phone_number = ?, email = ?, address = ? WHERE id = ?`,
-              [password_hash, salt, name, phone_number, email, address, id],
-              function (err) {
-                if (err) reject(err);
-                else resolve();
-              }
-            );
+            const updateQuery =
+              isAdmin && card_payment_allowed !== undefined
+                ? `UPDATE users SET password_hash = ?, salt = ?, name = ?, phone_number = ?, email = ?, address = ?, card_payment_allowed = ? WHERE id = ?`
+                : `UPDATE users SET password_hash = ?, salt = ?, name = ?, phone_number = ?, email = ?, address = ? WHERE id = ?`;
+
+            const updateParams =
+              isAdmin && card_payment_allowed !== undefined
+                ? [
+                    password_hash,
+                    salt,
+                    name,
+                    phone_number,
+                    email,
+                    address,
+                    card_payment_allowed ? 1 : 0,
+                    id,
+                  ]
+                : [password_hash, salt, name, phone_number, email, address, id];
+
+            db.run(updateQuery, updateParams, function (err) {
+              if (err) reject(err);
+              else resolve();
+            });
           });
         } else {
           // 비밀번호 변경이 없는 경우
+          const updateQuery =
+            isAdmin && card_payment_allowed !== undefined
+              ? `UPDATE users SET name = ?, phone_number = ?, email = ?, address = ?, card_payment_allowed = ? WHERE id = ?`
+              : `UPDATE users SET name = ?, phone_number = ?, email = ?, address = ? WHERE id = ?`;
+
+          const updateParams =
+            isAdmin && card_payment_allowed !== undefined
+              ? [
+                  name,
+                  phone_number,
+                  email,
+                  address,
+                  card_payment_allowed ? 1 : 0,
+                  id,
+                ]
+              : [name, phone_number, email, address, id];
+
           await new Promise((resolve, reject) => {
-            db.run(
-              `UPDATE users SET name = ?, phone_number = ?, email = ?, address = ? WHERE id = ?`,
-              [name, phone_number, email, address, id],
-              function (err) {
-                if (err) reject(err);
-                else resolve();
-              }
-            );
+            db.run(updateQuery, updateParams, function (err) {
+              if (err) reject(err);
+              else resolve();
+            });
           });
         }
 
@@ -324,6 +360,7 @@ router.post('/', checkAdmin, (req, res) => {
       email,
       address,
       total_delivery_count = 0,
+      card_payment_allowed = false,
     } = req.body;
 
     if (!id || !password || !phone_number) {
@@ -362,7 +399,7 @@ router.post('/', checkAdmin, (req, res) => {
           const password_hash = hashPassword(password, salt);
 
           db.run(
-            `INSERT INTO users (id, password_hash, salt, total_delivery_count, name, phone_number, email, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO users (id, password_hash, salt, total_delivery_count, name, phone_number, email, address, card_payment_allowed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id,
               password_hash,
@@ -372,6 +409,7 @@ router.post('/', checkAdmin, (req, res) => {
               phone_number,
               email,
               address,
+              card_payment_allowed ? 1 : 0,
             ],
             function (err) {
               if (err) {

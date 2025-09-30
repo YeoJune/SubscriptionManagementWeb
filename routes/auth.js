@@ -155,6 +155,7 @@ router.post('/login', (req, res) => {
         email: user.email,
         address: user.address,
         total_delivery_count: user.total_delivery_count,
+        card_payment_allowed: !!user.card_payment_allowed,
         // 관리자 권한 확인 (예: 특정 아이디를 관리자로 지정)
         isAdmin: user.id === process.env.ADMIN_ID, // 예시: 'admin'이란 아이디를 가진 사용자가 관리자
       };
@@ -227,7 +228,7 @@ router.get('/', authMiddleware, (req, res) => {
 
     // 사용자 기본 정보 조회
     db.get(
-      `SELECT id, name, phone_number, email, address, created_at, last_login FROM users WHERE id = ?`,
+      `SELECT id, name, phone_number, email, address, card_payment_allowed, created_at, last_login FROM users WHERE id = ?`,
       [userId],
       (err, user) => {
         if (err) {
@@ -343,7 +344,7 @@ router.get('/profile', authMiddleware, (req, res) => {
     const user_id = req.session.user.id;
 
     db.get(
-      'SELECT id, name, phone_number, email, address, created_at FROM users WHERE id = ?',
+      'SELECT id, name, phone_number, email, address, card_payment_allowed, created_at FROM users WHERE id = ?',
       [user_id],
       (err, user) => {
         if (err) {

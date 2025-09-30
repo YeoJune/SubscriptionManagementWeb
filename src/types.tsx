@@ -17,6 +17,7 @@ export interface UserProps {
   created_at?: string;
   last_login?: string;
   total_delivery_count?: number; // 전체 배송 잔여 횟수
+  card_payment_allowed?: boolean; // 카드 결제 허용 여부
 }
 
 export interface AuthResponse {

@@ -289,3 +289,32 @@
     display: none;
   }
 }
+
+/* 카드 결제 토글 버튼 스타일 */
+.card-payment-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+}
+
+.card-payment-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: scale(1.1);
+}
+
+.card-payment-toggle.enabled {
+  color: #28a745;
+}
+
+.card-payment-toggle.disabled {
+  color: #dc3545;
+}

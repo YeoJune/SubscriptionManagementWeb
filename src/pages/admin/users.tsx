@@ -11,6 +11,7 @@ interface User {
   email?: string;
   address?: string;
   total_delivery_count: number;
+  card_payment_allowed: boolean;
   created_at: string;
   last_login?: string;
 }
@@ -107,6 +108,32 @@ const AdminUsers: React.FC = () => {
   // 사용자 행 클릭 시 상세 페이지로 이동
   const handleRowClick = (id: string) => {
     navigate(`/admin/users/${id}`);
+  };
+
+  // 카드 결제 허용 여부 토글
+  const handleToggleCardPayment = async (userId: string, newValue: boolean) => {
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          card_payment_allowed: newValue,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || '카드 결제 설정 변경에 실패했습니다.');
+      }
+
+      // 성공 시 목록 새로고침
+      fetchUsers();
+    } catch (err: any) {
+      alert(err.message);
+    }
   };
 
   // 배송 횟수에 따른 스타일 클래스 결정
@@ -268,6 +295,14 @@ const AdminUsers: React.FC = () => {
                       (order === 'asc' ? '↑' : '↓')}
                   </th>
                   <th
+                    className="sortable"
+                    onClick={() => handleSort('card_payment_allowed')}
+                  >
+                    카드결제{' '}
+                    {sortBy === 'card_payment_allowed' &&
+                      (order === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th
                     className="hide-xs sortable"
                     onClick={() => handleSort('created_at')}
                   >
@@ -296,6 +331,23 @@ const AdminUsers: React.FC = () => {
                       >
                         {user.total_delivery_count}
                       </span>
+                    </td>
+                    <td className="users-table-cell">
+                      <button
+                        className={`card-payment-toggle ${
+                          user.card_payment_allowed ? 'enabled' : 'disabled'
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleCardPayment(
+                            user.id,
+                            !user.card_payment_allowed
+                          );
+                        }}
+                        title={`카드 결제 ${user.card_payment_allowed ? '허용됨' : '차단됨'}`}
+                      >
+                        {user.card_payment_allowed ? '✅' : '❌'}
+                      </button>
                     </td>
                     <td className="users-table-cell hide-xs">
                       {new Date(user.created_at).toLocaleDateString()}

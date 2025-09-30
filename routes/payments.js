@@ -51,62 +51,100 @@ router.post('/prepare', authMiddleware, (req, res) => {
       });
     }
 
+    // 사용자의 카드 결제 허용 여부 확인
     db.get(
-      `SELECT * FROM product WHERE id = ?`,
-      [product_id],
-      (err, product) => {
+      'SELECT card_payment_allowed FROM users WHERE id = ?',
+      [user_id],
+      (err, user) => {
         if (err) {
-          return res.status(500).json({ success: false, error: err.message });
+          return res
+            .status(500)
+            .json({ success: false, error: '사용자 정보 조회 실패' });
         }
 
-        if (!product) {
-          return res.status(404).json({
+        if (!user) {
+          return res
+            .status(404)
+            .json({ success: false, error: '사용자를 찾을 수 없습니다.' });
+        }
+
+        if (!user.card_payment_allowed) {
+          return res.status(403).json({
             success: false,
-            error: '상품을 찾을 수 없습니다.',
+            error:
+              '카드 결제가 허용되지 않은 사용자입니다. 현금 결제를 이용해주세요.',
           });
         }
 
-        const orderId = generateOrderId();
-        const amount = product.price;
-        const timestamp = Date.now().toString();
-        const signature = generateSignature(orderId, amount, timestamp);
-
-        const deliveryInfo = JSON.stringify({
-          special_request: req.body.special_request || null,
-          delivery_address: req.body.delivery_address || null,
-          delivery_time: req.body.delivery_time || null,
-          selected_dates: null, // approve 시점에 업데이트
-        });
-
-        db.run(
-          `INSERT INTO payments (user_id, product_id, count, amount, order_id, status, delivery_info) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [user_id, product_id, 1, amount, orderId, 'pending', deliveryInfo],
-          function (err) {
+        // 카드 결제가 허용된 사용자인 경우 기존 로직 계속
+        db.get(
+          `SELECT * FROM product WHERE id = ?`,
+          [product_id],
+          (err, product) => {
             if (err) {
               return res
                 .status(500)
                 .json({ success: false, error: err.message });
             }
 
-            const paymentId = this.lastID;
+            if (!product) {
+              return res.status(404).json({
+                success: false,
+                error: '상품을 찾을 수 없습니다.',
+              });
+            }
 
-            const paramsForNicePaySDK = {
-              clientId: NICEPAY_CLIENT_KEY,
-              method: 'card',
-              orderId: orderId,
-              amount: parseInt(amount),
-              goodsName: product.name,
-              returnUrl: `https://saluvallday.com/api/payments/payment-result`,
-              timestamp: timestamp,
-              signature: signature,
-            };
+            const orderId = generateOrderId();
+            const amount = product.price;
+            const timestamp = Date.now().toString();
+            const signature = generateSignature(orderId, amount, timestamp);
 
-            res.json({
-              success: true,
-              payment_id: paymentId,
-              order_id: orderId,
-              paramsForNicePaySDK,
+            const deliveryInfo = JSON.stringify({
+              special_request: req.body.special_request || null,
+              delivery_address: req.body.delivery_address || null,
+              delivery_time: req.body.delivery_time || null,
+              selected_dates: null, // approve 시점에 업데이트
             });
+
+            db.run(
+              `INSERT INTO payments (user_id, product_id, count, amount, order_id, status, delivery_info) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [
+                user_id,
+                product_id,
+                1,
+                amount,
+                orderId,
+                'pending',
+                deliveryInfo,
+              ],
+              function (err) {
+                if (err) {
+                  return res
+                    .status(500)
+                    .json({ success: false, error: err.message });
+                }
+
+                const paymentId = this.lastID;
+
+                const paramsForNicePaySDK = {
+                  clientId: NICEPAY_CLIENT_KEY,
+                  method: 'card',
+                  orderId: orderId,
+                  amount: parseInt(amount),
+                  goodsName: product.name,
+                  returnUrl: `https://saluvallday.com/api/payments/payment-result`,
+                  timestamp: timestamp,
+                  signature: signature,
+                };
+
+                res.json({
+                  success: true,
+                  payment_id: paymentId,
+                  order_id: orderId,
+                  paramsForNicePaySDK,
+                });
+              }
+            );
           }
         );
       }
@@ -1888,63 +1926,100 @@ router.post('/catering-prepare', authMiddleware, (req, res) => {
       });
     }
 
-    // 문의 정보 및 권한 확인
+    // 사용자의 카드 결제 허용 여부 확인
     db.get(
-      `SELECT * FROM inquiries WHERE id = ? AND user_id = ? AND payment_requested = TRUE`,
-      [inquiry_id, user_id],
-      (err, inquiry) => {
+      'SELECT card_payment_allowed FROM users WHERE id = ?',
+      [user_id],
+      (err, user) => {
         if (err) {
-          return res.status(500).json({ success: false, error: err.message });
+          return res
+            .status(500)
+            .json({ success: false, error: '사용자 정보 조회 실패' });
         }
 
-        if (!inquiry) {
-          return res.status(404).json({
+        if (!user) {
+          return res
+            .status(404)
+            .json({ success: false, error: '사용자를 찾을 수 없습니다.' });
+        }
+
+        if (!user.card_payment_allowed) {
+          return res.status(403).json({
             success: false,
-            error: '결제 요청된 문의를 찾을 수 없습니다.',
+            error:
+              '카드 결제가 허용되지 않은 사용자입니다. 현금 결제를 이용해주세요.',
           });
         }
 
-        const orderId = generateOrderId();
-        const amount = inquiry.payment_amount;
-        const timestamp = Date.now().toString();
-        const signature = generateSignature(orderId, amount, timestamp);
-
-        const deliveryInfo = JSON.stringify({
-          special_request: special_request || null,
-          inquiry_id: inquiry_id,
-          inquiry_title: inquiry.title,
-        });
-
-        // payments 테이블에 저장 (product_id 대신 특별한 값 사용)
-        db.run(
-          `INSERT INTO payments (user_id, product_id, count, amount, order_id, status, delivery_info) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [user_id, -inquiry_id, 1, amount, orderId, 'pending', deliveryInfo], // product_id를 -inquiry_id로 설정하여 구분
-          function (err) {
+        // 문의 정보 및 권한 확인
+        db.get(
+          `SELECT * FROM inquiries WHERE id = ? AND user_id = ? AND payment_requested = TRUE`,
+          [inquiry_id, user_id],
+          (err, inquiry) => {
             if (err) {
               return res
                 .status(500)
                 .json({ success: false, error: err.message });
             }
 
-            const paymentId = this.lastID;
+            if (!inquiry) {
+              return res.status(404).json({
+                success: false,
+                error: '결제 요청된 문의를 찾을 수 없습니다.',
+              });
+            }
 
-            const paramsForNicePaySDK = {
-              clientId: NICEPAY_CLIENT_KEY,
-              method: 'card',
-              orderId: orderId,
-              amount: parseInt(amount),
-              goodsName: `케이터링 서비스 - ${inquiry.title}`,
-              returnUrl: `https://saluvallday.com/api/payments/payment-result`,
-              timestamp: timestamp,
-              signature: signature,
-            };
+            const orderId = generateOrderId();
+            const amount = inquiry.payment_amount;
+            const timestamp = Date.now().toString();
+            const signature = generateSignature(orderId, amount, timestamp);
 
-            res.json({
-              success: true,
-              payment_id: paymentId,
-              order_id: orderId,
-              paramsForNicePaySDK,
+            const deliveryInfo = JSON.stringify({
+              special_request: special_request || null,
+              inquiry_id: inquiry_id,
+              inquiry_title: inquiry.title,
             });
+
+            // payments 테이블에 저장 (product_id 대신 특별한 값 사용)
+            db.run(
+              `INSERT INTO payments (user_id, product_id, count, amount, order_id, status, delivery_info) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [
+                user_id,
+                -inquiry_id,
+                1,
+                amount,
+                orderId,
+                'pending',
+                deliveryInfo,
+              ], // product_id를 -inquiry_id로 설정하여 구분
+              function (err) {
+                if (err) {
+                  return res
+                    .status(500)
+                    .json({ success: false, error: err.message });
+                }
+
+                const paymentId = this.lastID;
+
+                const paramsForNicePaySDK = {
+                  clientId: NICEPAY_CLIENT_KEY,
+                  method: 'card',
+                  orderId: orderId,
+                  amount: parseInt(amount),
+                  goodsName: `케이터링 서비스 - ${inquiry.title}`,
+                  returnUrl: `https://saluvallday.com/api/payments/payment-result`,
+                  timestamp: timestamp,
+                  signature: signature,
+                };
+
+                res.json({
+                  success: true,
+                  payment_id: paymentId,
+                  order_id: orderId,
+                  paramsForNicePaySDK,
+                });
+              }
+            );
           }
         );
       }

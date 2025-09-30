@@ -27,6 +27,7 @@ interface UserDetail {
   email?: string;
   address?: string;
   total_delivery_count: number;
+  card_payment_allowed: boolean;
   product_deliveries: ProductDelivery[];
   created_at: string;
   last_login?: string;
@@ -58,11 +59,13 @@ const AdminUserDetail: React.FC = () => {
     phone_number: string;
     email: string;
     address: string;
+    card_payment_allowed: boolean;
   }>({
     name: '',
     phone_number: '',
     email: '',
     address: '',
+    card_payment_allowed: false,
   });
 
   useEffect(() => {
@@ -98,6 +101,7 @@ const AdminUserDetail: React.FC = () => {
         phone_number: data.phone_number || '',
         email: data.email || '',
         address: data.address || '',
+        card_payment_allowed: !!data.card_payment_allowed,
       });
     } catch (err: any) {
       setError(err.message);
@@ -165,6 +169,7 @@ const AdminUserDetail: React.FC = () => {
           phone_number: userDetail.phone_number || '',
           email: userDetail.email || '',
           address: userDetail.address || '',
+          card_payment_allowed: !!userDetail.card_payment_allowed,
         });
       }
     }
@@ -327,6 +332,32 @@ const AdminUserDetail: React.FC = () => {
               />
             ) : (
               <span>{userDetail.address || '-'}</span>
+            )}
+          </div>
+          <div className="info-item">
+            <label>카드 결제 허용:</label>
+            {isEditing ? (
+              <label className="card-payment-checkbox">
+                <input
+                  type="checkbox"
+                  checked={editForm.card_payment_allowed}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      card_payment_allowed: e.target.checked,
+                    })
+                  }
+                />
+                <span className="checkbox-label">
+                  {editForm.card_payment_allowed ? '허용' : '차단'}
+                </span>
+              </label>
+            ) : (
+              <span
+                className={`card-payment-status ${userDetail.card_payment_allowed ? 'allowed' : 'blocked'}`}
+              >
+                {userDetail.card_payment_allowed ? '✅ 허용' : '❌ 차단'}
+              </span>
             )}
           </div>
           <div className="info-item">
