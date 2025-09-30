@@ -32,7 +32,7 @@ const steps = ['상품 선택', '식단표 보기', '배송일 선택', '주문 
 const Subscription: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth(); // user도 함께 가져오기
 
   const [activeStep, setActiveStep] = useState(0);
   const [products, setProducts] = useState<ProductProps[]>([]);
@@ -67,15 +67,14 @@ const Subscription: React.FC = () => {
 
   // 사용자 인증 상태 변경 시 결제 방법 초기화
   useEffect(() => {
-    if (isAuthenticated) {
-      const { user } = useAuth();
-      if (user?.card_payment_allowed) {
+    if (isAuthenticated && user) {
+      if (user.card_payment_allowed) {
         setPaymentMethod('card');
       } else {
         setPaymentMethod('cash');
       }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   const fetchProducts = async () => {
     try {
@@ -516,7 +515,6 @@ const Subscription: React.FC = () => {
 
   // 🆕 결제 방법 선택 렌더링
   const renderPaymentMethodSelection = () => {
-    const { user } = useAuth();
     const canUseCard = user?.card_payment_allowed === true;
 
     // 카드 결제 불가 사용자는 현금 결제로 강제 설정 (한 번만 실행)
