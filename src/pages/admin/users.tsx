@@ -337,6 +337,7 @@ const AdminUsers: React.FC = () => {
                         type="checkbox"
                         className="card-payment-checkbox"
                         checked={user.card_payment_allowed}
+                        onClick={(e) => e.stopPropagation()}
                         onChange={(e) => {
                           e.stopPropagation();
                           handleToggleCardPayment(user.id, e.target.checked);
