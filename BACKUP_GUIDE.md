@@ -50,7 +50,7 @@ ls -lh backups/
 ```bash
 pm2 stop all
 # 또는
-sudo systemctl stop your-service-name
+sudo systemctl stop server.js
 ```
 
 ### 3. 현재 DB 백업 (안전을 위해)
@@ -70,7 +70,7 @@ cp backups/database-2025-10-02-030000.sqlite database.sqlite
 ```bash
 pm2 start all
 # 또는
-sudo systemctl start your-service-name
+sudo systemctl start server.js
 ```
 
 ## 백업 로그 확인
