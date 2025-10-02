@@ -82,14 +82,18 @@ const Profile: React.FC = () => {
     if (!user) return;
 
     try {
-      const response = await fetch(`/api/users/${user.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(editForm),
-      });
+      // ID에 스페이스나 특수문자가 있을 수 있으므로 URL 인코딩
+      const response = await fetch(
+        `/api/users/${encodeURIComponent(user.id)}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(editForm),
+        }
+      );
 
       if (!response.ok) {
         const data = await response.json();

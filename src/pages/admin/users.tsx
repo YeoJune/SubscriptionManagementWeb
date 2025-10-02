@@ -107,13 +107,15 @@ const AdminUsers: React.FC = () => {
 
   // 사용자 행 클릭 시 상세 페이지로 이동
   const handleRowClick = (id: string) => {
-    navigate(`/admin/users/${id}`);
+    // ID에 스페이스나 특수문자가 있을 수 있으므로 URL 인코딩
+    navigate(`/admin/users/${encodeURIComponent(id)}`);
   };
 
   // 카드 결제 허용 여부 토글
   const handleToggleCardPayment = async (userId: string, newValue: boolean) => {
     try {
-      const response = await fetch(`/api/users/${userId}`, {
+      // ID에 스페이스나 특수문자가 있을 수 있으므로 URL 인코딩
+      const response = await fetch(`/api/users/${encodeURIComponent(userId)}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

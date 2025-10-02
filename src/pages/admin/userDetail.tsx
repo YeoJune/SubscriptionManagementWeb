@@ -83,7 +83,8 @@ const AdminUserDetail: React.FC = () => {
   const fetchUserDetail = async (userId: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/users/${userId}`, {
+      // ID에 스페이스나 특수문자가 있을 수 있으므로 URL 인코딩
+      const response = await fetch(`/api/users/${encodeURIComponent(userId)}`, {
         method: 'GET',
         credentials: 'include',
       });
@@ -114,10 +115,14 @@ const AdminUserDetail: React.FC = () => {
     setDeliveryLoading(true);
     try {
       // 관리자용 배송 목록 API 사용 (사용자 ID로 검색)
-      const response = await fetch(`/api/delivery?search=${userId}&limit=50`, {
-        method: 'GET',
-        credentials: 'include',
-      });
+      // ID에 스페이스나 특수문자가 있을 수 있으므로 URL 인코딩
+      const response = await fetch(
+        `/api/delivery?search=${encodeURIComponent(userId)}&limit=50`,
+        {
+          method: 'GET',
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) {
         console.error('배송 이력을 불러오는데 실패했습니다.');
@@ -137,7 +142,8 @@ const AdminUserDetail: React.FC = () => {
     if (!id) return;
 
     try {
-      const response = await fetch(`/api/users/${id}`, {
+      // ID에 스페이스나 특수문자가 있을 수 있으므로 URL 인코딩
+      const response = await fetch(`/api/users/${encodeURIComponent(id)}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

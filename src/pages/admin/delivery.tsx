@@ -286,8 +286,9 @@ const Delivery: React.FC = () => {
     setScheduleError(null);
 
     try {
+      // ID에 스페이스나 특수문자가 있을 수 있으므로 URL 인코딩
       const response = await axios.get(
-        `/api/delivery/users/${userId}/schedule`
+        `/api/delivery/users/${encodeURIComponent(userId)}/schedule`
       );
       setSelectedUser(response.data);
       setNewScheduleDates([]);
