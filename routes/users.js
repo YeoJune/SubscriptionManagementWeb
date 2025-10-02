@@ -227,58 +227,49 @@ router.put('/:id', (req, res) => {
       }
 
       try {
-        // 1. 사용자 기본 정보 업데이트
+        // 1. 사용자 기본 정보 업데이트 - 동적으로 필드 구성
+        const updateFields = [];
+        const updateValues = [];
+
+        // 비밀번호 변경이 있는 경우
         if (password) {
-          // 비밀번호 변경이 있는 경우
           const salt = generateSalt();
           const password_hash = hashPassword(password, salt);
+          updateFields.push('password_hash = ?', 'salt = ?');
+          updateValues.push(password_hash, salt);
+        }
+
+        // 각 필드가 전달된 경우에만 업데이트
+        if (name !== undefined) {
+          updateFields.push('name = ?');
+          updateValues.push(name);
+        }
+        if (phone_number !== undefined) {
+          updateFields.push('phone_number = ?');
+          updateValues.push(phone_number);
+        }
+        if (email !== undefined) {
+          updateFields.push('email = ?');
+          updateValues.push(email);
+        }
+        if (address !== undefined) {
+          updateFields.push('address = ?');
+          updateValues.push(address);
+        }
+
+        // card_payment_allowed는 관리자만 변경 가능
+        if (isAdmin && card_payment_allowed !== undefined) {
+          updateFields.push('card_payment_allowed = ?');
+          updateValues.push(card_payment_allowed ? 1 : 0);
+        }
+
+        // 업데이트할 필드가 있는 경우에만 쿼리 실행
+        if (updateFields.length > 0) {
+          updateValues.push(id); // WHERE 절의 id 파라미터
+          const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
 
           await new Promise((resolve, reject) => {
-            const updateQuery =
-              isAdmin && card_payment_allowed !== undefined
-                ? `UPDATE users SET password_hash = ?, salt = ?, name = ?, phone_number = ?, email = ?, address = ?, card_payment_allowed = ? WHERE id = ?`
-                : `UPDATE users SET password_hash = ?, salt = ?, name = ?, phone_number = ?, email = ?, address = ? WHERE id = ?`;
-
-            const updateParams =
-              isAdmin && card_payment_allowed !== undefined
-                ? [
-                    password_hash,
-                    salt,
-                    name,
-                    phone_number,
-                    email,
-                    address,
-                    card_payment_allowed ? 1 : 0,
-                    id,
-                  ]
-                : [password_hash, salt, name, phone_number, email, address, id];
-
-            db.run(updateQuery, updateParams, function (err) {
-              if (err) reject(err);
-              else resolve();
-            });
-          });
-        } else {
-          // 비밀번호 변경이 없는 경우
-          const updateQuery =
-            isAdmin && card_payment_allowed !== undefined
-              ? `UPDATE users SET name = ?, phone_number = ?, email = ?, address = ?, card_payment_allowed = ? WHERE id = ?`
-              : `UPDATE users SET name = ?, phone_number = ?, email = ?, address = ? WHERE id = ?`;
-
-          const updateParams =
-            isAdmin && card_payment_allowed !== undefined
-              ? [
-                  name,
-                  phone_number,
-                  email,
-                  address,
-                  card_payment_allowed ? 1 : 0,
-                  id,
-                ]
-              : [name, phone_number, email, address, id];
-
-          await new Promise((resolve, reject) => {
-            db.run(updateQuery, updateParams, function (err) {
+            db.run(updateQuery, updateValues, function (err) {
               if (err) reject(err);
               else resolve();
             });
