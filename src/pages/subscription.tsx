@@ -627,6 +627,10 @@ const Subscription: React.FC = () => {
       <>
         <div className="confirmation-section">
           <h3 className="section-title">주문 확인</h3>
+
+          {/* 에러 메시지를 주문 확인 섹션 내부로 이동 */}
+          {error && <div className="alert alert-error">{error}</div>}
+
           <div className="summary-content">
             <h4>상품 정보</h4>
             <p className="summary-item">
@@ -868,7 +872,10 @@ const Subscription: React.FC = () => {
 
       {renderStepper()}
 
-      {error && <div className="alert alert-error">{error}</div>}
+      {/* 주문 확인 단계가 아닐 때만 상단에 에러 표시 */}
+      {error && activeStep !== 3 && (
+        <div className="alert alert-error">{error}</div>
+      )}
 
       <div className="content-paper">
         {getStepContent(activeStep)}
