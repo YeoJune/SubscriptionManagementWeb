@@ -284,6 +284,89 @@ router.get('/available-dates', authMiddleware, async (req, res) => {
   }
 });
 
+// POST /api/delivery/auto-schedule - 자동 스케줄링 (월/수/금)
+router.post('/auto-schedule', authMiddleware, async (req, res) => {
+  try {
+    const sessionUserId = req.session.user.id;
+    const isAdmin = req.session.user.isAdmin;
+    const { required_count, user_id } = req.body;
+
+    // user_id 결정
+    const targetUserId = user_id && isAdmin ? user_id : sessionUserId;
+
+    // 권한 확인
+    if (!isAdmin && targetUserId !== sessionUserId) {
+      return res.status(403).json({
+        success: false,
+        error: '권한이 없습니다.',
+      });
+    }
+
+    if (!required_count || required_count <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: '필요한 배송 횟수를 지정해주세요.',
+      });
+    }
+
+    const scheduledDeliveries =
+      await deliveryManager.getScheduledDeliveries(targetUserId);
+    const availableDays = deliveryManager.getAvailableDeliveryDays(isAdmin);
+
+    const suggestedDates = [];
+    const today = new Date();
+    let currentDate = new Date(today);
+
+    // 관리자가 아니면 내일부터 시작
+    if (!isAdmin) {
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    const maxDaysToCheck = 60;
+    let daysChecked = 0;
+
+    while (
+      suggestedDates.length < required_count &&
+      daysChecked < maxDaysToCheck
+    ) {
+      const dayOfWeek = currentDate.getDay();
+      const formattedDate = currentDate.toLocaleDateString('sv-SE');
+
+      if (availableDays.includes(dayOfWeek)) {
+        const isScheduled = scheduledDeliveries.some(
+          (delivery) => delivery.date === formattedDate
+        );
+
+        if (!isScheduled) {
+          suggestedDates.push(formattedDate);
+        }
+      }
+
+      currentDate.setDate(currentDate.getDate() + 1);
+      daysChecked++;
+    }
+
+    if (suggestedDates.length < required_count) {
+      return res.status(400).json({
+        success: false,
+        error: `60일 이내에 ${required_count}개의 배송일을 찾을 수 없습니다. (${suggestedDates.length}개만 가능)`,
+        suggested_dates: suggestedDates,
+      });
+    }
+
+    res.json({
+      success: true,
+      suggested_dates: suggestedDates,
+      message: `${required_count}개의 배송일이 자동으로 선택되었습니다.`,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
 // GET /api/delivery/products - 사용자별 상품 배송 잔여 횟수 조회
 router.get('/products', authMiddleware, async (req, res) => {
   try {

@@ -41,13 +41,34 @@ function generateSignature(orderId, amount, timestamp) {
 // POST /api/payments/prepare
 router.post('/prepare', authMiddleware, (req, res) => {
   try {
-    const { product_id, special_request } = req.body;
+    const { product_id, special_request, delivery_time, selected_dates } =
+      req.body;
     const user_id = req.session.user.id;
 
     if (!product_id) {
       return res.status(400).json({
         success: false,
         error: '상품은 필수 입력 사항입니다.',
+      });
+    }
+
+    // 🆕 배송 시간 필수 검증
+    if (!delivery_time) {
+      return res.status(400).json({
+        success: false,
+        error: '배송 시간은 필수 입력 사항입니다.',
+      });
+    }
+
+    // 🆕 배송 날짜 필수 검증
+    if (
+      !selected_dates ||
+      !Array.isArray(selected_dates) ||
+      selected_dates.length === 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: '배송 날짜는 필수 입력 사항입니다.',
       });
     }
 
@@ -102,8 +123,8 @@ router.post('/prepare', authMiddleware, (req, res) => {
             const deliveryInfo = JSON.stringify({
               special_request: req.body.special_request || null,
               delivery_address: req.body.delivery_address || null,
-              delivery_time: req.body.delivery_time || null,
-              selected_dates: null, // approve 시점에 업데이트
+              delivery_time: req.body.delivery_time,
+              selected_dates: req.body.selected_dates,
             });
 
             db.run(
@@ -396,7 +417,7 @@ router.post('/approve', authMiddleware, (req, res) => {
                               .json({ success: false, error: err.message });
                           }
 
-                          // 저장된 배송 정보 가져오기 및 업데이트
+                          // 저장된 배송 정보 가져오기
                           let deliveryInfo = {};
                           try {
                             deliveryInfo = JSON.parse(
@@ -425,25 +446,23 @@ router.post('/approve', authMiddleware, (req, res) => {
                             );
                           }
 
-                          let deliveryPromise;
-                          if (selectedDates && selectedDates.length > 0) {
-                            deliveryPromise =
-                              deliveryManager.bulkAddDeliveryWithSchedule(
-                                user_id,
-                                payment.product_id,
-                                selectedDates,
-                                specialRequest,
-                                deliveryInfo.delivery_time
-                              );
-                          } else {
-                            deliveryPromise = deliveryManager.addDeliveryCount(
+                          // 🆕 배송 날짜 필수: selected_dates가 반드시 있어야 함
+                          if (!selectedDates || selectedDates.length === 0) {
+                            db.run('ROLLBACK');
+                            return res.status(400).json({
+                              success: false,
+                              error: '배송 날짜가 선택되지 않았습니다.',
+                            });
+                          }
+
+                          const deliveryPromise =
+                            deliveryManager.bulkAddDeliveryWithSchedule(
                               user_id,
                               payment.product_id,
-                              product.delivery_count,
+                              selectedDates,
                               specialRequest,
                               deliveryInfo.delivery_time
                             );
-                          }
 
                           deliveryPromise
                             .then(async (result) => {
@@ -1520,7 +1539,8 @@ router.post('/admin/:id/cancel', checkAdmin, async (req, res) => {
 // POST /api/payments/cash/prepare (현금 결제 준비)
 router.post('/cash/prepare', authMiddleware, (req, res) => {
   try {
-    const { product_id, depositor_name } = req.body;
+    const { product_id, depositor_name, delivery_time, selected_dates } =
+      req.body;
     const user_id = req.session.user.id;
 
     if (!product_id) {
@@ -1534,6 +1554,26 @@ router.post('/cash/prepare', authMiddleware, (req, res) => {
       return res.status(400).json({
         success: false,
         error: '입금자명은 필수 입력 사항입니다.',
+      });
+    }
+
+    // 🆕 배송 시간 필수 검증
+    if (!delivery_time) {
+      return res.status(400).json({
+        success: false,
+        error: '배송 시간은 필수 입력 사항입니다.',
+      });
+    }
+
+    // 🆕 배송 날짜 필수 검증
+    if (
+      !selected_dates ||
+      !Array.isArray(selected_dates) ||
+      selected_dates.length === 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: '배송 날짜는 필수 입력 사항입니다.',
       });
     }
 
@@ -1557,8 +1597,8 @@ router.post('/cash/prepare', authMiddleware, (req, res) => {
         const deliveryInfo = JSON.stringify({
           special_request: req.body.special_request || null,
           delivery_address: req.body.delivery_address || null,
-          delivery_time: req.body.delivery_time || null,
-          selected_dates: req.body.selected_dates || null,
+          delivery_time: req.body.delivery_time,
+          selected_dates: req.body.selected_dates,
         });
 
         db.run(
@@ -1758,26 +1798,27 @@ router.post('/admin/:id/approve-cash', checkAdmin, (req, res) => {
                       const finalSelectedDates =
                         selected_dates || deliveryInfo.selected_dates;
 
+                      // 🆕 배송 날짜 필수: selected_dates가 반드시 있어야 함
+                      if (
+                        !finalSelectedDates ||
+                        finalSelectedDates.length === 0
+                      ) {
+                        return res.status(400).json({
+                          success: false,
+                          error:
+                            '배송 날짜가 선택되지 않았습니다. 관리자가 배송 날짜를 추가해주세요.',
+                        });
+                      }
+
                       // 배송 처리
-                      let deliveryPromise;
-                      if (finalSelectedDates && finalSelectedDates.length > 0) {
-                        deliveryPromise =
-                          deliveryManager.bulkAddDeliveryWithSchedule(
-                            payment.user_id,
-                            payment.product_id,
-                            finalSelectedDates,
-                            specialRequest,
-                            deliveryInfo.delivery_time
-                          );
-                      } else {
-                        deliveryPromise = deliveryManager.addDeliveryCount(
+                      const deliveryPromise =
+                        deliveryManager.bulkAddDeliveryWithSchedule(
                           payment.user_id,
                           payment.product_id,
-                          product.delivery_count,
+                          finalSelectedDates,
                           specialRequest,
                           deliveryInfo.delivery_time
                         );
-                      }
 
                       deliveryPromise
                         .then((result) => {

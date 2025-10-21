@@ -193,14 +193,11 @@ const Subscription: React.FC = () => {
       return;
     }
 
-    // 배송일 선택 검증
+    // 배송일 선택 검증 (필수)
     if (activeStep === 2) {
-      if (
-        selectedDates.length > 0 &&
-        selectedDates.length !== selectedProduct?.delivery_count
-      ) {
+      if (selectedDates.length !== selectedProduct?.delivery_count) {
         setError(
-          `배송일을 선택하려면 ${selectedProduct?.delivery_count}개의 날짜를 모두 선택해주세요. (또는 건너뛰기)`
+          `배송일을 정확히 ${selectedProduct?.delivery_count}개 선택해주세요. (자동 선택 버튼을 이용하시면 편리합니다)`
         );
         return;
       }
@@ -276,7 +273,7 @@ const Subscription: React.FC = () => {
       special_request: specialRequest.trim() || null,
       delivery_address: deliveryAddress.trim(),
       delivery_time: deliveryTime,
-      selected_dates: selectedDates.length > 0 ? selectedDates : null,
+      selected_dates: selectedDates, // 필수로 변경
       depositor_name: depositorName.trim(),
     };
 
@@ -304,6 +301,7 @@ const Subscription: React.FC = () => {
       special_request: specialRequest.trim() || null,
       delivery_address: deliveryAddress.trim(),
       delivery_time: deliveryTime,
+      selected_dates: selectedDates, // 필수로 변경
     });
 
     if (!prepareResponse.data.success) {
@@ -498,9 +496,9 @@ const Subscription: React.FC = () => {
           </p>
           <p>
             총 <strong>{selectedProduct.delivery_count}회</strong> 배송이
-            시작됩니다. 원하시는 배송일을 선택해주세요. 총{' '}
-            {selectedProduct.delivery_count}회 이내에서 60일이내
-            자유선택하실수있습니다.
+            시작됩니다. 정확히{' '}
+            <strong>{selectedProduct.delivery_count}개</strong>의 배송일을
+            선택해주세요. (60일 이내, 자동 선택 버튼을 이용하시면 편리합니다)
           </p>
         </div>
         <DeliveryCalendar
@@ -508,15 +506,19 @@ const Subscription: React.FC = () => {
           selectedDates={selectedDates}
           onDatesChange={setSelectedDates}
         />
-        {selectedDates.length > 0 &&
-          selectedDates.length < selectedProduct.delivery_count && (
-            <div className="partial-selection-notice">
-              <p>
-                현재 {selectedDates.length}/{selectedProduct.delivery_count}개
-                선택됨
-              </p>
-            </div>
-          )}
+        {selectedDates.length > 0 && (
+          <div className="partial-selection-notice">
+            <p>
+              현재 {selectedDates.length}/{selectedProduct.delivery_count}개
+              선택됨
+              {selectedDates.length === selectedProduct.delivery_count && (
+                <span style={{ color: 'green', marginLeft: '10px' }}>
+                  ✓ 완료
+                </span>
+              )}
+            </p>
+          </div>
+        )}
       </div>
     );
   };
@@ -644,22 +646,16 @@ const Subscription: React.FC = () => {
               <strong>배송 횟수:</strong> {selectedProduct?.delivery_count}회
             </p>
 
-            {selectedDates.length > 0 ? (
-              <div className="selected-dates-summary">
-                <strong>선택한 배송일:</strong>
-                <div className="dates-list">
-                  {selectedDates.map((date) => (
-                    <span key={date} className="date-item">
-                      {new Date(date).toLocaleDateString('ko-KR')}
-                    </span>
-                  ))}
-                </div>
+            <div className="selected-dates-summary">
+              <strong>선택한 배송일:</strong>
+              <div className="dates-list">
+                {selectedDates.map((date) => (
+                  <span key={date} className="date-item">
+                    {new Date(date).toLocaleDateString('ko-KR')}
+                  </span>
+                ))}
               </div>
-            ) : (
-              <p className="summary-item">
-                <strong>배송 일정:</strong> 자동 스케줄링 (월/수/금)
-              </p>
-            )}
+            </div>
 
             <hr className="divider" />
 

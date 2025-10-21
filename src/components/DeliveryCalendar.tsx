@@ -19,6 +19,7 @@ const DeliveryCalendar: React.FC<DeliveryCalendarProps> = ({
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [loading, setLoading] = useState(false);
+  const [autoSelecting, setAutoSelecting] = useState(false);
 
   useEffect(() => {
     fetchAvailableDates();
@@ -66,6 +67,26 @@ const DeliveryCalendar: React.FC<DeliveryCalendarProps> = ({
     const newMonth = new Date(currentMonth);
     newMonth.setMonth(newMonth.getMonth() + direction);
     setCurrentMonth(newMonth);
+  };
+
+  // 🆕 자동 선택 함수 (월/수/금)
+  const handleAutoSelect = async () => {
+    setAutoSelecting(true);
+    try {
+      const response = await axios.post('/api/delivery/auto-schedule', {
+        required_count: requiredCount,
+        user_id: userId,
+      });
+
+      if (response.data.success && response.data.suggested_dates) {
+        onDatesChange(response.data.suggested_dates);
+      }
+    } catch (error) {
+      console.error('자동 선택 실패:', error);
+      alert('자동 선택에 실패했습니다. 수동으로 선택해주세요.');
+    } finally {
+      setAutoSelecting(false);
+    }
   };
 
   // 날짜를 YYYY-MM-DD 형식으로 변환 (로컬 시간대 사용)
@@ -125,6 +146,13 @@ const DeliveryCalendar: React.FC<DeliveryCalendarProps> = ({
 
       <div className="selection-status">
         {requiredCount}개 중 {selectedDates.length}개 선택됨
+        <button
+          onClick={handleAutoSelect}
+          disabled={autoSelecting || selectedDates.length === requiredCount}
+          className="auto-select-button"
+        >
+          {autoSelecting ? '자동 선택 중...' : '🗓️ 자동 선택 (월/수/금)'}
+        </button>
       </div>
 
       {loading ? (
