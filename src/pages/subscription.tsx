@@ -628,9 +628,6 @@ const Subscription: React.FC = () => {
         <div className="confirmation-section">
           <h3 className="section-title">주문 확인</h3>
 
-          {/* 에러 메시지를 주문 확인 섹션 내부로 이동 */}
-          {error && <div className="alert alert-error">{error}</div>}
-
           <div className="summary-content">
             <h4>상품 정보</h4>
             <p className="summary-item">
@@ -792,6 +789,14 @@ const Subscription: React.FC = () => {
               '안전결제 진행하기'
             )}
           </button>
+
+          {/* 에러 메시지를 버튼 바로 아래로 이동 */}
+          {error && (
+            <div className="alert alert-error" style={{ marginTop: '15px' }}>
+              {error}
+            </div>
+          )}
+
           <p className="payment-notice">
             {paymentMethod === 'cash'
               ? '주문 후 계좌로 입금해주시면 관리자 확인 후 배송이 시작됩니다.'
