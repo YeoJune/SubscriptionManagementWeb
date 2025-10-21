@@ -197,7 +197,7 @@ const Subscription: React.FC = () => {
     if (activeStep === 2) {
       if (selectedDates.length !== selectedProduct?.delivery_count) {
         setError(
-          `배송일을 정확히 ${selectedProduct?.delivery_count}개 선택해주세요. (자동 선택 버튼을 이용하시면 편리합니다)`
+          `배송일을 정확히 ${selectedProduct?.delivery_count}개 선택해주세요.`
         );
         return;
       }
@@ -498,7 +498,7 @@ const Subscription: React.FC = () => {
             총 <strong>{selectedProduct.delivery_count}회</strong> 배송이
             시작됩니다. 정확히{' '}
             <strong>{selectedProduct.delivery_count}개</strong>의 배송일을
-            선택해주세요. (60일 이내, 자동 선택 버튼을 이용하시면 편리합니다)
+            선택해주세요.
           </p>
         </div>
         <DeliveryCalendar

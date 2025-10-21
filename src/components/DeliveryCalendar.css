@@ -52,32 +52,25 @@
 }
 
 .auto-select-button {
-  background: linear-gradient(
-    135deg,
-    var(--primary-color),
-    var(--accent-color)
-  );
+  background: var(--primary-color);
   color: white;
   border: none;
   border-radius: 6px;
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(255, 140, 66, 0.3);
 }
 
 .auto-select-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 140, 66, 0.4);
+  background: var(--primary-dark);
 }
 
 .auto-select-button:disabled {
   background: #ccc;
   cursor: not-allowed;
-  box-shadow: none;
   opacity: 0.6;
 }
 

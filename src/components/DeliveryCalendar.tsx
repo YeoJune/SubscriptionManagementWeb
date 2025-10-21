@@ -151,7 +151,7 @@ const DeliveryCalendar: React.FC<DeliveryCalendarProps> = ({
           disabled={autoSelecting || selectedDates.length === requiredCount}
           className="auto-select-button"
         >
-          {autoSelecting ? '자동 선택 중...' : '🗓️ 자동 선택 (월/수/금)'}
+          {autoSelecting ? '자동 선택 중...' : '🗓️ 자동 선택'}
         </button>
       </div>
 
