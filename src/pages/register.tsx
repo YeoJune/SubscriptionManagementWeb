@@ -57,8 +57,19 @@ const Register: React.FC = () => {
   const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setId(value);
+
     if (value.length === 0) {
       setIdError('아이디를 입력해주세요');
+    } else if (value.length < 4) {
+      setIdError('아이디는 4자 이상이어야 합니다');
+    } else if (value.length > 20) {
+      setIdError('아이디는 20자 이하여야 합니다');
+    } else if (!/^[a-zA-Z]/.test(value)) {
+      setIdError('아이디는 영문자로 시작해야 합니다');
+    } else if (!/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(value)) {
+      setIdError(
+        '아이디는 영문자, 숫자, 언더스코어(_), 하이픈(-)만 사용 가능합니다'
+      );
     } else {
       setIdError(null);
     }

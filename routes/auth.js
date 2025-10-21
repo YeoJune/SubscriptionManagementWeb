@@ -37,6 +37,22 @@ router.post('/signup', (req, res) => {
         .json({ error: '아이디, 비밀번호, 전화번호는 필수 입력 사항입니다.' });
     }
 
+    // ID 형식 검증
+    const idPattern = /^[a-zA-Z][a-zA-Z0-9_-]{3,19}$/;
+    if (!idPattern.test(id)) {
+      return res.status(400).json({
+        error:
+          '아이디는 영문자로 시작하며, 영문자, 숫자, 언더스코어(_), 하이픈(-)만 사용 가능합니다 (4-20자).',
+      });
+    }
+
+    // 공백 및 특수문자 추가 검증
+    if (/\s/.test(id)) {
+      return res
+        .status(400)
+        .json({ error: '아이디에 공백을 포함할 수 없습니다.' });
+    }
+
     // 전화번호 형식 검사 (선택적)
     const phoneRegex = /^[0-9]{10,11}$/;
     if (!phoneRegex.test(phone_number.replace(/-/g, ''))) {
