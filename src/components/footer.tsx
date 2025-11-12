@@ -24,6 +24,9 @@ const Footer: React.FC = () => {
               <Link to="/">홈/공지사항</Link>
             </li>
             <li>
+              <Link to="/nutrition">영양성분</Link>
+            </li>
+            <li>
               <Link to="/profile">내 프로필</Link>
             </li>
             <li>

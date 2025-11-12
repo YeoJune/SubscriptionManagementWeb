@@ -104,6 +104,13 @@ const Header: React.FC = () => {
               홈/공지사항
             </Link>
             <Link
+              to="/nutrition"
+              className={`sal-nav-button ${isActive('/nutrition') ? 'sal-active-nav-button' : ''}`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              영양성분
+            </Link>
+            <Link
               to="/subscription"
               className={`sal-nav-button ${isActive('/subscription') ? 'sal-active-nav-button' : ''}`}
               onClick={() => setMobileMenuOpen(false)}

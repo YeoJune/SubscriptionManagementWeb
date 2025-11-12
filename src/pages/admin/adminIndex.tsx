@@ -446,6 +446,24 @@ const AdminIndex: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            <div className="feature-card nutrition-feature">
+              <div
+                className="feature-card-action"
+                onClick={() => handleCardClick('/admin/nutrition')}
+              >
+                <div className="feature-content">
+                  <svg
+                    className="feature-icon"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M9.31 6.71c-.39.39-.39 1.02 0 1.41L13.19 12l-3.88 3.88c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l4.59-4.59c.39-.39.39-1.02 0-1.41L10.72 6.7c-.38-.38-1.02-.38-1.41.01zM6 8c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm12 8c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2z" />
+                  </svg>
+                  <div className="feature-title">영양성분 관리</div>
+                </div>
+              </div>
+            </div>
           </div>
         </>
       )}

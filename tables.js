@@ -48,4 +48,11 @@ CREATE TABLE IF NOT EXISTS inquiries (
   answered_at TIMESTAMP
 );
 
+-- 영양성분 테이블 (nutrition_info)
+CREATE TABLE IF NOT EXISTS nutrition_info (
+  id SERIAL PRIMARY KEY,
+  image_path TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 */
