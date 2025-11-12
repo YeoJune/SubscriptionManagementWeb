@@ -77,10 +77,11 @@ const AdminProducts: React.FC = () => {
         'image/jpg',
         'image/png',
         'image/gif',
+        'image/webp',
       ];
       if (!allowedTypes.includes(file.type)) {
         setDialogError(
-          '지원되지 않는 파일 형식입니다. (jpg, jpeg, png, gif만 허용)'
+          '지원되지 않는 파일 형식입니다. (jpg, jpeg, png, gif, webp만 허용)'
         );
         return;
       }
@@ -631,7 +632,12 @@ const AdminProducts: React.FC = () => {
                     이미지 선택
                   </label>
                   <div className="helper-text">
-                    JPG, PNG, GIF 파일만 허용 (최대 50MB)
+                    JPG, PNG, GIF, WebP 파일만 허용 (최대 50MB)
+                    <br />
+                    <small style={{ color: '#4caf50' }}>
+                      ※ 업로드된 이미지는 자동으로 WebP 형식으로 최적화됩니다
+                      (가로 1000px 초과 시 자동 리사이징)
+                    </small>
                   </div>
                 </div>
 

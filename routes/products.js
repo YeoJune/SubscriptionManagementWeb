@@ -6,6 +6,7 @@ const db = require('../lib/db');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const sharp = require('sharp');
 
 /*
 -- 상품 테이블 (product) - 이미지 및 순서 필드 추가
@@ -44,13 +45,21 @@ const storage = multer.diskStorage({
 // 이미지 파일 필터링
 const fileFilter = (req, file, cb) => {
   // 허용할 이미지 타입
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+  const allowedTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+  ];
 
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
     cb(
-      new Error('지원되지 않는 파일 형식입니다. (jpg, jpeg, png, gif만 허용)'),
+      new Error(
+        '지원되지 않는 파일 형식입니다. (jpg, jpeg, png, gif, webp만 허용)'
+      ),
       false
     );
   }
@@ -62,6 +71,38 @@ const upload = multer({
   fileFilter: fileFilter,
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB 제한
 });
+
+// 이미지 최적화 함수 - 가로 1000px 제한 & WebP 변환
+async function optimizeImage(inputPath) {
+  try {
+    const image = sharp(inputPath);
+    const metadata = await image.metadata();
+
+    // 파일명에서 확장자를 .webp로 변경
+    const outputPath = inputPath.replace(/\.[^.]+$/, '.webp');
+
+    // 가로가 1000px을 넘으면 리사이징, 아니면 그대로 WebP 변환
+    if (metadata.width > 1000) {
+      await image
+        .resize({ width: 1000, withoutEnlargement: true })
+        .webp({ quality: 85 }) // 85% 품질로 WebP 변환
+        .toFile(outputPath);
+    } else {
+      await image.webp({ quality: 85 }).toFile(outputPath);
+    }
+
+    // 원본 파일 삭제 (WebP로 교체)
+    if (inputPath !== outputPath && fs.existsSync(inputPath)) {
+      fs.unlinkSync(inputPath);
+    }
+
+    return outputPath;
+  } catch (error) {
+    console.error('이미지 최적화 중 오류 발생:', error);
+    // 최적화 실패 시 원본 파일 그대로 사용
+    return inputPath;
+  }
+}
 
 // GET /api/products - 상품 목록 조회
 router.get('/', (req, res) => {
@@ -161,12 +202,22 @@ router.get('/:id', (req, res) => {
 });
 
 // POST /api/products (admin) - 상품 등록
-router.post('/', checkAdmin, upload.single('image'), (req, res) => {
+router.post('/', checkAdmin, upload.single('image'), async (req, res) => {
   try {
     const { name, description, price, delivery_count, sort_order } = req.body;
-    const imagePath = req.file
-      ? `/public/uploads/products/${req.file.filename}`
-      : null;
+    let imagePath = null;
+
+    // 이미지가 업로드되었으면 최적화 처리
+    if (req.file) {
+      try {
+        const optimizedPath = await optimizeImage(req.file.path);
+        imagePath = `/public/uploads/products/${path.basename(optimizedPath)}`;
+      } catch (err) {
+        console.error('이미지 최적화 실패:', err);
+        // 최적화 실패 시 원본 사용
+        imagePath = `/public/uploads/products/${req.file.filename}`;
+      }
+    }
 
     // 유효성 검사
     if (!name || price === undefined) {
@@ -247,7 +298,7 @@ router.post('/', checkAdmin, upload.single('image'), (req, res) => {
 });
 
 // PUT /api/products/:id (admin) - 상품 수정
-router.put('/:id', checkAdmin, upload.single('image'), (req, res) => {
+router.put('/:id', checkAdmin, upload.single('image'), async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -258,9 +309,19 @@ router.put('/:id', checkAdmin, upload.single('image'), (req, res) => {
       sort_order,
       removeImage,
     } = req.body;
-    const newImagePath = req.file
-      ? `/public/uploads/products/${req.file.filename}`
-      : null;
+    let newImagePath = null;
+
+    // 새 이미지가 업로드되었으면 최적화 처리
+    if (req.file) {
+      try {
+        const optimizedPath = await optimizeImage(req.file.path);
+        newImagePath = `/public/uploads/products/${path.basename(optimizedPath)}`;
+      } catch (err) {
+        console.error('이미지 최적화 실패:', err);
+        // 최적화 실패 시 원본 사용
+        newImagePath = `/public/uploads/products/${req.file.filename}`;
+      }
+    }
 
     // 유효성 검사
     if (!name || price === undefined) {

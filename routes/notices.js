@@ -6,6 +6,7 @@ const db = require('../lib/db');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const sharp = require('sharp');
 
 /*
 -- 공지 테이블 (notice) - images 필드로 변경
@@ -38,12 +39,20 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+  const allowedTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+  ];
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
     cb(
-      new Error('지원되지 않는 파일 형식입니다. (jpg, jpeg, png, gif만 허용)'),
+      new Error(
+        '지원되지 않는 파일 형식입니다. (jpg, jpeg, png, gif, webp만 허용)'
+      ),
       false
     );
   }
@@ -56,16 +65,58 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024, files: 10 },
 });
 
+// 공지사항 이미지 최적화 함수 - 가로 1500px 제한 & WebP 변환
+async function optimizeNoticeImage(inputPath) {
+  try {
+    const image = sharp(inputPath);
+    const metadata = await image.metadata();
+
+    // 파일명에서 확장자를 .webp로 변경
+    const outputPath = inputPath.replace(/\.[^.]+$/, '.webp');
+
+    // 가로가 1500px을 넘으면 리사이징, 아니면 그대로 WebP 변환
+    if (metadata.width > 1500) {
+      await image
+        .resize({ width: 1500, withoutEnlargement: true })
+        .webp({ quality: 85 }) // 85% 품질로 WebP 변환
+        .toFile(outputPath);
+    } else {
+      await image.webp({ quality: 85 }).toFile(outputPath);
+    }
+
+    // 원본 파일 삭제 (WebP로 교체)
+    if (inputPath !== outputPath && fs.existsSync(inputPath)) {
+      fs.unlinkSync(inputPath);
+    }
+
+    return outputPath;
+  } catch (error) {
+    console.error('공지사항 이미지 최적화 중 오류 발생:', error);
+    // 최적화 실패 시 원본 파일 그대로 사용
+    return inputPath;
+  }
+}
+
 // POST /api/notices (admin) - 공지사항 등록
-router.post('/', checkAdmin, upload.array('images', 10), (req, res) => {
+router.post('/', checkAdmin, upload.array('images', 10), async (req, res) => {
   try {
     const { type, title, content, question, answer } = req.body;
 
-    // 업로드된 이미지들의 경로 배열
-    const imagePaths =
-      req.files && req.files.length > 0
-        ? req.files.map((file) => `/public/uploads/notices/${file.filename}`)
-        : [];
+    // 업로드된 이미지들 최적화 처리
+    const imagePaths = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        try {
+          const optimizedPath = await optimizeNoticeImage(file.path);
+          imagePaths.push(
+            `/public/uploads/notices/${path.basename(optimizedPath)}`
+          );
+        } catch (err) {
+          console.error('공지사항 이미지 최적화 실패:', err);
+          imagePaths.push(`/public/uploads/notices/${file.filename}`);
+        }
+      }
+    }
 
     // 유효성 검사
     if (!type || !title) {
@@ -145,7 +196,7 @@ router.post('/', checkAdmin, upload.array('images', 10), (req, res) => {
 });
 
 // PUT /api/notices/:id (admin) - 공지사항 수정
-router.put('/:id', checkAdmin, upload.array('images', 10), (req, res) => {
+router.put('/:id', checkAdmin, upload.array('images', 10), async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -158,10 +209,21 @@ router.put('/:id', checkAdmin, upload.array('images', 10), (req, res) => {
       existingImages,
     } = req.body;
 
-    const newImagePaths =
-      req.files && req.files.length > 0
-        ? req.files.map((file) => `/public/uploads/notices/${file.filename}`)
-        : [];
+    // 새 이미지 최적화 처리
+    const newImagePaths = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        try {
+          const optimizedPath = await optimizeNoticeImage(file.path);
+          newImagePaths.push(
+            `/public/uploads/notices/${path.basename(optimizedPath)}`
+          );
+        } catch (err) {
+          console.error('공지사항 이미지 최적화 실패:', err);
+          newImagePaths.push(`/public/uploads/notices/${file.filename}`);
+        }
+      }
+    }
 
     // 유효성 검사
     if (!type || !title) {
