@@ -2,22 +2,21 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../lib/db');
+const checkAdmin = require('../lib/checkAdmin');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs').promises;
+const fs = require('fs');
 
 // 이미지 저장 설정
 const storage = multer.diskStorage({
-  destination: async (req, file, cb) => {
+  destination: function (req, file, cb) {
     const uploadDir = path.join(__dirname, '../public/images/nutrition');
-    try {
-      await fs.mkdir(uploadDir, { recursive: true });
-      cb(null, uploadDir);
-    } catch (error) {
-      cb(error);
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
     }
+    cb(null, uploadDir);
   },
-  filename: (req, file, cb) => {
+  filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, 'nutrition-' + uniqueSuffix + path.extname(file.originalname));
   },
@@ -60,7 +59,7 @@ router.get('/', async (req, res) => {
 });
 
 // 관리자 API: 영양성분 정보 조회
-router.get('/admin', async (req, res) => {
+router.get('/admin', checkAdmin, async (req, res) => {
   try {
     const result = await db.query(
       'SELECT id, image_path, created_at FROM nutrition_info ORDER BY created_at DESC LIMIT 1'
@@ -78,7 +77,7 @@ router.get('/admin', async (req, res) => {
 });
 
 // 관리자 API: 영양성분 정보 등록/업데이트
-router.post('/admin', upload.single('image'), async (req, res) => {
+router.post('/admin', checkAdmin, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: '이미지를 업로드해주세요.' });
@@ -97,7 +96,9 @@ router.post('/admin', upload.single('image'), async (req, res) => {
       if (oldImagePath) {
         const oldFilePath = path.join(__dirname, '../public', oldImagePath);
         try {
-          await fs.unlink(oldFilePath);
+          if (fs.existsSync(oldFilePath)) {
+            fs.unlinkSync(oldFilePath);
+          }
         } catch (err) {
           console.error('기존 이미지 삭제 실패:', err);
         }
@@ -127,7 +128,7 @@ router.post('/admin', upload.single('image'), async (req, res) => {
 });
 
 // 관리자 API: 영양성분 정보 삭제
-router.delete('/admin/:id', async (req, res) => {
+router.delete('/admin/:id', checkAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -146,7 +147,9 @@ router.delete('/admin/:id', async (req, res) => {
     if (imagePath) {
       const filePath = path.join(__dirname, '../public', imagePath);
       try {
-        await fs.unlink(filePath);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
       } catch (err) {
         console.error('이미지 파일 삭제 실패:', err);
       }
