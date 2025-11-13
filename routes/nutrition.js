@@ -22,22 +22,30 @@ const storage = multer.diskStorage({
   },
 });
 
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+  ];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(
+      new Error(
+        '지원되지 않는 파일 형식입니다. (jpg, jpeg, png, gif, webp만 허용)'
+      ),
+      false
+    );
+  }
+};
+
 const upload = multer({
   storage: storage,
+  fileFilter: fileFilter,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(
-      path.extname(file.originalname).toLowerCase()
-    );
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('이미지 파일만 업로드 가능합니다.'));
-    }
-  },
 });
 
 // 공개 API: 영양성분 정보 조회
