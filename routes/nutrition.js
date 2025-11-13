@@ -60,6 +60,7 @@ router.get('/', (req, res) => {
           return res.status(500).json({ message: '서버 오류가 발생했습니다.' });
         }
 
+        console.log('Nutrition data from DB:', nutrition);
         res.json({ nutrition: nutrition || null });
       }
     );
@@ -132,7 +133,7 @@ router.post('/admin', checkAdmin, upload.single('image'), (req, res) => {
 
           // 업데이트
           db.run(
-            'UPDATE nutrition_info SET image_path = ?, created_at = CURRENT_TIMESTAMP WHERE id = ?',
+            'UPDATE nutrition_info SET image_path = ? WHERE id = ?',
             [imagePath, existing.id],
             function (err) {
               if (err) {
@@ -155,7 +156,7 @@ router.post('/admin', checkAdmin, upload.single('image'), (req, res) => {
         } else {
           // 새로 생성
           db.run(
-            'INSERT INTO nutrition_info (image_path, created_at) VALUES (?, CURRENT_TIMESTAMP)',
+            'INSERT INTO nutrition_info (image_path) VALUES (?)',
             [imagePath],
             function (err) {
               if (err) {
@@ -169,6 +170,7 @@ router.post('/admin', checkAdmin, upload.single('image'), (req, res) => {
                   .json({ message: '서버 오류가 발생했습니다.' });
               }
 
+              console.log('New nutrition created with ID:', this.lastID);
               res.json({
                 id: this.lastID,
                 message: '영양성분 정보가 등록되었습니다.',
