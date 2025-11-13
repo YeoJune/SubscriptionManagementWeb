@@ -63,7 +63,8 @@
   border: none;
   cursor: pointer;
   padding: 0.5rem;
-  margin-left: auto;
+  margin-left: 0;
+  flex-shrink: 0; /* 유지되도록 */
 }
 
 .sal-menu-icon {
@@ -277,13 +278,20 @@
 
 /* Responsive adjustments */
 @media (max-width: 992px) {
-  .sal-mobile-menu-toggle {
-    display: block;
-    order: 3;
+  /* mobile ordering: logo (left) -> toggle (center/right) -> auth (right) */
+  .sal-logo-section {
+    order: 1;
+    flex-shrink: 0;
+    min-width: 120px;
   }
 
-  .sal-logo-section {
-    flex: 1;
+  .sal-mobile-menu-toggle {
+    display: block;
+    order: 2;
+    margin-left: 0.5rem;
+    position: relative;
+    z-index: 120; /* nav보다 위에 표시되도록 */
+    background: transparent;
   }
 
   .sal-nav-section {
@@ -298,8 +306,8 @@
     transform: translateY(-100%);
     opacity: 0;
     visibility: hidden;
-    transition: all 0.3s ease;
-    z-index: 99;
+    transition: all 0.25s ease;
+    z-index: 100; /* 아래에 위치하게 하여 토글이 클릭되도록 */
   }
 
   .sal-nav-section.sal-menu-open {
@@ -316,6 +324,7 @@
   }
 
   .sal-auth-section {
+    order: 3;
     margin-left: auto;
     margin-right: 1rem;
   }
