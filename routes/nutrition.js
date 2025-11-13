@@ -73,8 +73,13 @@ router.get('/', (req, res) => {
 // 관리자 API: 영양성분 정보 조회
 router.get('/admin', checkAdmin, (req, res) => {
   try {
+    // 모든 데이터 확인
+    db.all('SELECT * FROM nutrition_info', [], (err, all) => {
+      console.log('All nutrition_info rows:', all);
+    });
+
     db.get(
-      'SELECT id, image_path, created_at FROM nutrition_info ORDER BY created_at DESC LIMIT 1',
+      'SELECT * FROM nutrition_info ORDER BY created_at DESC LIMIT 1',
       [],
       (err, nutrition) => {
         if (err) {
@@ -82,7 +87,14 @@ router.get('/admin', checkAdmin, (req, res) => {
           return res.status(500).json({ message: '서버 오류가 발생했습니다.' });
         }
 
-        console.log('nutrition:', nutrition, typeof nutrition?.id);
+        console.log(
+          'nutrition:',
+          nutrition,
+          'id type:',
+          typeof nutrition?.id,
+          'id value:',
+          nutrition?.id
+        );
 
         res.json({ nutrition: nutrition || null });
       }
