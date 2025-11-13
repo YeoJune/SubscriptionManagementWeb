@@ -10,7 +10,7 @@ const fs = require('fs');
 // 이미지 저장 설정
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, '../public/images/nutrition');
+    const uploadDir = path.join(__dirname, '../public/uploads/nutrition');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -89,7 +89,7 @@ router.post('/admin', checkAdmin, upload.single('image'), (req, res) => {
       return res.status(400).json({ message: '이미지를 업로드해주세요.' });
     }
 
-    const imagePath = `/images/nutrition/${req.file.filename}`;
+    const imagePath = `/public/uploads/nutrition/${req.file.filename}`;
 
     // 기존 데이터 조회
     db.get(
