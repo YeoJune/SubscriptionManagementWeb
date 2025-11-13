@@ -278,17 +278,23 @@
 
 /* Responsive adjustments */
 @media (max-width: 992px) {
-  /* mobile ordering: logo (left) -> toggle (center/right) -> auth (right) */
+  /* mobile ordering: logo (left) -> auth (center) -> toggle (right) */
   .sal-logo-section {
     order: 1;
     flex-shrink: 0;
-    min-width: 120px;
+    min-width: 100px;
+  }
+
+  .sal-auth-section {
+    order: 2;
+    margin-left: auto;
+    margin-right: 0.5rem;
   }
 
   .sal-mobile-menu-toggle {
     display: block;
-    order: 2;
-    margin-left: 0.5rem;
+    order: 3;
+    margin-left: 0;
     position: relative;
     z-index: 120; /* nav보다 위에 표시되도록 */
     background: transparent;
@@ -321,12 +327,6 @@
     width: 100%;
     text-align: center;
     padding: 0.8rem;
-  }
-
-  .sal-auth-section {
-    order: 3;
-    margin-left: auto;
-    margin-right: 1rem;
   }
 }
 
