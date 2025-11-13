@@ -41,17 +41,20 @@ const upload = multer({
 });
 
 // 공개 API: 영양성분 정보 조회
-router.get('/', async (req, res) => {
+router.get('/', (req, res) => {
   try {
-    const result = await db.query(
-      'SELECT id, image_path, created_at FROM nutrition_info ORDER BY created_at DESC LIMIT 1'
+    db.get(
+      'SELECT id, image_path, created_at FROM nutrition_info ORDER BY created_at DESC LIMIT 1',
+      [],
+      (err, nutrition) => {
+        if (err) {
+          console.error('영양성분 조회 실패:', err);
+          return res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+        }
+
+        res.json({ nutrition: nutrition || null });
+      }
     );
-
-    if (result.rows.length === 0) {
-      return res.json({ nutrition: null });
-    }
-
-    res.json({ nutrition: result.rows[0] });
   } catch (error) {
     console.error('영양성분 조회 실패:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
@@ -59,17 +62,20 @@ router.get('/', async (req, res) => {
 });
 
 // 관리자 API: 영양성분 정보 조회
-router.get('/admin', checkAdmin, async (req, res) => {
+router.get('/admin', checkAdmin, (req, res) => {
   try {
-    const result = await db.query(
-      'SELECT id, image_path, created_at FROM nutrition_info ORDER BY created_at DESC LIMIT 1'
+    db.get(
+      'SELECT id, image_path, created_at FROM nutrition_info ORDER BY created_at DESC LIMIT 1',
+      [],
+      (err, nutrition) => {
+        if (err) {
+          console.error('영양성분 조회 실패:', err);
+          return res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+        }
+
+        res.json({ nutrition: nutrition || null });
+      }
     );
-
-    if (result.rows.length === 0) {
-      return res.json({ nutrition: null });
-    }
-
-    res.json({ nutrition: result.rows[0] });
   } catch (error) {
     console.error('영양성분 조회 실패:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
@@ -77,7 +83,7 @@ router.get('/admin', checkAdmin, async (req, res) => {
 });
 
 // 관리자 API: 영양성분 정보 등록/업데이트
-router.post('/admin', checkAdmin, upload.single('image'), async (req, res) => {
+router.post('/admin', checkAdmin, upload.single('image'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: '이미지를 업로드해주세요.' });
@@ -86,79 +92,151 @@ router.post('/admin', checkAdmin, upload.single('image'), async (req, res) => {
     const imagePath = `/images/nutrition/${req.file.filename}`;
 
     // 기존 데이터 조회
-    const existingResult = await db.query(
-      'SELECT id, image_path FROM nutrition_info ORDER BY created_at DESC LIMIT 1'
-    );
-
-    if (existingResult.rows.length > 0) {
-      // 기존 이미지 삭제
-      const oldImagePath = existingResult.rows[0].image_path;
-      if (oldImagePath) {
-        const oldFilePath = path.join(__dirname, '../public', oldImagePath);
-        try {
-          if (fs.existsSync(oldFilePath)) {
-            fs.unlinkSync(oldFilePath);
+    db.get(
+      'SELECT id, image_path FROM nutrition_info ORDER BY created_at DESC LIMIT 1',
+      [],
+      (err, existing) => {
+        if (err) {
+          console.error('기존 데이터 조회 실패:', err);
+          // 업로드된 파일 삭제
+          if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
           }
-        } catch (err) {
-          console.error('기존 이미지 삭제 실패:', err);
+          return res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+        }
+
+        if (existing) {
+          // 기존 이미지 삭제
+          if (existing.image_path) {
+            const oldFilePath = path.join(
+              __dirname,
+              '../public',
+              existing.image_path
+            );
+            try {
+              if (fs.existsSync(oldFilePath)) {
+                fs.unlinkSync(oldFilePath);
+              }
+            } catch (err) {
+              console.error('기존 이미지 삭제 실패:', err);
+            }
+          }
+
+          // 업데이트
+          db.run(
+            'UPDATE nutrition_info SET image_path = ?, created_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [imagePath, existing.id],
+            function (err) {
+              if (err) {
+                console.error('영양성분 업데이트 실패:', err);
+                // 업로드된 파일 삭제
+                if (req.file && fs.existsSync(req.file.path)) {
+                  fs.unlinkSync(req.file.path);
+                }
+                return res
+                  .status(500)
+                  .json({ message: '서버 오류가 발생했습니다.' });
+              }
+
+              res.json({
+                message: '영양성분 정보가 업데이트되었습니다.',
+                image_path: imagePath,
+              });
+            }
+          );
+        } else {
+          // 새로 생성
+          db.run(
+            'INSERT INTO nutrition_info (image_path, created_at) VALUES (?, CURRENT_TIMESTAMP)',
+            [imagePath],
+            function (err) {
+              if (err) {
+                console.error('영양성분 생성 실패:', err);
+                // 업로드된 파일 삭제
+                if (req.file && fs.existsSync(req.file.path)) {
+                  fs.unlinkSync(req.file.path);
+                }
+                return res
+                  .status(500)
+                  .json({ message: '서버 오류가 발생했습니다.' });
+              }
+
+              res.json({
+                id: this.lastID,
+                message: '영양성분 정보가 등록되었습니다.',
+                image_path: imagePath,
+              });
+            }
+          );
         }
       }
-
-      // 업데이트
-      await db.query(
-        'UPDATE nutrition_info SET image_path = $1, created_at = NOW() WHERE id = $2',
-        [imagePath, existingResult.rows[0].id]
-      );
-    } else {
-      // 새로 생성
-      await db.query(
-        'INSERT INTO nutrition_info (image_path, created_at) VALUES ($1, NOW())',
-        [imagePath]
-      );
-    }
-
-    res.json({
-      message: '영양성분 정보가 업데이트되었습니다.',
-      image_path: imagePath,
-    });
+    );
   } catch (error) {
     console.error('영양성분 업로드 실패:', error);
+    // 업로드된 파일 삭제
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
 
 // 관리자 API: 영양성분 정보 삭제
-router.delete('/admin/:id', checkAdmin, async (req, res) => {
+router.delete('/admin/:id', checkAdmin, (req, res) => {
   try {
     const { id } = req.params;
 
     // 이미지 경로 조회
-    const result = await db.query(
-      'SELECT image_path FROM nutrition_info WHERE id = $1',
-      [id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: '데이터를 찾을 수 없습니다.' });
-    }
-
-    // 이미지 파일 삭제
-    const imagePath = result.rows[0].image_path;
-    if (imagePath) {
-      const filePath = path.join(__dirname, '../public', imagePath);
-      try {
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
+    db.get(
+      'SELECT image_path FROM nutrition_info WHERE id = ?',
+      [id],
+      (err, nutrition) => {
+        if (err) {
+          console.error('영양성분 조회 실패:', err);
+          return res.status(500).json({ message: '서버 오류가 발생했습니다.' });
         }
-      } catch (err) {
-        console.error('이미지 파일 삭제 실패:', err);
+
+        if (!nutrition) {
+          return res
+            .status(404)
+            .json({ message: '데이터를 찾을 수 없습니다.' });
+        }
+
+        // 이미지 파일 삭제
+        if (nutrition.image_path) {
+          const filePath = path.join(
+            __dirname,
+            '../public',
+            nutrition.image_path
+          );
+          try {
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+            }
+          } catch (err) {
+            console.error('이미지 파일 삭제 실패:', err);
+          }
+        }
+
+        // DB에서 삭제
+        db.run('DELETE FROM nutrition_info WHERE id = ?', [id], function (err) {
+          if (err) {
+            console.error('영양성분 삭제 실패:', err);
+            return res
+              .status(500)
+              .json({ message: '서버 오류가 발생했습니다.' });
+          }
+
+          if (this.changes === 0) {
+            return res
+              .status(404)
+              .json({ message: '영양성분 삭제에 실패했습니다.' });
+          }
+
+          res.json({ message: '삭제되었습니다.' });
+        });
       }
-    }
-
-    // DB에서 삭제
-    await db.query('DELETE FROM nutrition_info WHERE id = $1', [id]);
-
-    res.json({ message: '삭제되었습니다.' });
+    );
   } catch (error) {
     console.error('영양성분 삭제 실패:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
