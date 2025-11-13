@@ -82,6 +82,8 @@ router.get('/admin', checkAdmin, (req, res) => {
           return res.status(500).json({ message: '서버 오류가 발생했습니다.' });
         }
 
+        console.log('nutrition:', nutrition, typeof nutrition?.id);
+
         res.json({ nutrition: nutrition || null });
       }
     );
