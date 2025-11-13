@@ -23,6 +23,7 @@ const Nutrition: React.FC = () => {
     setLoading(true);
     try {
       const response = await axios.get('/api/nutrition');
+      console.log('Nutrition API response:', response.data);
       setNutritionInfo(response.data.nutrition);
     } catch (error) {
       console.error('Failed to fetch nutrition info:', error);
